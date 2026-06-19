@@ -696,28 +696,127 @@ const events = {
     const npc = npcs[Math.floor(Math.random() * npcs.length)];
     const good = Math.random() > 0.4;
     if (good) {
-      showText(npc.name, npc.desc, [{ text: '🤝 接受', next: 'explore', effect: npc.effectGood }, { text: '👋 离开', next: 'explore' }]);
+      showText(npc.name, npc.desc, [{ 
+        text: '🤝 接受', 
+        next: 'npc_result', 
+        effect: npc.effectGood,
+        data: { npc, isGood: true }
+      }, { 
+        text: '👋 离开', 
+        next: 'npc_leave',
+        data: { npc }
+      }]);
     } else {
-      showText(npc.name, npc.desc + '\n\n⚠️ 感觉不太对劲...', [{ text: '🤝 接受', next: 'explore', effect: npc.effectBad }, { text: '🚫 拒绝', next: 'explore', effect: { brave: 5 } }]);
+      showText(npc.name, npc.desc + '\n\n⚠️ 感觉不太对劲...', [{ 
+        text: '🤝 接受', 
+        next: 'npc_result', 
+        effect: npc.effectBad,
+        data: { npc, isGood: false }
+      }, { 
+        text: '🚫 拒绝', 
+        next: 'npc_reject',
+        data: { npc }
+      }]);
     }
+  },
+
+  npc_result: () => {
+    const { npc, isGood } = events._tempData;
+    const resultText = isGood ? npc.result : npc.result;
+    const emoji = isGood ? '✅' : '❌';
+    showText(`${emoji} ${npc.name}`, resultText, [{ text: '继续探索', next: 'explore' }]);
+  },
+
+  npc_leave: () => {
+    const { npc } = events._tempData;
+    const leaveTexts = [
+      `${npc.name}看着你离去的背影，摇了摇头...`,
+      `你礼貌地告别了${npc.name}，继续你的旅程。`,
+      `${npc.name}微微点头，目送你离开。`
+    ];
+    showText('👋 离开', leaveTexts[Math.floor(Math.random() * leaveTexts.length)], [{ text: '继续', next: 'explore' }]);
+  },
+
+  npc_reject: () => {
+    const { npc } = events._tempData;
+    const rejectTexts = [
+      `你警惕地拒绝了${npc.name}。${npc.name}看起来有些失望...`,
+      `你保持距离，${npc.name}无奈地离开了。`,
+      `你的警惕心救了你一命！${npc.name}其实是蛇精的眼线。`
+    ];
+    showText('🚫 拒绝', rejectTexts[Math.floor(Math.random() * rejectTexts.length)], [{ text: '继续', next: 'explore', effect: { brave: 5 } }]);
   },
 
   enemy_encounter: () => {
     const e = enemies[Math.floor(Math.random() * enemies.length)];
+    const powerRatio = player.power / e.power;
+    
+    // 根据实力对比显示不同信息
+    let difficulty = '';
+    if (powerRatio >= 1.5) difficulty = '🟢 轻松碾压';
+    else if (powerRatio >= 1.1) difficulty = '🟡 有优势';
+    else if (powerRatio >= 0.9) difficulty = '🟠 势均力敌';
+    else if (powerRatio >= 0.7) difficulty = '🔴 有风险';
+    else difficulty = '💀 危险！';
+    
     const strategies = [
-      { text: `⚔️ 正面迎战`, effect: { hp: -e.power * 0.3, power: 3, brave: 5 } },
-      { text: `🎯 偷袭弱点`, effect: { hp: -e.power * 0.2, power: 5 }, condition: player.skills.includes('隐身') },
-      { text: `🔥 用火焰攻击`, effect: { hp: -e.power * 0.15, power: 4 }, condition: player.skills.includes('喷火') },
-      { text: `💪 用蛮力碾压`, effect: { hp: -e.power * 0.1, power: 6 }, condition: player.skills.includes('力大无穷') },
-      { text: `💨 战术撤退`, effect: { hp: -3, brave: -3 } }
+      { text: `⚔️ 正面迎战`, effect: { hp: -e.power * 0.3, power: 3, brave: 5 }, successRate: Math.min(0.95, powerRatio * 0.8) },
+      { text: `🎯 偷袭弱点`, effect: { hp: -e.power * 0.2, power: 5 }, condition: player.skills.includes('隐身'), successRate: 0.9 },
+      { text: `🔥 火焰攻击`, effect: { hp: -e.power * 0.15, power: 4 }, condition: player.skills.includes('喷火'), successRate: 0.85 },
+      { text: `💪 蛮力碾压`, effect: { hp: -e.power * 0.1, power: 6 }, condition: player.skills.includes('力大无穷'), successRate: Math.min(0.95, powerRatio * 1.2) },
+      { text: `👀 侦查敌情`, effect: { power: 2 }, condition: player.skills.includes('千里眼'), successRate: 1 },
+      { text: `🛡️ 铜墙铁壁`, effect: { hp: -e.power * 0.05, power: 4 }, condition: player.skills.includes('铜头铁臂'), successRate: 0.95 },
+      { text: `💨 战术撤退`, effect: { hp: -2, brave: -2 }, successRate: 1 }
     ].filter(s => !s.condition || s.condition);
     
-    showText(e.name, `⚔️ ${e.desc}！\n\n敌人战力：${e.power} | 敌人生命：${e.hp}`, strategies.map(s => ({
+    showText(e.name, `⚔️ ${e.desc}！\n\n${difficulty}\n敌人战力：${e.power} | 敌人生命：${e.hp}\n你的战力：${player.power}`, strategies.map(s => ({
       text: s.text,
       next: 'combat_result',
       effect: s.effect,
-      data: { enemy: e }
+      data: { enemy: e, successRate: s.successRate }
     })));
+  },
+
+  combat_result: () => {
+    const { enemy, successRate } = events._tempData;
+    const success = Math.random() < successRate;
+    
+    if (success) {
+      winStreak++;
+      let streakBonus = '';
+      let bonusEffect = {};
+      
+      if (winStreak >= 5) {
+        streakBonus = `\n\n🔥 连胜 ${winStreak} 场！触发"战神附体"效果！`;
+        bonusEffect = { power: 5, hp: 10, brave: 5 };
+      } else if (winStreak >= 3) {
+        streakBonus = `\n\n⚡ 连胜 ${winStreak} 场！气势如虹！`;
+        bonusEffect = { power: 3, brave: 3 };
+      } else if (winStreak >= 2) {
+        streakBonus = `\n\n✨ 连胜 ${winStreak} 场！士气大振！`;
+        bonusEffect = { power: 2 };
+      }
+      
+      const winTexts = [
+        `你英勇地击退了${enemy.name}！`,
+        `战斗胜利！${enemy.name}落荒而逃！`,
+        `经过激战，你取得了胜利！`,
+        `你用实力证明了自己！`
+      ];
+      
+      showText('✅ 胜利', winTexts[Math.floor(Math.random() * winTexts.length)] + streakBonus, 
+        [{ text: '继续探索', next: 'explore', effect: bonusEffect }]);
+    } else {
+      winStreak = 0;
+      const failTexts = [
+        `${enemy.name}的实力超出了你的预期！你被打败了...`,
+        `战斗失败！${enemy.name}太强了...`,
+        `你低估了${enemy.name}的实力，被打得落花流水...`
+      ];
+      const damage = Math.floor(enemy.power * 0.5);
+      showText('❌ 失败', failTexts[Math.floor(Math.random() * failTexts.length)] + `\n\n受到 ${damage} 点伤害！`, 
+        [{ text: '狼狈逃走', next: 'explore', effect: { hp: -damage, brave: -5 } }]);
+    }
   },
 
   combat_result: () => {
