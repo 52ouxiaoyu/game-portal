@@ -1,0 +1,206 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'ZCOOL KuaiLe', 'Comic Sans MS', sans-serif;
+    user-select: none;
+}
+
+body {
+    background-color: #111;
+    color: #fff;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    overflow: hidden;
+}
+
+#game-container {
+    position: relative;
+    width: 800px;
+    height: 600px;
+    background-color: #222;
+    box-shadow: 0 0 20px rgba(0, 255, 100, 0.2);
+    border: 4px solid #333;
+    border-radius: 10px;
+    overflow: hidden;
+}
+
+canvas {
+    display: block;
+    width: 100%;
+    height: 100%;
+}
+
+/* HUD */
+#hud {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    padding: 10px 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    z-index: 10;
+    background: linear-gradient(to bottom, rgba(0,0,0,0.8), transparent);
+    pointer-events: none;
+}
+
+.hud-item {
+    display: flex;
+    flex-direction: column;
+}
+
+.center-box {
+    align-items: center;
+}
+
+.right-box {
+    align-items: flex-end;
+}
+
+.label {
+    font-size: 14px;
+    color: #aaa;
+}
+
+#score, #high-score {
+    font-size: 24px;
+    font-weight: bold;
+    color: #ffaa00;
+    text-shadow: 0 2px 4px rgba(0,0,0,0.5);
+}
+
+#weapon-info {
+    font-size: 20px;
+    color: #00ffff;
+    background: rgba(0,0,0,0.5);
+    padding: 5px 15px;
+    border-radius: 20px;
+    border: 2px solid #00ffff;
+    text-shadow: 0 0 5px #00ffff;
+}
+
+#kill-combo {
+    font-size: 18px;
+    color: #ff00ff;
+    margin-top: 5px;
+    animation: pulse 0.5s infinite alternate;
+}
+
+@keyframes pulse {
+    from { transform: scale(1); }
+    to { transform: scale(1.1); }
+}
+
+#pause-btn {
+    pointer-events: auto;
+    background: rgba(255,255,255,0.2);
+    border: 1px solid #fff;
+    color: #fff;
+    padding: 5px 10px;
+    border-radius: 5px;
+    cursor: pointer;
+    margin-top: 5px;
+}
+#pause-btn:hover {
+    background: rgba(255,255,255,0.4);
+}
+
+/* UI Screens */
+#ui-layer {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    z-index: 20;
+}
+
+.screen {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.85);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    pointer-events: auto;
+    transition: opacity 0.3s ease;
+}
+
+.title-art {
+    font-size: 60px;
+    color: #00ff66;
+    text-shadow: 0 0 20px #00ff66, 0 0 40px #00ff66;
+    margin-bottom: 10px;
+}
+
+.subtitle {
+    font-size: 24px;
+    color: #ccc;
+    margin-bottom: 30px;
+}
+
+.controls-info {
+    background: rgba(255,255,255,0.1);
+    padding: 20px;
+    border-radius: 10px;
+    margin-bottom: 30px;
+    text-align: center;
+    line-height: 1.6;
+}
+
+.big-btn {
+    background: #00ff66;
+    color: #000;
+    border: none;
+    padding: 15px 40px;
+    font-size: 24px;
+    border-radius: 30px;
+    cursor: pointer;
+    box-shadow: 0 4px 15px rgba(0,255,102,0.5);
+    transition: transform 0.1s, box-shadow 0.1s;
+}
+
+.big-btn:hover {
+    transform: scale(1.05);
+    box-shadow: 0 6px 20px rgba(0,255,102,0.8);
+}
+.big-btn:active {
+    transform: scale(0.95);
+}
+
+.stats-box {
+    font-size: 20px;
+    line-height: 1.8;
+    margin: 20px 0;
+    text-align: center;
+}
+#final-score {
+    color: #ffaa00;
+    font-size: 30px;
+    font-weight: bold;
+}
+
+.glow-text {
+    color: #ffaa00;
+    font-size: 24px;
+    animation: glow 1s infinite alternate;
+    margin-bottom: 20px;
+}
+
+@keyframes glow {
+    from { text-shadow: 0 0 5px #ffaa00; }
+    to { text-shadow: 0 0 20px #ffaa00; }
+}
+
+.hidden {
+    display: none !important;
+}

@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>末日枪手 - 僵尸突围</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=ZCOOL+KuaiLe&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div id="game-container">
+        <!-- 抬头显示 -->
+        <div id="hud" class="hidden">
+            <div class="hud-item score-box">
+                <span class="label">分数</span>
+                <span id="score">0</span>
+            </div>
+            <div class="hud-item center-box">
+                <div id="weapon-info">当前武器: <span id="current-weapon">双持手枪</span></div>
+                <div id="kill-combo" class="hidden">连击 <span id="combo-count">x1</span></div>
+            </div>
+            <div class="hud-item right-box">
+                <span class="label">最高分</span>
+                <span id="high-score">0</span>
+                <button id="pause-btn">⏸暂停</button>
+            </div>
+        </div>
+
+        <!-- 游戏UI层 -->
+        <div id="ui-layer">
+            <!-- 开始屏幕 -->
+            <div id="start-screen" class="screen">
+                <div class="title-art">🔫 末日枪手 🔫</div>
+                <p class="subtitle">抵御无尽的僵尸！</p>
+                <div class="controls-info">
+                    <p>← → (A D) : 左右移动/转身</p>
+                    <p>空格键 : 开火射击</p>
+                    <p>消灭僵尸获取升级，坚持下去！</p>
+                </div>
+                <button id="start-btn" class="big-btn">开始突围</button>
+            </div>
+
+            <!-- 游戏结束屏幕 -->
+            <div id="game-over-screen" class="screen hidden">
+                <h1>你被僵尸淹没了！</h1>
+                <div class="stats-box">
+                    <p>最终得分: <span id="final-score">0</span></p>
+                    <p>存活时间: <span id="survival-time">0</span> 秒</p>
+                    <p>击溃僵尸: <span id="kill-count">0</span></p>
+                </div>
+                <div id="new-high" class="hidden glow-text">🏆 新纪录！🏆</div>
+                <button id="restart-btn" class="big-btn">再试一次</button>
+            </div>
+
+            <!-- 暂停屏幕 -->
+            <div id="pause-screen" class="screen hidden">
+                <h1>已暂停</h1>
+                <button id="resume-btn" class="big-btn">继续战斗</button>
+            </div>
+        </div>
+
+        <canvas id="game-canvas"></canvas>
+    </div>
+    
+    <!-- 引入如何发声的简单音频合成 -->
+    <script src="game.js"></script>
+</body>
+</html>
