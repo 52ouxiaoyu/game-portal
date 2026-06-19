@@ -596,8 +596,19 @@ function showText(speaker, text, choices) {
       const c = choices[0];
       if (c.data) events._tempData = c.data;
       if (c.effect) applyEffect(c.effect); 
-      updateUI();
       
+      let resultStr = '';
+      if (c.effect) {
+        if (c.effect.hp) resultStr += `生命 ${c.effect.hp > 0 ? '+' : ''}${c.effect.hp} `;
+        if (c.effect.power) resultStr += `战力 ${c.effect.power > 0 ? '+' : ''}${c.effect.power} `;
+        if (c.effect.brave) resultStr += `勇气 ${c.effect.brave > 0 ? '+' : ''}${c.effect.brave} `;
+        if (c.effect.karma) resultStr += `善恶 ${c.effect.karma > 0 ? '+' : ''}${c.effect.karma} `;
+      }
+      if (resultStr) {
+        document.getElementById('text').textContent += `\n\n(🎯 自动结算：${resultStr})`;
+      }
+      
+      updateUI();
       window.isIdle = true;
       document.getElementById('actions').style.opacity = '1';
       document.getElementById('actions').style.pointerEvents = 'auto';
@@ -867,7 +878,7 @@ const events = {
     
     if (success) {
       showText(`⚔️ 战斗`, 
-        `你与${brother.name}展开激战！\n\n经过一番搏斗，你用强大的力量震醒了他！\n\n「我...我怎么了...」`, 
+        `${brother.name}展开激战！\n\n经过一番搏斗，你用强大的力量震醒了他！\n\n「我...我怎么了...」`, 
         [{ text: `${brother.name}恢复清醒！`, next: 'explore', effect: { skill, power: 10, hp: -15 } }]);
     } else {
       showText(`😤 失败`, 
@@ -1051,35 +1062,36 @@ const events = {
     const { enemy, successRate } = events._tempData;
     let success = Math.random() < successRate;
     
-    // 10%概率战斗意外反转
-    const combatSurprise = Math.random() < 0.10;
+    // 15%概率战斗意外反转
+    const combatSurprise = Math.random() < 0.15;
     
     if (success && !combatSurprise) {
       // 正常胜利
       winStreak++;
       let streakBonus = '';
-      let bonusEffect = {};
+      // 基础保底战利品
+      let bonusEffect = { power: Math.floor(Math.random() * 3) + 1, hp: Math.floor(Math.random() * 8) + 2 };
       
       if (winStreak >= 5) {
         streakBonus = `\n\n🔥 连胜 ${winStreak} 场！触发"战神附体"效果！`;
-        bonusEffect = { power: 5, hp: 10, brave: 5 };
+        bonusEffect.power += 5; bonusEffect.hp += 10; bonusEffect.brave = 5;
       } else if (winStreak >= 3) {
         streakBonus = `\n\n⚡ 连胜 ${winStreak} 场！气势如虹！`;
-        bonusEffect = { power: 3, brave: 3 };
+        bonusEffect.power += 3; bonusEffect.brave = 3;
       } else if (winStreak >= 2) {
         streakBonus = `\n\n✨ 连胜 ${winStreak} 场！士气大振！`;
-        bonusEffect = { power: 2 };
+        bonusEffect.power += 2;
       }
       
       const winTexts = [
-        `你英勇地击退了${enemy.name}！`,
-        `战斗胜利！${enemy.name}落荒而逃！`,
-        `经过激战，你取得了胜利！`,
-        `你用实力证明了自己！`
+        `你英勇地击退了${enemy.name}！\n\n你从敌人身上搜刮到了战利品。`,
+        `战斗胜利！${enemy.name}落荒而逃，留下了一些物资！`,
+        `经过激战，你取得了胜利！\n\n你在战场上获得了一些启发和战利品。`,
+        `你用实力证明了自己！战后你顺手拿走了敌人的宝贝。`
       ];
       
       showText('✅ 胜利', winTexts[Math.floor(Math.random() * winTexts.length)] + streakBonus, 
-        [{ text: '继续探索', next: 'explore', effect: bonusEffect }]);
+        [{ text: '打扫战场', next: 'explore', effect: bonusEffect }]);
     } else if (!success && !combatSurprise) {
       // 正常失败
       winStreak = 0;
@@ -1116,33 +1128,6 @@ const events = {
     }
   },
 
-  combat_result: () => {
-    winStreak++;
-    let streakBonus = '';
-    let bonusEffect = {};
-    
-    if (winStreak >= 5) {
-      streakBonus = `\n\n🔥 连胜 ${winStreak} 场！触发"战神附体"效果！`;
-      bonusEffect = { power: 5, hp: 10, brave: 5 };
-    } else if (winStreak >= 3) {
-      streakBonus = `\n\n⚡ 连胜 ${winStreak} 场！气势如虹！`;
-      bonusEffect = { power: 3, brave: 3 };
-    } else if (winStreak >= 2) {
-      streakBonus = `\n\n✨ 连胜 ${winStreak} 场！士气大振！`;
-      bonusEffect = { power: 2 };
-    }
-    
-    const msgs = [
-      '你英勇地击退了敌人！',
-      '战斗胜利！你变得更强了！',
-      '敌人落荒而逃！',
-      '经过激战，你取得了胜利！',
-      '你用实力证明了自己！'
-    ];
-    
-    showText('✅ 胜利', msgs[Math.floor(Math.random() * msgs.length)] + streakBonus, 
-      [{ text: '继续探索', next: 'explore', effect: bonusEffect }]);
-  },
 
   cave_explore: () => {
     const r = Math.random();
