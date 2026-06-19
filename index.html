@@ -221,6 +221,67 @@
         .coffee-btn:active {
             transform: translateY(0);
         }
+        button.coffee-btn {
+            border: none;
+            cursor: pointer;
+            font-family: inherit;
+        }
+
+        /* Donate Modal */
+        .donate-modal {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.6);
+            z-index: 999;
+            align-items: center;
+            justify-content: center;
+            backdrop-filter: blur(4px);
+        }
+        .donate-content {
+            background: #fff;
+            padding: 32px;
+            border-radius: 16px;
+            text-align: center;
+            position: relative;
+            max-width: 400px;
+            width: 90%;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+            animation: modalFadeIn 0.3s ease;
+        }
+        @keyframes modalFadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .donate-close {
+            position: absolute;
+            top: 16px; right: 16px;
+            cursor: pointer;
+            font-size: 28px;
+            color: #aaa;
+            line-height: 1;
+        }
+        .donate-close:hover { color: #333; }
+        .donate-qr {
+            width: 220px; height: 220px;
+            margin: 16px auto 8px;
+            border-radius: 8px;
+            object-fit: contain;
+            display: block;
+        }
+        .donate-paypal {
+            display: inline-block;
+            margin-top: 12px;
+            padding: 12px 24px;
+            background: #003087;
+            color: #fff;
+            text-decoration: none;
+            border-radius: 8px;
+            font-weight: 500;
+            font-size: 14px;
+            transition: background 0.2s;
+        }
+        .donate-paypal:hover { background: #002266; }
 
         @media (max-width: 768px) {
             .container { padding: 60px 16px 48px; }
@@ -253,11 +314,27 @@
                 </div>
             </div>
             <div style="margin-top: 32px;">
-                <a href="https://www.buymeacoffee.com/" target="_blank" class="coffee-btn" title="Buy me a coffee!">
+                <button onclick="openDonateModal()" class="coffee-btn" title="Buy me a coffee!">
                     ☕ 请我喝杯咖啡 (Buy Me a Coffee)
-                </a>
+                </button>
             </div>
         </header>
+
+        <!-- Donate Modal -->
+        <div id="donate-modal" class="donate-modal" onclick="closeDonateModal(event)">
+            <div class="donate-content" onclick="event.stopPropagation()">
+                <div class="donate-close" onclick="closeDonateModal()">×</div>
+                <h2>感谢您的支持！💖</h2>
+                <p style="color: #666; margin-top: 8px; font-size: 14px;">您的打赏是我开发更多好游戏的最大动力</p>
+                
+                <h4 style="margin-top: 28px; color: #333;">👉 国内玩家打赏通道</h4>
+                <img src="donate.png" alt="微信赞赏码" class="donate-qr">
+                <p style="font-size: 12px; color: #999;">（打开微信扫一扫，支持任意金额）</p>
+
+                <h4 style="margin-top: 28px; color: #333;">👉 For International Players</h4>
+                <a href="https://www.paypal.me/" target="_blank" class="donate-paypal">💳 Support via PayPal</a>
+            </div>
+        </div>
 
         <div class="games-grid" id="games-grid"></div>
 
@@ -371,13 +448,23 @@
                     </div>
                 `;
             }).join('');
+        }
+            // Initialize
+        const totalStats = getTotalStats();
+        document.getElementById('total-plays').innerText = totalStats.plays;
+        document.getElementById('total-time').innerText = formatTime(totalStats.time);
+        renderGames();
 
-            const total = getTotalStats();
-            document.getElementById('total-plays').textContent = total.plays;
-            document.getElementById('total-time').textContent = formatTime(total.time);
+        function openDonateModal() {
+            document.getElementById('donate-modal').style.display = 'flex';
         }
 
-        renderGames();
+        function closeDonateModal(e) {
+            // Close if clicking the background or the X button
+            if (!e || e.target.id === 'donate-modal' || !e.target.id) {
+                document.getElementById('donate-modal').style.display = 'none';
+            }
+        }
     </script>
 </body>
 </html>
