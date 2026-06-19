@@ -267,7 +267,7 @@ class PowerUp {
         else if (this.type === POWERUP_TYPES.STAR) player.upgrade();
         else if (this.type === POWERUP_TYPES.SHOVEL) this.game.fortifyBase();
         else if (this.type === POWERUP_TYPES.LIFE) this.game.lives++;
-        else if (this.type === POWERUP_TYPES.TIME) this.game.enemies.forEach(e => e.frozenTimer = 300);
+        else if (this.type === POWERUP_TYPES.TIME) this.game.enemyFrozenTimer = 300;
         this.game.updateHUD();
     }
     draw(ctx) { if (Math.floor(this.timer / 10) % 2 === 0) { ctx.font = '48px Arial'; ctx.fillText(this.type, this.x, this.y + 48); } }
@@ -833,11 +833,10 @@ class Enemy extends Tank {
         else { this.speed = (2 + Math.min(stage * 0.1, 2)) * diffMult; this.health = 1; }
         
         this.dirTimer = 0; 
-        this.frozenTimer = 0;
     } 
     update() { 
         super.update(); 
-        if (this.frozenTimer > 0) { this.frozenTimer--; return; }
+        if (this.game.enemyFrozenTimer > 0) return;
         if (this.dirTimer <= 0) { this.direction = ['UP', 'DOWN', 'LEFT', 'RIGHT'][Math.floor(Math.random() * 4)]; this.dirTimer = 30 + Math.random() * 60; } else this.dirTimer--; const ox = this.x; const oy = this.y; this.move(this.direction); if (this.x === ox && this.y === oy) this.dirTimer = 0; if (Math.random() * 100 < (this.variant==='ELITE'? 4 : 2)) this.shoot(); 
     } 
 }
@@ -927,6 +926,7 @@ class Boss extends Enemy {
     }
     update() {
         super.update();
+        if (this.game.enemyFrozenTimer > 0) return;
         let nearestEnemy = null;
         let nearestDist = Infinity;
         for (const p of this.game.players) {
@@ -1067,7 +1067,7 @@ class Game {
     constructor() {
         this.canvas = document.getElementById('game-canvas'); this.ctx = this.canvas.getContext('2d');
         this.canvas.width = CANVAS_SIZE; this.canvas.height = CANVAS_SIZE; this.input = new InputHandler(); this.map = new GameMap(this);
-        this.players = []; this.enemies = []; this.bullets = []; this.effects = []; this.powerUps = []; this.fortifyTimer = 0; this.spawnTimer = 0;
+        this.players = []; this.enemies = []; this.bullets = []; this.effects = []; this.powerUps = []; this.fortifyTimer = 0; this.spawnTimer = 0; this.enemyFrozenTimer = 0;
         this.currentStage = 0; this.gameState = 'START'; this.lives = 3; this.paused = false;
         this.highScore = parseInt(localStorage.getItem('tankBattleHighScore') || '0');
         this.baseHealth = 5; this.maxBaseHealth = 5;
@@ -1114,7 +1114,7 @@ class Game {
         this.gameState = 'STAGE_START'; this.stageStartTimer = 120;
         document.getElementById('start-screen').classList.add('hidden'); document.getElementById('game-over-screen').classList.add('hidden');
         document.getElementById('stage-info').innerText = `STAGE ${this.currentStage + 1}`;
-        this.map.reset(this.currentStage); this.bullets = []; this.enemies = []; this.effects = []; this.powerUps = []; this.fortifyTimer = 0;
+        this.map.reset(this.currentStage); this.bullets = []; this.enemies = []; this.effects = []; this.powerUps = []; this.fortifyTimer = 0; this.enemyFrozenTimer = 0;
         this.stageClearTimer = 0;
         this.currentLevel = this.map.currentLevel;
         const diffMult = this.difficulty === 'easy' ? 0.7 : (this.difficulty === 'hard' ? 1.3 : 1);
@@ -1191,6 +1191,7 @@ class Game {
 
         this.announcements = this.announcements.filter(a => { a.timer--; a.y -= 0.5; return a.timer > 0; });
         this.floatingTexts = this.floatingTexts.filter(t => { t.timer--; t.y += t.vy; return t.timer > 0; });
+        if (this.enemyFrozenTimer > 0) this.enemyFrozenTimer--;
 
         const bossChance = this.currentStage < 5 ? 0 : (this.currentStage < 20 ? 0.0002 : 0.0005);
         if (Math.random() < bossChance && !this.enemies.some(e => e.isBoss) && !this.bossWarning) {
