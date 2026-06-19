@@ -341,7 +341,7 @@ class Bullet {
         const tx = Math.floor((this.x + this.size/2) / TILE_SIZE); const ty = Math.floor((this.y + this.size/2) / TILE_SIZE);
         if (tx < 0 || tx >= GRID_SIZE || ty < 0 || ty >= GRID_SIZE) { this.active = false; return; }
         const tile = this.game.map.grid[ty][tx];
-        if (tile !== TILE_TYPES.EMPTY && tile !== TILE_TYPES.FOREST) { this.triggerExplosion(this.x + this.size/2, this.y + this.size/2); this.active = false; return; }
+        if (tile === TILE_TYPES.BRICK || tile === TILE_TYPES.STEEL || tile === TILE_TYPES.BASE) { this.triggerExplosion(this.x + this.size/2, this.y + this.size/2); this.active = false; return; }
         const isEnemyBullet = this.owner instanceof Enemy;
         const tanks = isEnemyBullet ? this.game.players : this.game.enemies;
         for (const tank of tanks) {
