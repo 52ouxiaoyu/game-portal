@@ -154,8 +154,7 @@ class Player {
         this.mechTime = 0;
         this.mechHp = 0;
         this.vehicleTime = 0;
-        this.lives = 3;
-        this.reviveProgress = 0; // 0 to 180 (3 seconds at 60fps)
+                this.reviveProgress = 0; // 0 to 180 (3 seconds at 60fps)
         this.isDowned = false;
         this.lastInputTime = Date.now();
         this.isAI = false;
@@ -454,8 +453,7 @@ class Player {
         ctx.textAlign = 'center';
         let idText = this.isAI ? 'P' + this.id + ' (AI托管)' : 'P' + this.id;
         ctx.fillText(idText, this.x, this.y - 35);
-        ctx.fillStyle = '#ff3333';
-        ctx.fillText('❤️'.repeat(this.lives), this.x, this.y - 23);
+        
         
         // Draw Shield
         if(this.shieldTime > 0) {
@@ -490,7 +488,7 @@ class Player {
         if(this.hp > 0 && !this.isDowned) {
             ctx.font = '12px Arial';
             ctx.textAlign = 'center';
-            let stars = '⭐'.repeat(this.hp);
+            let stars = '❤️'.repeat(this.hp);
             ctx.fillText(stars, this.x, this.y - 25);
         }
     }
@@ -717,7 +715,7 @@ class LootBox {
                 this.active = false;
                 if(this.type === 'heal') {
                     p.hp = Math.min(p.maxHp, p.hp + 1);
-                    addFloatingText(p.x, p.y - 30, "⭐ 获得星星!", "#00ff00");
+                    addFloatingText(p.x, p.y - 30, "❤️ 获得生命!", "#00ff00");
                     audio.levelUp();
                 } else if(this.type === 'shield') {
                     p.shieldTime = 300;
@@ -761,7 +759,7 @@ class LootBox {
                         audio.levelUp();
                     } else {
                         p.hp = Math.min(p.maxHp, p.hp + 1);
-                        addFloatingText(p.x, p.y - 30, "⭐ 星星+1", "#ff3333");
+                        addFloatingText(p.x, p.y - 30, "❤️ 生命+1", "#ff3333");
                         audio.levelUp();
                     }
                 } else if(this.type === 'ult') {
