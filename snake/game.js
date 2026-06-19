@@ -561,9 +561,9 @@ const FOOD_TYPES = {
 };
 
 const DIFFICULTY = {
-    easy:   { baseSpeed: 140, speedIncrease: 2, maxSpeed: 60, lives: 5 },
-    normal: { baseSpeed: 100, speedIncrease: 3, maxSpeed: 45, lives: 3 },
-    hard:   { baseSpeed: 65, speedIncrease: 4, maxSpeed: 30, lives: 2 },
+    easy:   { baseSpeed: 140, speedIncrease: 2, maxSpeed: 60, lives: 1 },
+    normal: { baseSpeed: 100, speedIncrease: 3, maxSpeed: 45, lives: 1 },
+    hard:   { baseSpeed: 65, speedIncrease: 4, maxSpeed: 30, lives: 1 },
 };
 
 // Game State
@@ -1290,8 +1290,8 @@ function update(dt) {
             
             // 大宝藏给额外奖励
             if (treasure.type === 'big') {
-                lives = Math.min(lives + 1, 5);
-                addFloatingText(CANVAS_W / 2, CANVAS_H / 2, '❤️ +1 命!', '#ff4444', 20);
+                score += 500;
+                addFloatingText(CANVAS_W / 2, CANVAS_H / 2, '+500 巨额宝藏!', '#ffdd00', 20);
             }
             ate = true;
             break;
@@ -1509,7 +1509,7 @@ function updateDeathAnimations() {
 }
 
 function loseLife() {
-    lives--;
+    lives = 0;
     audio.die();
     screenShake = 5;
 
@@ -1522,10 +1522,8 @@ function loseLife() {
 
     addFloatingText(snake[0].x * TILE_SIZE + TILE_SIZE / 2, snake[0].y * TILE_SIZE, '💀', '#ff4444', 24);
 
-    if (lives <= 0) {
-        gameOver();
-        return;
-    }
+    gameOver();
+    return;
 
     const startX = Math.floor(GRID_W / 2);
     const startY = Math.floor(GRID_H / 2);
