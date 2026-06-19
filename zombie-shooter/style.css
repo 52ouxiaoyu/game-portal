@@ -18,8 +18,8 @@ body {
 
 #game-container {
     position: relative;
-    width: 800px;
-    height: 600px;
+    width: 1000px;
+    height: 800px;
     background-color: #222;
     box-shadow: 0 0 20px rgba(0, 255, 100, 0.2);
     border: 4px solid #333;
