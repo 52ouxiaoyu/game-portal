@@ -1209,29 +1209,15 @@ function update(dt) {
     const head = snake[0];
     let newHead = { x: head.x + snakeDir.x, y: head.y + snakeDir.y };
 
-    if (activeGhost) {
-        newHead.x = (newHead.x + GRID_W) % GRID_W;
-        newHead.y = (newHead.y + GRID_H) % GRID_H;
-    } else {
-        if (newHead.x < 0 || newHead.x >= GRID_W || newHead.y < 0 || newHead.y >= GRID_H) {
-            if (activeShield) {
-                activeShield = false;
-                shieldBlockCount++;
-                newHead = { ...head };
-                audio.powerup();
-                spawnParticles(head.x * TILE_SIZE + TILE_SIZE / 2, head.y * TILE_SIZE + TILE_SIZE / 2, '#ffff00', 15);
-                addFloatingText(head.x * TILE_SIZE + TILE_SIZE / 2, head.y * TILE_SIZE, '护盾抵挡!', '#ffff00');
-                checkShieldAchievement();
-                return;
-            } else {
-                loseLife();
-                return;
-            }
-        }
-    }
+    // 边界环绕：蛇总是可以穿过边界到另一边
+    newHead.x = (newHead.x + GRID_W) % GRID_W;
+    newHead.y = (newHead.y + GRID_H) % GRID_H;
 
     const hitWall = walls.some(w => w.x === newHead.x && w.y === newHead.y);
-    if (hitWall && !activeGhost) {
+    if (hitWall && activeGhost) {
+        ghostWallCount++;
+        checkGhostAchievement();
+    } else if (hitWall) {
         if (activeShield) {
             activeShield = false;
             shieldBlockCount++;
@@ -1240,7 +1226,11 @@ function update(dt) {
             addFloatingText(newHead.x * TILE_SIZE + TILE_SIZE / 2, newHead.y * TILE_SIZE, '护盾抵挡!', '#ffff00');
             checkShieldAchievement();
             return;
+        } else {
+            loseLife();
+            return;
         }
+    }
         loseLife();
         return;
     }
