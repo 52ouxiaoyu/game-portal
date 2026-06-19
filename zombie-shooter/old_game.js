@@ -1,16 +1,9 @@
 const canvas = document.getElementById('game-canvas');
 const ctx = canvas.getContext('2d');
-let CANVAS_W = window.innerWidth;
-let CANVAS_H = window.innerHeight;
+const CANVAS_W = 800;
+const CANVAS_H = 600;
 canvas.width = CANVAS_W;
 canvas.height = CANVAS_H;
-
-window.addEventListener('resize', () => {
-    CANVAS_W = window.innerWidth;
-    CANVAS_H = window.innerHeight;
-    canvas.width = CANVAS_W;
-    canvas.height = CANVAS_H;
-});
 
 // --- AUDIO SYSTEM (Web Audio API) ---
 const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
@@ -52,13 +45,11 @@ let killCount = 0;
 let startTime = 0;
 let lastTime = 0;
 
-let players = [];
+let player;
 let zombies = [];
 let bullets = [];
 let particles = [];
 let floatingTexts = [];
-let lootBoxes = [];
-let lootTimer = 0;
 
 let spawnTimer = 0;
 let spawnRate = 100; // frames
@@ -68,13 +59,13 @@ let frameCount = 0;
 const keys = {
     ArrowUp: false, ArrowDown: false, ArrowLeft: false, ArrowRight: false,
     KeyW: false, KeyS: false, KeyA: false, KeyD: false,
-    Space: false, Enter: false, NumpadEnter: false
+    Space: false
 };
 
 window.addEventListener('keydown', e => {
     if(keys.hasOwnProperty(e.code)) keys[e.code] = true;
-    if((e.code === 'Space' || e.code === 'Enter' || e.code === 'NumpadEnter') && gameState === 'PLAYING') {
-        players.forEach(p => { if((e.code==='Space'&&p.id===1) || ((e.code==='Enter'||e.code==='NumpadEnter')&&p.id===2)) p.shoot(); });
+    if(e.code === 'Space' && gameState === 'PLAYING') {
+        player.shoot();
         e.preventDefault();
     }
 });
@@ -92,20 +83,17 @@ document.getElementById('resume-btn').onclick = togglePause;
 // --- CLASSES ---
 
 class Player {
-    constructor(id) {
-        this.id = id;
-        this.x = CANVAS_W / 2 + (id === 1 ? -50 : 50);
+    constructor() {
+        this.x = CANVAS_W / 2;
         this.y = CANVAS_H / 2;
         this.size = 20;
         this.speed = 5;
-        this.color = id === 1 ? '#00bfff' : '#ff9900';
+        this.color = '#00ffff';
         this.facing = {x: 1, y: 0}; // default facing right
         this.hp = 100;
         this.maxHp = 100;
         this.weaponLevel = 0;
         this.cooldown = 0;
-        this.buffTime = 0;
-        this.shieldTime = 0;
         
         this.weapons = [
             { name: "双持手枪 Pistols", cd: 20, type: "pistol", req: 0 },
@@ -116,130 +104,102 @@ class Player {
     }
 
     update() {
-        if(this.cooldown > 0 && this.buffTime <= 0) this.cooldown--;
-        if(this.buffTime > 0) this.buffTime--;
-        if(this.shieldTime > 0) this.shieldTime--;
-
+        // Movement
         let dx = 0; let dy = 0;
-        let currentSpeed = this.buffTime > 0 ? this.speed * 1.5 : this.speed;
-        if(this.id === 1) {
-            if(keys.KeyW) dy -= 1;
-            if(keys.KeyS) dy += 1;
-            if(keys.KeyA) dx -= 1;
-            if(keys.KeyD) dx += 1;
-        } else {
-            if(keys.ArrowUp) dy -= 1;
-            if(keys.ArrowDown) dy += 1;
-            if(keys.ArrowLeft) dx -= 1;
-            if(keys.ArrowRight) dx += 1;
-        }
+        if(keys.ArrowLeft || keys.KeyA) dx -= 1;
+        if(keys.ArrowRight || keys.KeyD) dx += 1;
+        // User requested left/right movement, but let's allow up/down so they don't get stuck easily
+        if(keys.ArrowUp || keys.KeyW) dy -= 1;
+        if(keys.ArrowDown || keys.KeyS) dy += 1;
 
         if(dx !== 0 || dy !== 0) {
+            // Normalize
             const len = Math.hypot(dx, dy);
             dx /= len; dy /= len;
+            this.x += dx * this.speed;
+            this.y += dy * this.speed;
             this.facing = {x: dx, y: dy};
         }
 
-        this.x += dx * currentSpeed;
-        this.y += dy * currentSpeed;
-
+        // Constrain
         this.x = Math.max(this.size, Math.min(CANVAS_W - this.size, this.x));
         this.y = Math.max(this.size, Math.min(CANVAS_H - this.size, this.y));
 
-        // Check weapon level up
-        for(let i = this.weapons.length - 1; i >= 0; i--) {
-            if(killCount >= this.weapons[i].req) {
-                if(this.weaponLevel !== i) {
-                    this.weaponLevel = i;
-                    audio.levelUp();
-                    addFloatingText(this.x, this.y - 30, "WEAPON UPGRADE!", "#ffff00");
-                    if(this.id === 1) document.getElementById('current-weapon').textContent = this.weapons[i].name;
-                }
-                break;
-            }
+        if(this.cooldown > 0) this.cooldown--;
+
+        // Weapon Upgrade Check
+        let nextWep = this.weaponLevel + 1;
+        if(nextWep < this.weapons.length && killCount >= this.weapons[nextWep].req) {
+            this.weaponLevel = nextWep;
+            audio.levelUp();
+            document.getElementById('current-weapon').textContent = this.weapons[this.weaponLevel].name;
+            addFloatingText(this.x, this.y - 30, "武器升级! UPGRADE!", "#00ff66");
+            createParticles(this.x, this.y, '#00ff66', 30);
+        }
+        
+        // Auto-shoot or Space-shoot
+        // Space is handled in keydown for singles, but machinegun/laser needs holding
+        if(keys.Space) {
+            this.shoot();
         }
     }
 
     shoot() {
-        if(this.hp <= 0 || this.cooldown > 0) return;
-        const w = this.weapons[this.weaponLevel];
-        this.cooldown = w.cd;
-        
-        let fx = this.facing.x;
-        let fy = this.facing.y;
-        
-        audio.shoot();
-        
-        if(w.type === "pistol") {
-            bullets.push(new Bullet(this.x, this.y, fx, fy, 10, 20, '#fff'));
-            bullets.push(new Bullet(this.x, this.y, -fx, -fy, 10, 20, '#fff'));
-        } else if(w.type === "shotgun") {
+        if(this.cooldown > 0) return;
+        const wep = this.weapons[this.weaponLevel];
+        this.cooldown = wep.cd;
+
+        const bx = this.x + this.facing.x * this.size;
+        const by = this.y + this.facing.y * this.size;
+        const angle = Math.atan2(this.facing.y, this.facing.x);
+
+        if(wep.type === 'pistol') {
+            audio.shootPistol();
+            // Two parallel bullets
+            const pX = Math.cos(angle + Math.PI/2) * 5;
+            const pY = Math.sin(angle + Math.PI/2) * 5;
+            bullets.push(new Bullet(bx + pX, by + pY, this.facing.x, this.facing.y, 10, 20, '#fff'));
+            bullets.push(new Bullet(bx - pX, by - pY, this.facing.x, this.facing.y, 10, 20, '#fff'));
+        } else if(wep.type === 'shotgun') {
+            audio.shootShotgun();
             for(let i = -2; i <= 2; i++) {
-                let angle = Math.atan2(fy, fx) + i * 0.2;
-                bullets.push(new Bullet(this.x, this.y, Math.cos(angle), Math.sin(angle), 12, 15, '#ffaa00'));
+                const a = angle + i * 0.2;
+                bullets.push(new Bullet(bx, by, Math.cos(a), Math.sin(a), 12, 25, '#ffaa00'));
             }
-        } else if(w.type === "machinegun") {
-            let angle = Math.atan2(fy, fx) + (Math.random() - 0.5) * 0.2;
-            bullets.push(new Bullet(this.x, this.y, Math.cos(angle), Math.sin(angle), 15, 18, '#00ffff'));
-        } else if(w.type === "laser") {
-            bullets.push(new Bullet(this.x, this.y, fx, fy, 25, 30, '#ff00ff', true));
+            this.x -= this.facing.x * 5; // knockback
+            this.y -= this.facing.y * 5;
+        } else if(wep.type === 'machinegun') {
+            audio.shootMachine();
+            const a = angle + (Math.random() - 0.5) * 0.15;
+            bullets.push(new Bullet(bx, by, Math.cos(a), Math.sin(a), 15, 15, '#ffff00'));
+        } else if(wep.type === 'laser') {
+            audio.shootLaser();
+            bullets.push(new Bullet(bx, by, this.facing.x, this.facing.y, 25, 10, '#00ffff', true));
         }
     }
 
     draw(ctx) {
-        if(this.hp <= 0) return;
+        ctx.save();
+        ctx.translate(this.x, this.y);
+        
+        // Body
         ctx.fillStyle = this.color;
         ctx.beginPath();
-        ctx.arc(this.x, this.y, this.size, 0, Math.PI*2);
+        ctx.arc(0, 0, this.size, 0, Math.PI * 2);
         ctx.fill();
-        ctx.strokeStyle = '#fff';
-        ctx.lineWidth = 2;
-        ctx.stroke();
-
-        // Visor
-        ctx.fillStyle = '#111';
-        ctx.beginPath();
-        ctx.arc(this.x + this.facing.x * 10, this.y + this.facing.y * 10, 8, 0, Math.PI*2);
-        ctx.fill();
-
-        // Gun
-        ctx.strokeStyle = '#555';
-        ctx.lineWidth = 6;
-        ctx.beginPath();
-        ctx.moveTo(this.x, this.y);
-        ctx.lineTo(this.x + this.facing.x * 25, this.y + this.facing.y * 25);
-        ctx.stroke();
-
-        // Player ID
-        ctx.fillStyle = '#fff';
-        ctx.font = '12px ZCOOL KuaiLe';
-        ctx.textAlign = 'center';
-        ctx.fillText('P' + this.id, this.x, this.y - 25);
         
-        // Draw Shield
-        if(this.shieldTime > 0) {
-            ctx.strokeStyle = `rgba(255, 255, 0, ${0.5 + Math.sin(frameCount * 0.2)*0.3})`;
-            ctx.lineWidth = 4;
-            ctx.beginPath();
-            ctx.arc(this.x, this.y, this.size + 10, 0, Math.PI * 2);
-            ctx.stroke();
-        }
-        // Draw Buff aura
-        if(this.buffTime > 0) {
-            ctx.strokeStyle = `rgba(0, 255, 255, 0.8)`;
-            ctx.lineWidth = 2;
-            ctx.beginPath();
-            ctx.arc(this.x, this.y, this.size + 5, 0, Math.PI * 2);
-            ctx.stroke();
-        }
+        // Gun
+        ctx.rotate(Math.atan2(this.facing.y, this.facing.x));
+        ctx.fillStyle = '#aaa';
+        ctx.fillRect(10, -5, 15, 10);
+        
+        ctx.restore();
 
         // HP Bar
-        if(this.hp < this.maxHp) {
-            ctx.fillStyle = '#f00';
-            ctx.fillRect(this.x - 15, this.y + 25, 30, 4);
-            ctx.fillStyle = '#0f0';
-            ctx.fillRect(this.x - 15, this.y + 25, 30 * (this.hp/this.maxHp), 4);
-        }
+        ctx.fillStyle = '#f00';
+        ctx.fillRect(this.x - 20, this.y + 25, 40, 5);
+        ctx.fillStyle = '#0f0';
+        ctx.fillRect(this.x - 20, this.y + 25, 40 * (this.hp / this.maxHp), 5);
     }
 }
 
@@ -255,21 +215,6 @@ class Bullet {
         this.active = true;
     }
     update() {
-        let closestDist = 200;
-        let target = null;
-        zombies.forEach(z => {
-            if (!z.active) return;
-            let d = Math.hypot(z.x - this.x, z.y - this.y);
-            if(d < closestDist) { closestDist = d; target = z; }
-        });
-        if(target) {
-            const idealDx = (target.x - this.x) / closestDist;
-            const idealDy = (target.y - this.y) / closestDist;
-            this.dx = this.dx * 0.9 + idealDx * 0.1;
-            this.dy = this.dy * 0.9 + idealDy * 0.1;
-            const len = Math.hypot(this.dx, this.dy);
-            this.dx /= len; this.dy /= len;
-        }
         this.x += this.dx * this.speed;
         this.y += this.dy * this.speed;
         if(this.x < 0 || this.x > CANVAS_W || this.y < 0 || this.y > CANVAS_H) this.active = false;
@@ -308,31 +253,23 @@ class Zombie {
     }
     
     update() {
-        let target = null;
-        let minDist = Infinity;
-        players.forEach(p => {
-            if(p.hp > 0) {
-                let d = Math.hypot(p.x - this.x, p.y - this.y);
-                if(d < minDist) { minDist = d; target = p; }
-            }
-        });
-        if(target) {
-            const dx = target.x - this.x;
-            const dy = target.y - this.y;
-            if(minDist > 0) {
-                this.x += (dx / minDist) * this.speed;
-                this.y += (dy / minDist) * this.speed;
-            }
-            if(minDist < this.size + target.size) {
-                if(target.shieldTime <= 0) {
-                    target.hp -= this.damage;
-                    audio.playerHit();
-                }
-                this.active = false;
-                createParticles(this.x, this.y, '#ff0000', 10);
-                if(players.every(p => p.hp <= 0)) {
-                    gameOver();
-                }
+        const dx = player.x - this.x;
+        const dy = player.y - this.y;
+        const dist = Math.hypot(dx, dy);
+        
+        if(dist > 0) {
+            this.x += (dx / dist) * this.speed;
+            this.y += (dy / dist) * this.speed;
+        }
+
+        // Collision with player
+        if(dist < this.size + player.size) {
+            player.hp -= this.damage;
+            audio.playerHit();
+            this.active = false;
+            createParticles(this.x, this.y, '#ff0000', 10);
+            if(player.hp <= 0) {
+                gameOver();
             }
         }
     }
@@ -340,14 +277,8 @@ class Zombie {
     draw(ctx) {
         ctx.fillStyle = this.color;
         ctx.beginPath();
-        // pixel style zombie
-        ctx.fillRect(this.x - this.size, this.y - this.size, this.size*2, this.size*2);
-        ctx.fillStyle = '#ff0000'; // red eyes
-        ctx.fillRect(this.x - this.size + 4, this.y - this.size + 4, 4, 4);
-        ctx.fillRect(this.x + this.size - 8, this.y - this.size + 4, 4, 4);
-        ctx.fillStyle = '#336600'; // dark green arms
-        ctx.fillRect(this.x - this.size - 4, this.y, 4, 10);
-        ctx.fillRect(this.x + this.size, this.y, 4, 10);
+        ctx.rect(this.x - this.size, this.y - this.size, this.size*2, this.size*2);
+        ctx.fill();
         
         if(this.hp < this.maxHp) {
             ctx.fillStyle = '#f00';
@@ -355,86 +286,6 @@ class Zombie {
             ctx.fillStyle = '#0f0';
             ctx.fillRect(this.x - this.size, this.y - this.size - 8, this.size*2 * (this.hp/this.maxHp), 4);
         }
-    }
-}
-
-
-class LootBox {
-    constructor() {
-        this.x = 50 + Math.random() * (CANVAS_W - 100);
-        this.y = 50 + Math.random() * (CANVAS_H - 100);
-        this.size = 15;
-        this.active = true;
-        this.color = '#ffd700'; // gold
-        // Determine type
-        const r = Math.random();
-        if(r < 0.3) this.type = 'medkit';      // 30% HP
-        else if(r < 0.5) this.type = 'potion'; // 20% Max HP
-        else if(r < 0.65) this.type = 'nuke';  // 15% Screen clear
-        else if(r < 0.8) this.type = 'stim';   // 15% Speed/Rapid fire
-        else if(r < 0.95) this.type = 'shield';// 15% Invincible
-        else this.type = 'trap';               // 5% Fake/Trap
-    }
-    update() {
-        // Check collision with players
-        players.forEach(p => {
-            if(!this.active || p.hp <= 0) return;
-            const dist = Math.hypot(p.x - this.x, p.y - this.y);
-            if(dist < this.size + p.size) {
-                this.collect(p);
-            }
-        });
-    }
-    collect(p) {
-        this.active = false;
-        audio.levelUp(); // use level up sound
-        createParticles(this.x, this.y, this.color, 20);
-        
-        switch(this.type) {
-            case 'medkit':
-                p.hp = Math.min(p.maxHp, p.hp + 50);
-                addFloatingText(this.x, this.y, "急救包! HP +50", "#00ff00");
-                break;
-            case 'potion':
-                p.maxHp += 20;
-                p.hp = p.maxHp;
-                addFloatingText(this.x, this.y, "神秘药剂! MAX HP 上升", "#ff00ff");
-                break;
-            case 'nuke':
-                zombies.forEach(z => { z.active = false; createParticles(z.x, z.y, '#ffaa00', 10); score += z.scoreVal; killCount++; });
-                addFloatingText(this.x, this.y, "核弹轰炸! 全屏秒杀", "#ffaa00");
-                break;
-            case 'stim':
-                p.buffTime = 300; // 5 seconds
-                addFloatingText(this.x, this.y, "兴奋剂! 极速射击", "#00ffff");
-                break;
-            case 'shield':
-                p.shieldTime = 600; // 10 seconds
-                addFloatingText(this.x, this.y, "无敌护盾!", "#ffff00");
-                break;
-            case 'trap':
-                p.hp -= 30;
-                audio.playerHit();
-                addFloatingText(this.x, this.y, "陷阱箱! -30 HP", "#ff0000");
-                if(p.hp <= 0 && players.every(pl => pl.hp <= 0)) gameOver();
-                break;
-        }
-    }
-    draw(ctx) {
-        if(!this.active) return;
-        ctx.fillStyle = this.color;
-        ctx.fillRect(this.x - this.size, this.y - this.size, this.size*2, this.size*2);
-        ctx.strokeStyle = '#fff';
-        ctx.strokeRect(this.x - this.size, this.y - this.size, this.size*2, this.size*2);
-        // lock icon
-        ctx.fillStyle = '#000';
-        ctx.fillRect(this.x - 3, this.y - 2, 6, 6);
-        
-        // bounce animation
-        const offset = Math.sin(frameCount * 0.1) * 3;
-        ctx.fillStyle = '#ff0000';
-        ctx.font = '20px Arial';
-        ctx.fillText('?', this.x - 5, this.y - 15 + offset);
     }
 }
 
@@ -478,13 +329,11 @@ function startGame() {
     killCount = 0;
     survivalTime = 0;
     startTime = Date.now();
-    players = [new Player(1), new Player(2)];
+    player = new Player();
     zombies = [];
     bullets = [];
     particles = [];
     floatingTexts = [];
-    lootBoxes = [];
-    lootTimer = 0;
     spawnRate = 100;
     frameCount = 0;
 
@@ -493,7 +342,7 @@ function startGame() {
     document.getElementById('pause-screen').classList.add('hidden');
     document.getElementById('hud').classList.remove('hidden');
     document.getElementById('score').textContent = '0';
-    document.getElementById('current-weapon').textContent = players[0].weapons[0].name;
+    document.getElementById('current-weapon').textContent = player.weapons[0].name;
     document.getElementById('new-high').classList.add('hidden');
 
     requestAnimationFrame(gameLoop);
@@ -534,7 +383,7 @@ function update() {
     // Time
     survivalTime = Math.floor((Date.now() - startTime) / 1000);
 
-    players.forEach(p => p.update());
+    player.update();
 
     // Spawning
     if(frameCount % Math.max(20, spawnRate) === 0) {
@@ -554,12 +403,6 @@ function update() {
     bullets.forEach(b => b.update());
     zombies.forEach(z => z.update());
     particles.forEach(p => p.update());
-    lootBoxes.forEach(lb => lb.update());
-    lootTimer++;
-    if(lootTimer > 600) {
-        lootTimer = 0;
-        if(Math.random() < 0.5) lootBoxes.push(new LootBox());
-    }
     floatingTexts.forEach(ft => { ft.y -= 1; ft.life -= 0.02; });
 
     // Collisions
@@ -601,7 +444,6 @@ function update() {
     zombies = zombies.filter(z => z.active);
     particles = particles.filter(p => p.life > 0);
     floatingTexts = floatingTexts.filter(ft => ft.life > 0);
-    lootBoxes = lootBoxes.filter(lb => lb.active);
 }
 
 function draw() {
@@ -618,9 +460,8 @@ function draw() {
     particles.forEach(p => p.draw(ctx));
     bullets.forEach(b => b.draw(ctx));
     zombies.forEach(z => z.draw(ctx));
-    if(players) players.forEach(p => p.draw(ctx));
+    if(player) player.draw(ctx);
 
-    lootBoxes.forEach(lb => lb.draw(ctx));
     floatingTexts.forEach(ft => {
         ctx.globalAlpha = Math.max(0, ft.life);
         ctx.fillStyle = ft.color;
