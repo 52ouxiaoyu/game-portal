@@ -1231,14 +1231,6 @@ function update(dt) {
             return;
         }
     }
-        loseLife();
-        return;
-    }
-
-    if (hitWall && activeGhost) {
-        ghostWallCount++;
-        checkGhostAchievement();
-    }
 
     const hitSelf = snake.some((s, i) => i > 0 && s.x === newHead.x && s.y === newHead.y);
     if (hitSelf) {
