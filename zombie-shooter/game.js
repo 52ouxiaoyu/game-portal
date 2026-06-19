@@ -65,7 +65,7 @@ let boars = [];
 let lootTimer = 0;
 
 let spawnTimer = 0;
-let spawnRate = 100; // frames
+let spawnRate = 60;
 let frameCount = 0;
 let screenShake = 0;
 let comboCount = 0;
@@ -74,12 +74,14 @@ let bgCanvas = document.createElement('canvas');
 bgCanvas.width = window.innerWidth;
 bgCanvas.height = window.innerHeight;
 let bgCtx = bgCanvas.getContext('2d');
+let activeEvent = null;
+let eventTimer = 0;
 
 // Inputs
 const keys = {
     ArrowUp: false, ArrowDown: false, ArrowLeft: false, ArrowRight: false,
     KeyW: false, KeyS: false, KeyA: false, KeyD: false,
-    Space: false, Enter: false, NumpadEnter: false
+    Space: false, Enter: false, NumpadEnter: false, KeyQ: false, ShiftRight: false, Slash: false
 };
 
 window.addEventListener('keydown', e => {
@@ -95,6 +97,24 @@ window.addEventListener('keydown', e => {
             if(p.id === 2 && (e.code === 'ArrowUp' || e.code === 'ArrowLeft' || e.code === 'ArrowDown' || e.code === 'ArrowRight' || e.code === 'Enter' || e.code === 'NumpadEnter')) {
                 p.lastInputTime = Date.now();
                 p.isAI = false;
+            }
+        });
+    }
+    if((e.code === 'KeyQ' || e.code === 'ShiftRight' || e.code === 'Slash') && gameState === 'PLAYING') {
+        players.forEach(p => { 
+            if(((e.code==='KeyQ'&&p.id===1) || ((e.code==='ShiftRight'||e.code==='Slash')&&p.id===2)) && p.hasUlt) {
+                p.hasUlt = false;
+                // Fire Ultimate: 360 degree lasers
+                audio.levelUp();
+                screenShake = 30;
+                addFloatingText(p.x, p.y - 50, "⚡ 万剑归宗 ⚡", "#00ffff");
+                for(let angle=0; angle<Math.PI*2; angle+=Math.PI/16) {
+                    let b = new Bullet(p.x, p.y, {x: Math.cos(angle), y: Math.sin(angle)}, p.weapon);
+                    b.damage = 100;
+                    b.pierce = true;
+                    b.size = 10;
+                    bullets.push(b);
+                }
             }
         });
     }
@@ -454,6 +474,18 @@ class Player {
             ctx.stroke();
         }
 
+        // Ultimate Indicator
+        if(this.hasUlt) {
+            ctx.shadowBlur = 20;
+            ctx.shadowColor = '#00ffff';
+            ctx.strokeStyle = '#00ffff';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.arc(this.x, this.y, 40 + Math.sin(frameCount*0.2)*5, 0, Math.PI*2);
+            ctx.stroke();
+            ctx.shadowBlur = 0;
+        }
+
         // HP Bar
         if(this.hp < this.maxHp) {
             ctx.fillStyle = '#f00';
@@ -520,6 +552,7 @@ class Zombie {
 
         this.size = isBoss ? 35 : 15 + Math.random() * 5;
         this.speed = isBoss ? 1.5 : 1 + Math.random() * 2 + (survivalTime / 60);
+        if(activeEvent === 'bloodmoon') this.speed *= 2;
         this.hp = isBoss ? 1000 + survivalTime*10 : 20 + survivalTime;
         this.maxHp = this.hp;
         this.color = isBoss ? '#ff00ff' : '#00ff00';
@@ -716,6 +749,55 @@ function gameOver() {
 function update() {
     if(gameState !== 'PLAYING') return;
     frameCount++;
+
+    // Random Events every 40 seconds
+    if(frameCount > 0 && frameCount % 2400 === 0) {
+        const events = ['swarm', 'bloodmoon', 'orbital'];
+        activeEvent = events[Math.floor(Math.random() * events.length)];
+        eventTimer = 600; // 10 seconds duration
+        
+        if(activeEvent === 'swarm') {
+            addFloatingText(CANVAS_W/2, CANVAS_H/2, "⚠️ 警告：尸潮来袭！ ⚠️", "#ff0000");
+            audio.levelUp();
+            screenShake = 30;
+            for(let i=0; i<30; i++) zombies.push(new Zombie());
+        } else if(activeEvent === 'bloodmoon') {
+            addFloatingText(CANVAS_W/2, CANVAS_H/2, "🌙 血月降临：丧尸狂暴！ 🌙", "#ff0000");
+            audio.levelUp();
+            screenShake = 20;
+        } else if(activeEvent === 'orbital') {
+            addFloatingText(CANVAS_W/2, CANVAS_H/2, "🚀 天降正义：全图轰炸！ 🚀", "#00ffff");
+            audio.levelUp();
+            screenShake = 20;
+        }
+    }
+    
+    // Process active event
+    if(eventTimer > 0) {
+        eventTimer--;
+        if(activeEvent === 'orbital' && eventTimer % 10 === 0) {
+            // Drop bombs randomly
+            let bx = Math.random() * CANVAS_W;
+            let by = Math.random() * CANVAS_H;
+            createParticles(bx, by, '#ffaa00', 30);
+            screenShake = 5;
+            audio.shootShotgun();
+            zombies.forEach(z => {
+                if(Math.hypot(z.x - bx, z.y - by) < 150) {
+                    z.hp -= 200;
+                    if(z.hp <= 0 && z.active) {
+                        z.active = false;
+                        score += z.scoreVal;
+                        createParticles(z.x, z.y, z.color, 15);
+                    }
+                }
+            });
+        }
+        if(eventTimer <= 0) {
+            activeEvent = null;
+        }
+    }
+
     if(screenShake > 0) screenShake--;
     if(comboTimer > 0) {
         comboTimer--;
@@ -731,8 +813,10 @@ function update() {
     players.forEach(p => p.update());
 
     // Spawning
-    if(frameCount % Math.max(20, spawnRate) === 0) {
-        zombies.push(new Zombie());
+    if(frameCount % Math.max(5, spawnRate) === 0) {
+        let count = Math.floor(survivalTime / 15) + 1;
+        if (count > 10) count = 10;
+        for(let i=0; i<count; i++) zombies.push(new Zombie());
     }
     // Boss spawn every 30 seconds
     if(frameCount % 1800 === 0) {
@@ -742,8 +826,8 @@ function update() {
     }
 
     // Difficulty increase
-    if(frameCount % 600 === 0) {
-        spawnRate = Math.max(15, spawnRate - 5);
+    if(frameCount % 300 === 0) {
+        spawnRate = Math.max(5, spawnRate - 5);
     }
 
     bullets.forEach(b => b.update());
@@ -812,7 +896,11 @@ function draw() {
     }
 
     // Clear background
-    ctx.fillStyle = '#111';
+    if(activeEvent === 'bloodmoon') {
+        ctx.fillStyle = '#300';
+    } else {
+        ctx.fillStyle = '#111';
+    }
     ctx.fillRect(0, 0, CANVAS_W, CANVAS_H);
 
     // Draw Grid
@@ -873,5 +961,9 @@ function gameLoop(timestamp) {
 }
 
 // Initial draw
-ctx.fillStyle = '#111';
-ctx.fillRect(0, 0, CANVAS_W, CANVAS_H);
+if(activeEvent === 'bloodmoon') {
+        ctx.fillStyle = '#300';
+    } else {
+        ctx.fillStyle = '#111';
+    }
+    ctx.fillRect(0, 0, CANVAS_W, CANVAS_H);
