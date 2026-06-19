@@ -544,15 +544,15 @@ function updateUI() {
   else warn.textContent = '';
 
   document.getElementById('playerStats').innerHTML = `
-    <div class="stat-row"><span class="stat-name">生命</span><div class="stat-bar"><div class="stat-fill hp-fill" style="width:${Math.round(player.hp/player.maxHp*100)}%"></div></div><span class="stat-num">${Math.round(player.hp)}/${Math.round(player.maxHp)}</span></div>
-    <div class="stat-row"><span class="stat-name">战力</span><div class="stat-bar"><div class="stat-fill power-fill" style="width:${Math.round(player.power/player.maxPower*100)}%"></div></div><span class="stat-num">${Math.round(player.power)}/${Math.round(player.maxPower)}</span></div>
-    <div class="stat-row"><span class="stat-name">勇气</span><div class="stat-bar"><div class="stat-fill brave-fill" style="width:${Math.round(player.brave)}%"></div></div><span class="stat-num">${Math.round(player.brave)}/100</span></div>
+    <div class="stat-row"><span class="stat-name">生命</span><div class="stat-bar"><div class="stat-fill hp-fill" style="width:${Math.max(0, Math.min(100, Math.round(player.hp/player.maxHp*100)))}%"></div></div><span class="stat-num">${Math.round(player.hp)}/${Math.round(player.maxHp)}</span></div>
+    <div class="stat-row"><span class="stat-name">战力</span><div class="stat-bar"><div class="stat-fill power-fill" style="width:${Math.max(0, Math.min(100, Math.round(player.power/player.maxPower*100)))}%"></div></div><span class="stat-num">${Math.round(player.power)}/${Math.round(player.maxPower)}</span></div>
+    <div class="stat-row"><span class="stat-name">勇气</span><div class="stat-bar"><div class="stat-fill brave-fill" style="width:${Math.max(0, Math.min(100, Math.round(player.brave)))}%"></div></div><span class="stat-num">${Math.round(player.brave)}/100</span></div>
     <div class="stat-row"><span class="stat-name">善恶</span><div class="stat-bar"><div class="stat-fill karma-fill" style="width:${Math.round(Math.min(100,Math.max(0,50+player.karma)))}%"></div></div><span class="stat-num">${player.karma>0?'+':''}${Math.round(player.karma)}</span></div>`;
 
   document.getElementById('bossStats').innerHTML = `
-    <div class="stat-row"><span class="stat-name">生命</span><div class="stat-bar"><div class="stat-fill hp-fill" style="width:${Math.round(boss.hp/boss.maxHp*100)}%"></div></div><span class="stat-num">${Math.round(boss.hp)}/${Math.round(boss.maxHp)}</span></div>
-    <div class="stat-row"><span class="stat-name">战力</span><div class="stat-bar"><div class="stat-fill power-fill" style="width:${Math.round(boss.power/boss.maxPower*100)}%"></div></div><span class="stat-num">${Math.round(boss.power)}/${Math.round(boss.maxPower)}</span></div>
-    <div class="stat-row"><span class="stat-name">气势</span><div class="stat-bar"><div class="stat-fill brave-fill" style="width:${Math.round(boss.brave)}%"></div></div><span class="stat-num">${Math.round(boss.brave)}/100</span></div>
+    <div class="stat-row"><span class="stat-name">生命</span><div class="stat-bar"><div class="stat-fill hp-fill" style="width:${Math.max(0, Math.min(100, Math.round(boss.hp/boss.maxHp*100)))}%"></div></div><span class="stat-num">${Math.round(boss.hp)}/${Math.round(boss.maxHp)}</span></div>
+    <div class="stat-row"><span class="stat-name">战力</span><div class="stat-bar"><div class="stat-fill power-fill" style="width:${Math.max(0, Math.min(100, Math.round(boss.power/boss.maxPower*100)))}%"></div></div><span class="stat-num">${Math.round(boss.power)}/${Math.round(boss.maxPower)}</span></div>
+    <div class="stat-row"><span class="stat-name">气势</span><div class="stat-bar"><div class="stat-fill brave-fill" style="width:${Math.max(0, Math.min(100, Math.round(boss.brave)))}%"></div></div><span class="stat-num">${Math.round(boss.brave)}/100</span></div>
     <div style="margin-top:8px; padding:8px; background:rgba(255,107,107,0.1); border-radius:4px;">
       <div style="color:#ff6b6b; font-size:14px; font-weight:bold;">📍 蛇精动态</div>
       <div style="color:#aaa; font-size:14px; margin-top:4px;">${boss.lastAction || '正在修炼中...'}</div>
