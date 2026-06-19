@@ -1,9 +1,16 @@
 const canvas = document.getElementById('game-canvas');
 const ctx = canvas.getContext('2d');
-const CANVAS_W = 1000;
-const CANVAS_H = 800;
+let CANVAS_W = window.innerWidth;
+let CANVAS_H = window.innerHeight;
 canvas.width = CANVAS_W;
 canvas.height = CANVAS_H;
+
+window.addEventListener('resize', () => {
+    CANVAS_W = window.innerWidth;
+    CANVAS_H = window.innerHeight;
+    canvas.width = CANVAS_W;
+    canvas.height = CANVAS_H;
+});
 
 // --- AUDIO SYSTEM (Web Audio API) ---
 const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
