@@ -440,6 +440,7 @@ const enemies = [
 
 let player = null, boss = null, turn = 1, logEntries = [];
 events._tempData = {};
+let winStreak = 0; // 连胜计数
 
 function initGame(charId) {
   player = { char: characters[charId], hp: 100, maxHp: 100, power: 15 + charId * 2, maxPower: 60, brave: 30, karma: 0, skills: [characters[charId].skill] };
@@ -588,14 +589,15 @@ const events = {
 
   explore: () => {
     growBoss(); turn++;
+    // 非战斗事件重置连胜
     const r = Math.random();
-    if (r < 0.12) showEvent('find_ally');
-    else if (r < 0.35) showEvent('npc_encounter');
+    if (r < 0.12) { winStreak = 0; showEvent('find_ally'); }
+    else if (r < 0.35) { winStreak = 0; showEvent('npc_encounter'); }
     else if (r < 0.55) showEvent('enemy_encounter');
-    else if (r < 0.70) showEvent('cave_explore');
-    else if (r < 0.80) showEvent('trap');
-    else if (r < 0.90) showEvent('lucky_event');
-    else showEvent('rest_spot');
+    else if (r < 0.70) { winStreak = 0; showEvent('cave_explore'); }
+    else if (r < 0.80) { winStreak = 0; showEvent('trap'); }
+    else if (r < 0.90) { winStreak = 0; showEvent('lucky_event'); }
+    else { winStreak = 0; showEvent('rest_spot'); }
   },
 
   find_ally: () => {
@@ -702,54 +704,111 @@ const events = {
 
   enemy_encounter: () => {
     const e = enemies[Math.floor(Math.random() * enemies.length)];
-    showText(e.name, e.desc, [
-      { text: '⚔️ 战斗', next: 'combat_win', effect: { hp: -e.power * 0.3, power: 3, brave: 5 } },
-      { text: '💨 逃跑', next: 'explore', effect: { hp: -3, brave: -3 } }
-    ]);
+    const strategies = [
+      { text: `⚔️ 正面迎战`, effect: { hp: -e.power * 0.3, power: 3, brave: 5 } },
+      { text: `🎯 偷袭弱点`, effect: { hp: -e.power * 0.2, power: 5 }, condition: player.skills.includes('隐身') },
+      { text: `🔥 用火焰攻击`, effect: { hp: -e.power * 0.15, power: 4 }, condition: player.skills.includes('喷火') },
+      { text: `💪 用蛮力碾压`, effect: { hp: -e.power * 0.1, power: 6 }, condition: player.skills.includes('力大无穷') },
+      { text: `💨 战术撤退`, effect: { hp: -3, brave: -3 } }
+    ].filter(s => !s.condition || s.condition);
+    
+    showText(e.name, `⚔️ ${e.desc}！\n\n敌人战力：${e.power} | 敌人生命：${e.hp}`, strategies.map(s => ({
+      text: s.text,
+      next: 'combat_result',
+      effect: s.effect,
+      data: { enemy: e }
+    })));
   },
 
-  combat_win: () => {
-    const msgs = ['你英勇地击退了敌人！', '战斗胜利！', '你变强了！'];
-    showText('✅ 胜利', msgs[Math.floor(Math.random() * msgs.length)], [{ text: '继续', next: 'explore' }]);
+  combat_result: () => {
+    winStreak++;
+    let streakBonus = '';
+    let bonusEffect = {};
+    
+    if (winStreak >= 5) {
+      streakBonus = `\n\n🔥 连胜 ${winStreak} 场！触发"战神附体"效果！`;
+      bonusEffect = { power: 5, hp: 10, brave: 5 };
+    } else if (winStreak >= 3) {
+      streakBonus = `\n\n⚡ 连胜 ${winStreak} 场！气势如虹！`;
+      bonusEffect = { power: 3, brave: 3 };
+    } else if (winStreak >= 2) {
+      streakBonus = `\n\n✨ 连胜 ${winStreak} 场！士气大振！`;
+      bonusEffect = { power: 2 };
+    }
+    
+    const msgs = [
+      '你英勇地击退了敌人！',
+      '战斗胜利！你变得更强了！',
+      '敌人落荒而逃！',
+      '经过激战，你取得了胜利！',
+      '你用实力证明了自己！'
+    ];
+    
+    showText('✅ 胜利', msgs[Math.floor(Math.random() * msgs.length)] + streakBonus, 
+      [{ text: '继续探索', next: 'explore', effect: bonusEffect }]);
   },
 
   cave_explore: () => {
     const r = Math.random();
-    if (r < 0.5) {
+    if (r < 0.4) {
       const items = [
-        { name: '💰 宝箱', effect: { power: 5, hp: 10 } },
-        { name: '📜 秘籍', effect: { power: 8 } },
-        { name: '💊 仙丹', effect: { hp: 25 } },
-        { name: '🔮 法杖', effect: { power: 6, hp: 8 } }
+        { name: '💰 古老宝箱', desc: '一个布满灰尘的宝箱，看起来很久没人打开过了', effect: { power: 5, hp: 10 } },
+        { name: '📜 神秘书籍', desc: '一本泛黄的古籍，上面记载着失传的武学', effect: { power: 8 } },
+        { name: '💊 千年仙丹', desc: '散发着金色光芒的丹药', effect: { hp: 25 } },
+        { name: '🔮 魔法水晶', desc: '蕴含神秘力量的水晶', effect: { power: 6, hp: 8 } },
+        { name: '⚔️ 古代兵器', desc: '一把锋利的古剑，寒光闪闪', effect: { power: 10 } },
+        { name: '🛡️ 神秘护符', desc: '一个古老的护符，散发着温暖的光芒', effect: { hp: 30 } }
       ];
       const item = items[Math.floor(Math.random() * items.length)];
-      showText(item.name, '你发现了宝藏！', [{ text: '🎉 拿走', next: 'explore', effect: item.effect }]);
-    } else {
+      showText(item.name, `你走进了一个神秘的洞穴...\n\n${item.desc}\n\n你决定...`, [
+        { text: '🔍 仔细检查', next: 'explore', effect: item.effect },
+        { text: '👀 保持警惕', next: 'explore', effect: { hp: 5, brave: 3 } }
+      ]);
+    } else if (r < 0.7) {
       const dangers = [
-        { name: '💣 炸弹', effect: { hp: -20 }, desc: '踩到炸弹了！' },
-        { name: '☠️ 毒气', effect: { hp: -15, power: -2 }, desc: '吸入毒气！' },
-        { name: '🪤 陷阱', effect: { hp: -18 }, desc: '掉进陷阱！' },
-        { name: '👻 鬼魂', effect: { hp: -12, brave: -8 }, desc: '被鬼魂缠上了！' },
-        { name: '💀 骷髅', effect: { hp: -25 }, desc: '骷髅攻击你！' }
+        { name: '💣 古老炸弹', desc: '你踩到了一个生锈的陷阱！轰隆一声！', effect: { hp: -20 } },
+        { name: '☠️ 毒气弥漫', desc: '洞穴里弥漫着紫色的毒雾，你吸入了一些...', effect: { hp: -15, power: -2 } },
+        { name: '🪤 精密陷阱', desc: '一个精心设计的机关突然触发！', effect: { hp: -18 } },
+        { name: '👻 远古亡灵', desc: '洞穴深处传来诡异的声音...', effect: { hp: -12, brave: -8 } },
+        { name: '💀 骷髅守卫', desc: '一个骷髅战士从阴影中冲出！', effect: { hp: -25 } }
       ];
       const d = dangers[Math.floor(Math.random() * dangers.length)];
-      showText(d.name, d.desc, [{ text: '😤 倒霉', next: 'explore', effect: d.effect }]);
+      showText(d.name, `你走进了一个阴暗的洞穴...\n\n${d.desc}\n\n你如何应对？`, [
+        { text: '😤 硬抗', next: 'explore', effect: d.effect },
+        { text: '🏃 快速躲避', next: 'explore', effect: { hp: Math.floor(d.effect.hp * 0.5), brave: 2 } },
+        { text: '🧠 用智慧化解', next: 'explore', effect: { hp: Math.floor(d.effect.hp * 0.3), power: 2 } }
+      ]);
+    } else {
+      // 发现隐藏区域
+      const discoveries = [
+        { name: '🏛️ 远古遗迹', desc: '你发现了一个远古文明的遗迹，墙壁上刻满了神秘的符文...', effect: { power: 8, karma: 5 } },
+        { name: '🌿 神秘花园', desc: '洞穴深处竟然有一个生机勃勃的花园，花朵散发着治愈的气息...', effect: { hp: 35, karma: 3 } },
+        { name: '📖 武学秘境', desc: '你发现了一个武学秘境，墙壁上记载着各种武学招式...', effect: { power: 12 } }
+      ];
+      const disc = discoveries[Math.floor(Math.random() * discoveries.length)];
+      showText(disc.name, disc.desc, [
+        { text: '🌟 探索', next: 'explore', effect: disc.effect },
+        { text: '📸 记录下来', next: 'explore', effect: { power: 3, karma: 2 } }
+      ]);
     }
   },
 
   trap: () => {
     const traps = [
-      { name: '🍌 香蕉皮', desc: '踩到香蕉皮滑倒！', effect: { hp: -10 } },
-      { name: '🕳️ 陷阱', desc: '掉进陷阱！', effect: { hp: -15 } },
-      { name: '🌪️ 毒雾', desc: '吸入毒雾！', effect: { hp: -8, power: -2 } },
-      { name: '😱 幻术', desc: '中了幻术！', effect: { brave: -10 } },
-      { name: '🪤 罗网', desc: '被罗网缠住！', effect: { hp: -5, brave: -5 } },
-      { name: '⚡ 触电', desc: '踩到电线！', effect: { hp: -12 } },
-      { name: '🔥 火焰', desc: '踩到火焰！', effect: { hp: -18 } },
-      { name: '❄️ 冰冻', desc: '被冰冻了！', effect: { hp: -10, power: -3 } }
+      { name: '🍌 香蕉皮陷阱', desc: '一个巨大的香蕉皮！你一脚踩上去滑飞了！', effect: { hp: -10 }, humor: '你在空中转了三圈才落地...' },
+      { name: '🕳️ 弹射陷阱', desc: '地面突然弹开，你被弹到了空中！', effect: { hp: -15 }, humor: '你看到了远处的风景，然后重重落地...' },
+      { name: '🌪️ 毒雾陷阱', desc: '一团紫色的毒雾突然喷出！', effect: { hp: -8, power: -2 }, humor: '你感觉自己变轻了...是力量在流失...' },
+      { name: '😱 幻术陷阱', desc: '你眼前出现了可怕的幻象！', effect: { brave: -10 }, humor: '你看到了...自己变成了一只鸡？！' },
+      { name: '🪤 缠绕陷阱', desc: '无数藤蔓从地下冒出，缠住了你！', effect: { hp: -5, brave: -5 }, humor: '你像一个粽子一样被包了起来...' },
+      { name: '⚡ 雷电陷阱', desc: '一道闪电劈向你！', effect: { hp: -12 }, humor: '你的头发竖起来了，像一个刺猬...' },
+      { name: '🔥 火焰陷阱', desc: '地面突然喷出火焰！', effect: { hp: -18 }, humor: '你闻到了...烤肉的味道？是你自己！' },
+      { name: '❄️ 冰冻陷阱', desc: '你被瞬间冻成了冰块！', effect: { hp: -10, power: -3 }, humor: '你变成了一座冰雕，过了好久才融化...' }
     ];
     const t = traps[Math.floor(Math.random() * traps.length)];
-    showText(t.name, t.desc, [{ text: '😤 继续', next: 'explore', effect: t.effect }]);
+    showText(t.name, `${t.desc}\n\n${t.humor}`, [
+      { text: '😤 爬起来继续', next: 'explore', effect: t.effect },
+      { text: '🧘 冥想恢复', next: 'explore', effect: { hp: Math.floor(t.effect.hp * 0.5), brave: 3 } }
+    ]);
   },
 
   lucky_event: () => {
@@ -806,9 +865,17 @@ const events = {
   },
 
   rest_spot: () => {
-    showText('🏕️ 安全地带', '找到安全的地方休息', [
-      { text: '💤 睡觉', next: 'explore', effect: { hp: 20 } },
-      { text: '🧘 修炼', next: 'explore', effect: { power: 4, hp: 8 } }
+    const restDescs = [
+      '你找到了一个隐蔽的山洞，洞口被藤蔓遮挡着...\n\n这里很安全，可以好好休息一下。',
+      '你发现了一片宁静的竹林，微风轻轻吹过...\n\n是个休息的好地方。',
+      '你找到了一个废弃的猎人小屋，里面有干草和水...\n\n可以在这里恢复体力。',
+      '你发现了一处温泉，热气腾腾...\n\n泡一泡会很舒服。'
+    ];
+    showText('🏕️ 安全地带', restDescs[Math.floor(Math.random() * restDescs.length)], [
+      { text: '💤 睡觉恢复', next: 'explore', effect: { hp: 25 } },
+      { text: '🧘 打坐修炼', next: 'explore', effect: { power: 5, hp: 10 } },
+      { text: '🎯 练习技能', next: 'explore', effect: { power: 8 } },
+      { text: '📖 研究秘籍', next: 'explore', effect: { power: 3, karma: 3 } }
     ]);
   },
 
