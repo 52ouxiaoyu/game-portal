@@ -151,6 +151,7 @@ class Player {
         this.buffTime = 0;
         this.shieldTime = 0;
         this.mechTime = 0;
+        this.mechType = 0;
         this.mechHp = 0;
         this.vehicleTime = 0;
                 this.reviveProgress = 0; // 0 to 180 (3 seconds at 60fps)
@@ -234,7 +235,11 @@ this.weapons = [];
         let dx = 0; let dy = 0;
         let currentSpeed = this.speed;
         if(this.buffTime > 0) currentSpeed *= 1.5;
-        if(this.mechTime > 0) currentSpeed *= 0.6; // Mech is slow
+        if(this.mechTime > 0) {
+            if(this.mechType === 1) currentSpeed *= 0.4;
+            else if(this.mechType === 2) currentSpeed *= 0.6;
+            else if(this.mechType === 3) currentSpeed *= 1.3;
+        }
         if(this.vehicleTime > 0) currentSpeed *= 3.0; // Vehicle is fast
 
         
@@ -363,10 +368,23 @@ this.weapons = [];
         this.cooldown = w.cd;
         
         if(this.mechTime > 0) {
-            audio.shootLaser();
-            for(let i=0; i<8; i++) {
-                let angle = Math.PI/4 * i + (frameCount*0.1);
-                bullets.push(new Bullet(this.x, this.y, Math.cos(angle), Math.sin(angle), 15, 50, '#ff0000', true, this.id));
+            if(this.mechType === 1) { 
+                if(frameCount % 20 === 0) {
+                    audio.shootLaser();
+                    let b = new Bullet(this.x, this.y, this.facing.x, this.facing.y, 10, 300, '#ff5500', true, this.id);
+                    b.size = 15;
+                    bullets.push(b);
+                }
+            } else if(this.mechType === 2) { 
+                audio.shootLaser();
+                for(let i=0; i<8; i++) {
+                    let angle = Math.PI/4 * i + (frameCount*0.1);
+                    bullets.push(new Bullet(this.x, this.y, Math.cos(angle), Math.sin(angle), 15, 50, '#ff0000', true, this.id));
+                }
+            } else if(this.mechType === 3) { 
+                audio.shootMachine();
+                let angle = Math.atan2(this.facing.y, this.facing.x) + (Math.random()-0.5)*0.15;
+                bullets.push(new Bullet(this.x, this.y, Math.cos(angle), Math.sin(angle), 25, 30, '#00ffff', true, this.id));
             }
             return;
         }
