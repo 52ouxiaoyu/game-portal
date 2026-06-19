@@ -534,12 +534,13 @@ function applyEffect(e) {
 }
 
 function growBoss() {
-  const gain = Math.floor(boss.power * 0.12);
-  boss.power = Math.min(boss.maxPower, boss.power + gain);
-  boss.hp = Math.min(boss.maxHp, boss.hp + 8);
-  addLog(`🐍 蛇精修炼中...战力+${gain}`, '#ff6b6b');
+  // Boss基础增长（随回合数增加）
+  const baseGain = Math.floor(boss.power * 0.08 + turn * 0.5);
+  boss.power = Math.min(boss.maxPower, boss.power + baseGain);
+  boss.hp = Math.min(boss.maxHp, boss.hp + 10);
+  addLog(`🐍 蛇精修炼中...战力+${baseGain}`, '#ff6b6b');
   
-  // 蛇精偶遇事件（25%概率）
+  // 蛇精偶遇事件（30%概率）
   const bossEvent = Math.random();
   if (bossEvent < 0.08) {
     // 💥 蛇精遇到强敌，两败俱伤
@@ -982,22 +983,72 @@ const events = {
 
   boss_entrance: () => {
     document.getElementById('chapter').textContent = '终章：蛇精洞府';
-    showText('🐍 蛇精', `哈哈哈！你终于来了！\n\n我现在的战力是 ${boss.power}，生命是 ${boss.hp}！`, [
-      { text: '⚔️ 决战！', next: 'boss_fight' },
-      { text: '😰 再准备', next: 'explore' }
-    ]);
+    const ratio = player.power / boss.power;
+    let difficulty = '';
+    if (ratio >= 1.3) difficulty = '你感觉蛇精已不是你的对手！';
+    else if (ratio >= 1.0) difficulty = '这将是一场势均力敌的战斗...';
+    else if (ratio >= 0.8) difficulty = '蛇精比你想象的更强！';
+    else difficulty = '蛇精的力量远超你的预期...';
+    
+    showText('🐍 蛇精', 
+      `哈哈哈！你终于来了！\n\n我现在的战力是 ${boss.power}，生命是 ${boss.hp}！\n\n${difficulty}`, 
+      [
+        { text: '⚔️ 决战！', next: 'boss_fight' },
+        { text: '😰 再准备', next: 'explore', effect: { hp: 10 } }
+      ]);
   },
 
   boss_fight: () => {
-    const pDmg = Math.floor(player.power * (1 + player.skills.length * 0.08));
-    const bDmg = Math.floor(boss.power * 0.5 * (1 - player.skills.length * 0.04));
+    // 战斗公式：基于实力对比
+    const powerRatio = player.power / boss.power;
+    const skillBonus = 1 + player.skills.length * 0.05;
+    
+    // 玩家伤害（基于实力对比）
+    let pDmg;
+    if (powerRatio >= 1.5) pDmg = Math.floor(player.power * 0.8 * skillBonus);
+    else if (powerRatio >= 1.0) pDmg = Math.floor(player.power * 0.6 * skillBonus);
+    else if (powerRatio >= 0.8) pDmg = Math.floor(player.power * 0.4 * skillBonus);
+    else pDmg = Math.floor(player.power * 0.25 * skillBonus);
+    
+    // Boss伤害（实力越强，Boss反击越狠）
+    const baseBossDmg = boss.power * 0.4;
+    const bossBonus = 1 + Math.floor(turn / 5) * 0.1; // 每5回合Boss变强
+    let bDmg = Math.floor(baseBossDmg * bossBonus * (1 - player.skills.length * 0.02));
+    
+    // 加入随机因素
+    const randomFactor = 0.8 + Math.random() * 0.4;
+    pDmg = Math.floor(pDmg * randomFactor);
+    bDmg = Math.floor(bDmg * (2 - randomFactor));
+    
     applyEffect({ hp: -bDmg, bossHp: -pDmg });
-    if (boss.hp <= 0) showText('🎉 胜利！', `你击败了蛇精！\n造成 ${pDmg} 伤害，受到 ${bDmg} 伤害。`, [{ text: '🏆 结局', next: 'ending' }]);
-    else if (player.hp <= 0) showText('💀 失败', `你被打败了...蛇精还剩 ${boss.hp} 生命。`, [{ text: '🔄 重来', next: 'restart' }]);
-    else showText('⚔️ 战斗', `造成 ${pDmg} 伤害，受到 ${bDmg} 伤害。\n蛇精还剩 ${boss.hp} 生命！`, [
-      { text: '继续', next: 'boss_fight' },
-      { text: '撤退', next: 'explore', effect: { hp: 15 } }
-    ]);
+    
+    if (boss.hp <= 0) {
+      // 多种胜利结局
+      const endings = [
+        `你终于击败了蛇精！\n造成 ${pDmg} 伤害，受到 ${bDmg} 伤害。\n\n爷爷得救了！`,
+        `蛇精倒下了！\n你和兄弟们齐心协力，终于战胜了强敌！\n\n造成 ${pDmg} 伤害，受到 ${bDmg} 伤害。`,
+        `战斗结束！蛇精被消灭了！\n你的勇气和智慧让你取得了胜利！`
+      ];
+      showText('🎉 胜利！', endings[Math.floor(Math.random() * endings.length)], [{ text: '🏆 结局', next: 'ending' }]);
+    }
+    else if (player.hp <= 0) {
+      const failTexts = [
+        `你被打败了...蛇精还剩 ${boss.hp} 生命。\n\n看来还需要更多历练...`,
+        `蛇精的力量太强了！你倒在了地上...\n\n蛇精还剩 ${boss.hp} 生命。`
+      ];
+      showText('💀 失败', failTexts[Math.floor(Math.random() * failTexts.length)], [{ text: '🔄 重来', next: 'restart' }]);
+    }
+    else {
+      const progress = Math.floor((1 - boss.hp / boss.maxHp) * 100);
+      const fightTexts = [
+        `激烈的战斗！造成 ${pDmg} 伤害，受到 ${bDmg} 伤害。\n蛇精还剩 ${boss.hp} 生命！（${progress}%）`,
+        `你和蛇精打得难解难分！\n造成 ${pDmg} 伤害，受到 ${bDmg} 伤害。\n蛇精还剩 ${boss.hp} 生命！（${progress}%）`
+      ];
+      showText('⚔️ 战斗', fightTexts[Math.floor(Math.random() * fightTexts.length)], [
+        { text: `继续战斗（${progress}%）`, next: 'boss_fight' },
+        { text: '😰 撤退', next: 'explore', effect: { hp: 15 } }
+      ]);
+    }
   },
 
   ending: () => { document.getElementById('chapter').textContent = '🌟 完美结局'; showText('爷爷', '好孩子！你做到了！', [{ text: '🔄 再玩', next: 'restart' }]); },
