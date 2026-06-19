@@ -845,6 +845,9 @@ class Game {
             };
         });
         this.difficulty = 'normal';
+        this.canvas.setAttribute('tabindex', '0');
+        this.canvas.focus();
+        this.canvas.addEventListener('click', () => this.canvas.focus());
         this.loop();
     }
     shakeScreen(intensity) { this.shakeTimer = intensity; this.shakeIntensity = intensity; }
@@ -860,6 +863,7 @@ class Game {
         this.startLevel();
         document.getElementById('hud').classList.remove('hidden');
         if (this.input.isMobile) document.getElementById('touch-controls').classList.remove('hidden');
+        this.canvas.focus();
     }
     startLevel() {
         this.gameState = 'STAGE_START'; this.stageStartTimer = 120;
