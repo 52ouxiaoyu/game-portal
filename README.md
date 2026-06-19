@@ -1,85 +1,41 @@
-# 🎮 游戏中心
+# Game Portal (网页游戏大厅) 🎮
 
-个人网页游戏合集，收录多款原创 HTML5 小游戏，即点即玩，无需下载。
+这是一个充满复古乐趣与现代创新的网页游戏集合大厅！本项目包含了 5 款由 HTML5 Canvas 和原生 JavaScript 驱动的经典游戏，支持中英文双语界面（Bilingual UI）。无需安装，点开即玩！
 
-## 🌐 在线访问
+## 🌟 游戏列表 (Games List)
 
-**https://game-portal-4iy.pages.dev/**
+### 1. 末日枪手 (Zombie Shooter) 🔥 *强烈推荐*
+一款支持双人合作（Co-op）的满屏割草射击游戏！
+- **真·全屏体验**：游戏画面自适应浏览器大小，无缝割草。
+- **智能双人模式**：P1 (`WASD`移动 + `Space`射击) | P2 (`方向键`移动 + `Enter/小键盘Enter`射击)。
+- **武器升级系统**：通过击杀僵尸解锁双枪、散弹枪、步枪和极光射线。
+- **盲盒空投 (Loot Boxes)**：地图上随机刷新宝箱，提供急救包、无敌护盾、全屏秒杀核弹，甚至是扣血陷阱！
+- **AI 智能托管机制**：玩家如果超过 5 秒钟不操作，聪明的 AI 将会自动接管角色，进行风筝走位并全自动射击！玩家按任意键即可随时收回控制权。
 
-## 🎯 游戏列表
+### 2. 坦克大战 (Tank Battle)
+重温红白机时代的经典回忆，保卫基地，消灭敌方坦克大军。
 
-| 游戏 | 类型 | 说明 |
-|------|------|------|
-| 🔫 [坦克大战](./tank-battle/) | 射击 | 经典坦克大战，支持双人对战，1000关随机生成 |
-| 🐍 [贪吃蛇](./snake/) | 休闲 | 经典贪吃蛇，多种玩法模式 |
-| 🏰 [王国保卫战](./kingdom-rush/) | 塔防 | 策略塔防游戏，建造防御塔抵御敌人 |
-| 🏮 [葫芦兄弟](./calabash-brothers/) | 冒险 | 致敬经典动画，七兄弟各有神通 |
+### 3. 贪吃蛇 (Snake)
+最经典的休闲游戏，吃掉苹果让蛇变长，看看你能坚持多久不撞墙。
 
-## 🚀 技术栈
+### 4. 萝卜保卫战 (Kingdom Rush)
+轻量级的策略塔防游戏。布置防御塔，升级火力，阻止怪物进入终点。
 
-- 纯 HTML / CSS / JavaScript
-- 零依赖，无需构建工具
-- Canvas 渲染，流畅运行
-- 响应式设计，支持手机/平板/电脑
+### 5. 葫芦娃大战妖精 (Calabash Brothers)
+经典的国漫 IP 塔防！种植各种葫芦娃来抵御蛇精和蝎子精的进攻。
 
-## 📱 支持平台
+## 🚀 如何运行 (How to Run)
 
-- ✅ PC 浏览器（Chrome / Firefox / Safari / Edge）
-- ✅ 手机浏览器
-- ✅ 平板设备
+本项目无需任何后端环境或构建工具（No Node.js/Webpack required）。
+1. 直接在浏览器中双击打开 `index.html` 即可进入游戏大厅。
+2. 也可以使用任何本地服务器运行（例如：`python -m http.server` 或 VSCode 的 Live Server 插件）。
 
-## 🎨 特色功能
+## 💡 操作指南 (Controls)
 
-- 🤖 AI 自动托管（坦克大战）
-- 👥 双人对战模式
-- 🎵 音效系统
-- 💾 最高分记录
-- 📱 触屏操控支持
+每款游戏内都提供了详细的按键说明。大多数游戏支持使用键盘的 `W A S D` 或 `↑ ↓ ← →` 进行移动。
 
-## 🛠️ 本地运行
-
-```bash
-# 克隆仓库
-git clone https://github.com/52ouxiaoyu/game-portal.git
-
-# 进入目录
-cd game-portal
-
-# 启动本地服务器
-python3 -m http.server 8080
-
-# 打开浏览器访问
-# http://localhost:8080
-```
-
-## 📁 项目结构
-
-```
-game-portal/
-├── index.html          # 游戏主页
-├── tank-battle/           # 坦克大战游戏
-│   ├── index.html
-│   ├── game.js
-│   └── style.css
-├── snake/             # 贪吃蛇游戏
-│   ├── index.html
-│   ├── game.js
-│   └── style.css
-├── kingdom-rush/         # 塔防游戏
-│   ├── index.html
-│   ├── css/
-│   └── js/
-└── calabash-brothers/           # 冒险游戏
-    └── index.html
-```
-
-## 📝 更新日志
-
-### 2026-06-19
-- ✨ 全新 UI 设计，毛玻璃风格
-- 📁 优化目录结构，中文命名
-- 🚀 部署到 Cloudflare Pages
+## 🌍 双语支持 (Bilingual)
+游戏大厅以及所有的游戏界面均已实现中英双语显示，方便不同国家和地区的玩家一起享受游戏的乐趣。
 
 ---
-
-*所有游戏均由 HTML/CSS/JS 纯手工打造，无需任何依赖。*
+Enjoy the games and have fun! 祝您游戏愉快！
