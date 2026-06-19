@@ -511,10 +511,10 @@ class Tank {
         if (this.cooldown > 0) return;
         let bulletCount = 0;
         for (const b of this.game.bullets) { if (b.owner === this && b.active) bulletCount++; }
-        const maxBullets = this.isBoss ? 2 : 1;
+        const maxBullets = this.isBoss ? 2 : (this instanceof Player ? 1 + Math.floor(this.level / 2) : 1);
         if (bulletCount >= maxBullets) return;
-        if (this.game.bullets.length >= 30) return;
-        this.cooldown = this instanceof Player ? Math.max(25, 45 - this.level * 5) : Math.max(30, 60 - this.level * 10);
+        if (this.game.bullets.length >= 40) return; // slightly increase global cap just in case
+        this.cooldown = this instanceof Player ? Math.max(12, 35 - this.level * 6) : Math.max(30, 60 - this.level * 10);
         let bx = this.x + 26; let by = this.y + 26;
         if (this.direction === 'UP') by = this.y - 10; else if (this.direction === 'DOWN') by = this.y + 60; else if (this.direction === 'LEFT') bx = this.x - 10; else if (this.direction === 'RIGHT') bx = this.x + 60;
         if (this instanceof Player) audio.play('shoot');
