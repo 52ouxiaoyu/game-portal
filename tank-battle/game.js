@@ -1057,7 +1057,33 @@ class Game {
         }
         if (this.highScore > 0) { this.ctx.fillStyle = '#ff0'; this.ctx.font = '16px Arial'; this.ctx.textAlign = 'right'; this.ctx.fillText(`HIGH SCORE: ${this.highScore}`, CANVAS_SIZE - 10, CANVAS_SIZE - 10); }
     }
-    drawForest() { for (let y = 0; y < GRID_SIZE; y++) for (let x = 0; x < GRID_SIZE; x++) if (this.map.grid[y][x] === TILE_TYPES.FOREST) { this.ctx.fillStyle = '#21B521'; this.ctx.fillRect(x * TILE_SIZE, y * TILE_SIZE, TILE_SIZE, TILE_SIZE); this.ctx.fillStyle = '#1a8a1a'; this.ctx.fillRect(x * TILE_SIZE + 4, y * TILE_SIZE + 4, TILE_SIZE - 8, TILE_SIZE - 8); } }
+    drawForest() {
+        this.ctx.save();
+        for (let y = 0; y < GRID_SIZE; y++) {
+            for (let x = 0; x < GRID_SIZE; x++) {
+                if (this.map.grid[y][x] === TILE_TYPES.FOREST) {
+                    const px = x * TILE_SIZE; const py = y * TILE_SIZE;
+                    const ts = TILE_SIZE;
+                    this.ctx.fillStyle = 'rgba(20, 80, 20, 0.9)';
+                    this.ctx.beginPath();
+                    this.ctx.arc(px + ts*0.25, py + ts*0.25, ts*0.3, 0, Math.PI*2);
+                    this.ctx.arc(px + ts*0.75, py + ts*0.25, ts*0.3, 0, Math.PI*2);
+                    this.ctx.arc(px + ts*0.25, py + ts*0.75, ts*0.3, 0, Math.PI*2);
+                    this.ctx.arc(px + ts*0.75, py + ts*0.75, ts*0.3, 0, Math.PI*2);
+                    this.ctx.arc(px + ts*0.5, py + ts*0.5, ts*0.4, 0, Math.PI*2);
+                    this.ctx.fill();
+                    
+                    this.ctx.fillStyle = 'rgba(40, 120, 40, 0.9)';
+                    this.ctx.beginPath();
+                    this.ctx.arc(px + ts*0.3, py + ts*0.3, ts*0.15, 0, Math.PI*2);
+                    this.ctx.arc(px + ts*0.7, py + ts*0.7, ts*0.15, 0, Math.PI*2);
+                    this.ctx.arc(px + ts*0.5, py + ts*0.3, ts*0.2, 0, Math.PI*2);
+                    this.ctx.fill();
+                }
+            }
+        }
+        this.ctx.restore();
+    }
     loop() { this.update(); this.draw(); requestAnimationFrame(() => this.loop()); }
 }
 window.onload = () => new Game();
