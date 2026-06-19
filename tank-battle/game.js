@@ -427,6 +427,8 @@ class Tank {
         if (this instanceof Player) {
             this.health = (this.health || 1) - damage;
             if (this.health > 0) {
+                this.level = Math.max(0, Math.floor((this.health - 1) / 2));
+                this.speed = 4 + this.level;
                 this.shieldTimer = 30; // Brief invincibility after hit
                 this.game.effects.push(new Effect(this.x + 30, this.y + 30, 'EXPLOSION', 1));
                 return;
