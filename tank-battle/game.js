@@ -256,7 +256,8 @@ class PowerUp {
     constructor(game, x, y, type) { this.game = game; this.x = x; this.y = y; this.type = type; this.width = 64; this.height = 64; this.timer = 900; this.active = true; }
     update() {
         this.timer--; if (this.timer <= 0) this.active = false;
-        this.game.players.forEach(p => { if (p.alive && this.x < p.x + p.width && this.x + this.width > p.x && this.y < p.y + p.height && this.y + this.height > p.y) { this.applyEffect(p); this.active = false; } });
+        if (!this.active) return;
+        this.game.players.forEach(p => { if (this.active && p.alive && this.x < p.x + p.width && this.x + this.width > p.x && this.y < p.y + p.height && this.y + this.height > p.y) { this.applyEffect(p); this.active = false; } });
     }
     applyEffect(player) {
         audio.play('powerup');
@@ -460,7 +461,7 @@ class Tank {
     setShield(d) { this.shieldTimer = d; }
     upgrade() { 
         this.level = Math.min(this.level + 1, 3); 
-        this.speed = 4 + this.level; 
+        this.speed = 4 + this.level * 0.5; 
         if (this instanceof Player) {
             this.maxHealth = 1 + this.level * 2;
             this.health = this.maxHealth;
@@ -528,7 +529,7 @@ class Tank {
             if (this instanceof Player) {
                 this.game.shakeScreen(4);
                 this.level = Math.max(0, Math.floor((this.health - 1) / 2));
-                this.speed = 4 + this.level;
+                this.speed = 4 + this.level * 0.5;
                 this.shieldTimer = 30;
             } else if (this.variant === 'HEAVY') {
                 this.color = this.health === 2 ? '#B56B20' : '#B53120';
@@ -548,15 +549,15 @@ class Tank {
                 killer.killStreak = 1;
             }
             killer.lastKillTime = now;
-            if (killer.killStreak === 3 && killer.level < 1) {
+            if (killer.killStreak >= 3 && killer.level < 1) {
                 killer.upgrade();
-                this.game.showAnnouncement('LEVEL UP!', '#0f0');
-            } else if (killer.killStreak === 6 && killer.level < 2) {
+                this.game.showAnnouncement(`P${killer.id} LEVEL UP!`, killer.color);
+            } else if (killer.killStreak >= 6 && killer.level < 2) {
                 killer.upgrade();
-                this.game.showAnnouncement('POWER UP!', '#0ff');
-            } else if (killer.killStreak === 10 && killer.level < 3) {
+                this.game.showAnnouncement(`P${killer.id} POWER UP!`, killer.color);
+            } else if (killer.killStreak >= 10 && killer.level < 3) {
                 killer.upgrade();
-                this.game.showAnnouncement('MAX POWER!', '#ff0');
+                this.game.showAnnouncement(`P${killer.id} MAX POWER!`, killer.color);
             }
             this.game.updateHUD();
         }
