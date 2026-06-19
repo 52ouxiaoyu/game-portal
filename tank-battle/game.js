@@ -678,13 +678,11 @@ class Player extends Tank {
         const baseY = 24 * TILE_SIZE;
         const myX = this.x + this.width / 2;
         const myY = this.y + this.height / 2;
-        const dx = baseX - myX;
-        const dy = baseY - myY;
-        const angle = Math.atan2(dy, dx);
-        const myAngle = this.direction === 'RIGHT' ? 0 : this.direction === 'DOWN' ? Math.PI/2 : this.direction === 'LEFT' ? Math.PI : -Math.PI/2;
-        let diff = Math.abs(angle - myAngle);
-        if (diff > Math.PI) diff = Math.PI * 2 - diff;
-        return diff < Math.PI / 3;
+        if (this.direction === 'UP' && myY > baseY && Math.abs(myX - baseX) < TILE_SIZE * 3) return true;
+        if (this.direction === 'DOWN' && myY < baseY && Math.abs(myX - baseX) < TILE_SIZE * 3) return true;
+        if (this.direction === 'LEFT' && myX > baseX && Math.abs(myY - baseY) < TILE_SIZE * 3) return true;
+        if (this.direction === 'RIGHT' && myX < baseX && Math.abs(myY - baseY) < TILE_SIZE * 3) return true;
+        return false;
     }
     isTileBlocked(x, y, dir) {
         const checkDist = TILE_SIZE * 1.5;
@@ -734,14 +732,14 @@ class Player extends Tank {
         return true;
     }
     findIncomingBullet(x, y) {
-        const range = TILE_SIZE * 5;
+        const range = TILE_SIZE * 6;
         for (const b of this.game.bullets) {
             if (!b.active || b.owner instanceof Player) continue;
             let incoming = false;
-            if (b.dir === 'DOWN' && Math.abs(b.x + b.size/2 - x) < 20 && b.y > y && b.y - y < range) incoming = true;
-            if (b.dir === 'UP' && Math.abs(b.x + b.size/2 - x) < 20 && b.y < y && y - b.y < range) incoming = true;
-            if (b.dir === 'RIGHT' && Math.abs(b.y + b.size/2 - y) < 20 && b.x > x && b.x - x < range) incoming = true;
-            if (b.dir === 'LEFT' && Math.abs(b.y + b.size/2 - y) < 20 && b.x < x && x - b.x < range) incoming = true;
+            if (b.dir === 'DOWN' && Math.abs(b.x + b.size/2 - x) < 24 && b.y < y && y - b.y < range) incoming = true;
+            if (b.dir === 'UP' && Math.abs(b.x + b.size/2 - x) < 24 && b.y > y && b.y - y < range) incoming = true;
+            if (b.dir === 'RIGHT' && Math.abs(b.y + b.size/2 - y) < 24 && b.x < x && x - b.x < range) incoming = true;
+            if (b.dir === 'LEFT' && Math.abs(b.y + b.size/2 - y) < 24 && b.x > x && b.x - x < range) incoming = true;
             if (incoming) return b;
         }
         return null;
@@ -751,21 +749,10 @@ class Player extends Tank {
         return Math.random() < 0.5 ? 'UP' : 'DOWN';
     }
     getSmartDodgeDir(bullet, myX, myY) {
-        const baseX = 13 * TILE_SIZE;
-        const baseY = 24 * TILE_SIZE;
-        let bestDir = this.getPerpendicularDir(bullet.dir);
-        let bestScore = -Infinity;
-        for (const dir of ['UP', 'DOWN', 'LEFT', 'RIGHT']) {
-            if (dir === bullet.dir || dir === this.getPerpendicularDir(bullet.dir)) continue;
-            const nx = myX + (dir === 'RIGHT' ? TILE_SIZE : dir === 'LEFT' ? -TILE_SIZE : 0);
-            const ny = myY + (dir === 'DOWN' ? TILE_SIZE : dir === 'UP' ? -TILE_SIZE : 0);
-            if (this.game.map.isBlocked(nx - this.width/2, ny - this.height/2, this.width, this.height)) continue;
-            const distToBase = Math.hypot(nx - baseX, ny - baseY);
-            let score = -distToBase;
-            if (!this.isTileBlocked(myX, myY, dir)) score += 100;
-            if (score > bestScore) { bestScore = score; bestDir = dir; }
-        }
-        return bestDir;
+        const perpDirs = (bullet.dir === 'UP' || bullet.dir === 'DOWN') ? ['LEFT', 'RIGHT'] : ['UP', 'DOWN'];
+        const validDirs = perpDirs.filter(d => !this.isTileBlocked(myX, myY, d));
+        if (validDirs.length > 0) return validDirs[Math.floor(Math.random() * validDirs.length)];
+        return perpDirs[0];
     }
 }
 class Enemy extends Tank { constructor(game, x, y, stage = 0) { super(game, x, y, COLORS.ENEMY); const diffMult = game.difficulty === 'easy' ? 0.8 : (game.difficulty === 'hard' ? 1.2 : 1); this.speed = (2 + Math.min(stage * 0.1, 2)) * diffMult; this.dirTimer = 0; } update() { super.update(); if (this.dirTimer <= 0) { this.direction = ['UP', 'DOWN', 'LEFT', 'RIGHT'][Math.floor(Math.random() * 4)]; this.dirTimer = 30 + Math.random() * 60; } else this.dirTimer--; const ox = this.x; const oy = this.y; this.move(this.direction); if (this.x === ox && this.y === oy) this.dirTimer = 0; if (Math.random() * 100 < 5) this.shoot(); } }
