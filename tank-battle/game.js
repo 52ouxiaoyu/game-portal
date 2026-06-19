@@ -379,7 +379,24 @@ class Bullet {
         const tx = Math.floor((this.x + this.size/2) / TILE_SIZE); const ty = Math.floor((this.y + this.size/2) / TILE_SIZE);
         if (tx < 0 || tx >= GRID_SIZE || ty < 0 || ty >= GRID_SIZE) { this.active = false; return; }
         const tile = this.game.map.grid[ty][tx];
-        if (tile === TILE_TYPES.BRICK || tile === TILE_TYPES.STEEL || tile === TILE_TYPES.BASE) { this.triggerExplosion(this.x + this.size/2, this.y + this.size/2); this.active = false; return; }
+        if (tile === TILE_TYPES.BRICK || tile === TILE_TYPES.STEEL || tile === TILE_TYPES.BASE) {
+            if (tile === TILE_TYPES.BASE) {
+                if (!(this.owner instanceof Player && this.owner.aiActive)) {
+                    this.game.baseHealth--;
+                    if (this.game.baseHealth <= 0) {
+                        this.game.map.grid[24][12] = TILE_TYPES.BASE_DESTROYED;
+                        this.game.map.grid[24][13] = TILE_TYPES.BASE_DESTROYED;
+                        this.game.map.grid[25][12] = TILE_TYPES.BASE_DESTROYED;
+                        this.game.map.grid[25][13] = TILE_TYPES.BASE_DESTROYED;
+                        this.game.gameOver();
+                    }
+                    this.game.shakeScreen(8);
+                }
+            }
+            this.triggerExplosion(this.x + this.size/2, this.y + this.size/2);
+            this.active = false;
+            return;
+        }
         const isEnemyBullet = this.owner instanceof Enemy;
         const tanks = isEnemyBullet ? this.game.players : this.game.enemies;
         for (const tank of tanks) {
@@ -402,11 +419,7 @@ class Bullet {
                 if (iy === 0 || iy === GRID_SIZE - 1 || ix === 0 || ix === GRID_SIZE - 1) continue;
                 if (tile === TILE_TYPES.BRICK) this.game.map.grid[iy][ix] = TILE_TYPES.EMPTY;
                 else if (tile === TILE_TYPES.STEEL && (this.level >= 3 || this.owner instanceof Player)) this.game.map.grid[iy][ix] = TILE_TYPES.EMPTY;
-                else if (tile === TILE_TYPES.BASE && isPlayerBullet) {
-                    this.game.baseHealth--;
-                    if (this.game.baseHealth <= 0) { this.game.map.grid[iy][ix] = TILE_TYPES.BASE_DESTROYED; this.game.gameOver(); }
-                    this.game.shakeScreen(8);
-                }
+                // Base is now only damaged by direct hits, so explosion radius won't accidentally destroy it
             }
         }
     }
