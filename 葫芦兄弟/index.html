@@ -467,7 +467,11 @@ function updateUI() {
   document.getElementById('bossStats').innerHTML = `
     <div class="stat-row"><span class="stat-name">生命</span><div class="stat-bar"><div class="stat-fill hp-fill" style="width:${boss.hp/boss.maxHp*100}%"></div></div><span class="stat-num">${boss.hp}/${boss.maxHp}</span></div>
     <div class="stat-row"><span class="stat-name">战力</span><div class="stat-bar"><div class="stat-fill power-fill" style="width:${boss.power/boss.maxPower*100}%"></div></div><span class="stat-num">${boss.power}</span></div>
-    <div class="stat-row"><span class="stat-name">气势</span><div class="stat-bar"><div class="stat-fill brave-fill" style="width:${boss.brave}%"></div></div><span class="stat-num">${boss.brave}</span></div>`;
+    <div class="stat-row"><span class="stat-name">气势</span><div class="stat-bar"><div class="stat-fill brave-fill" style="width:${boss.brave}%"></div></div><span class="stat-num">${boss.brave}</span></div>
+    <div style="margin-top:6px; padding:4px; background:rgba(255,107,107,0.1); border-radius:4px;">
+      <div style="color:#ff6b6b; font-size:9px;">📍 蛇精动态</div>
+      <div style="color:#aaa; font-size:9px; margin-top:2px;">${boss.lastAction || '正在修炼中...'}</div>
+    </div>`;
 
   const ratio = player.power / boss.power;
   const analysis = document.getElementById('bossAnalysis');
@@ -533,6 +537,50 @@ function growBoss() {
   boss.power = Math.min(boss.maxPower, boss.power + gain);
   boss.hp = Math.min(boss.maxHp, boss.hp + 8);
   addLog(`🐍 蛇精修炼中...战力+${gain}`, '#ff6b6b');
+  
+  // 蛇精偶遇事件（25%概率）
+  const bossEvent = Math.random();
+  if (bossEvent < 0.08) {
+    // 💥 蛇精遇到强敌，两败俱伤
+    const damage = Math.floor(Math.random() * 30) + 20;
+    boss.hp = Math.max(30, boss.hp - damage);
+    boss.power = Math.min(boss.maxPower, boss.power + 15);
+    addLog(`💥 蛇精与神秘强者激战！生命-${damage}，但战力+15！`, '#ff8800');
+  } else if (bossEvent < 0.15) {
+    // 🎁 蛇精获得神秘法器
+    const artifacts = ['千年蛇丹', '妖王内丹', '毒蛇胆', '蛇皮护甲', '魔蛇之眼'];
+    const artifact = artifacts[Math.floor(Math.random() * artifacts.length)];
+    const hpGain = Math.floor(Math.random() * 25) + 15;
+    const powerGain = Math.floor(Math.random() * 10) + 5;
+    boss.hp = Math.min(boss.maxHp, boss.hp + hpGain);
+    boss.power = Math.min(boss.maxPower, boss.power + powerGain);
+    addLog(`🎁 蛇精找到了${artifact}！生命+${hpGain}，战力+${powerGain}！`, '#9b59b6');
+  } else if (bossEvent < 0.20) {
+    // 😈 蛇精蛊惑了无辜
+    const victims = ['村民', '商人', '书生', '农夫', '猎人'];
+    const victim = victims[Math.floor(Math.random() * victims.length)];
+    const powerGain = Math.floor(Math.random() * 8) + 3;
+    boss.power = Math.min(boss.maxPower, boss.power + powerGain);
+    addLog(`😈 蛇精蛊惑了${victim}，吸取精气！战力+${powerGain}`, '#ff8800');
+  } else if (bossEvent < 0.25) {
+    // 🐍 蛇精遇到手下
+    const minions = ['小妖精', '蜘蛛精', '蝙蝠怪', '蛤蟆精', '蛇妖'];
+    const minion = minions[Math.floor(Math.random() * minions.length)];
+    const gainBonus = Math.floor(Math.random() * 6) + 2;
+    boss.power = Math.min(boss.maxPower, boss.power + gainBonus);
+    addLog(`🐍 蛇精收服了${minion}！战力+${gainBonus}`, '#ff6b6b');
+  } else if (bossEvent < 0.28) {
+    // 😵 蛇精走火入魔
+    const moodLoss = Math.floor(Math.random() * 10) + 5;
+    boss.power = Math.max(10, boss.power - moodLoss);
+    addLog(`😵 蛇精修炼走火入魔！战力-${moodLoss}`, '#4ecdc4');
+  } else if (bossEvent < 0.32) {
+    // 💪 蛇精怒气爆发
+    const怒气Gain = Math.floor(Math.random() * 12) + 8;
+    boss.power = Math.min(boss.maxPower, boss.power + 怒气Gain);
+    boss.brave = Math.min(100, boss.brave + 10);
+    addLog(`💪 蛇精怒气爆发！战力+${怒气Gain}，气势+10！`, '#ff4444');
+  }
 }
 
 const events = {
@@ -705,17 +753,56 @@ const events = {
   },
 
   lucky_event: () => {
-    const luckies = [
-      { name: '🍀 幸运草', effect: { hp: 12, power: 3 } },
-      { name: '💰 宝箱', effect: { power: 6, hp: 8 } },
-      { name: '🌟 灵泉', effect: { hp: 20 } },
-      { name: '📜 秘籍', effect: { power: 8 } },
-      { name: '🔮 法杖', effect: { power: 5, hp: 10 } },
-      { name: '💎 宝石', effect: { power: 7 } },
-      { name: '🎁 礼物', effect: { hp: 15, power: 4 } }
-    ];
-    const l = luckies[Math.floor(Math.random() * luckies.length)];
-    showText(l.name, '你发现了好东西！', [{ text: '🎉 太好了', next: 'explore', effect: l.effect }]);
+    const r = Math.random();
+    // 20%概率触发特殊大事件
+    if (r < 0.08) {
+      // 💥 奇遇：力量暴涨
+      const bonus = Math.floor(Math.random() * 20) + 15;
+      player.power = Math.min(player.maxPower, player.power + bonus);
+      showText('💥 奇遇！', `你误入了一个神秘洞穴，发现了一颗千年内丹！\n\n战力瞬间暴涨 +${bonus}！\n\n「这股力量...太强了！」`, [{ text: '🎉 太棒了', next: 'explore', effect: {} }]);
+    } else if (r < 0.15) {
+      // 💀 灾难：身受重伤
+      const damage = Math.floor(player.hp * 0.5);
+      player.hp = Math.max(1, player.hp - damage);
+      showText('💀 灾难！', `你踩到了一个古老的诅咒陷阱！\n\n生命值骤降 -${damage}！\n\n「不...这怎么可能...」`, [{ text: '😤 坚持住', next: 'explore', effect: { brave: 10 } }]);
+    } else if (r < 0.22) {
+      // 🎁 获得神秘法器
+      const artifacts = [
+        { name: '⚔️ 上古神剑', power: 25, desc: '一把散发寒光的神剑！战力+25！' },
+        { name: '🛡️ 金刚护盾', hp: 50, desc: '一个金色护盾！生命+50！' },
+        { name: '🔮 魔法水晶', power: 15, hp: 20, desc: '一颗神秘水晶！战力+15，生命+20！' },
+        { name: '💊 九转金丹', hp: 80, desc: '一颗金丹！生命直接回满！' },
+        { name: '📖 天书秘籍', power: 30, desc: '一本古老秘籍！战力+30！' }
+      ];
+      const artifact = artifacts[Math.floor(Math.random() * artifacts.length)];
+      showText(artifact.name, `你发现了一个神秘宝箱！\n\n打开后里面是...${artifact.name}！\n\n${artifact.desc}`, 
+        [{ text: '🎉 收下', next: 'explore', effect: { power: artifact.power || 0, hp: artifact.hp || 0 } }]);
+    } else if (r < 0.28) {
+      // 🎭 遇到骗子
+      showText('🎭 神秘人', '一个神秘人出现，声称要给你力量...\n\n但你感觉不太对劲...', [
+        { text: '🤝 相信他', next: 'explore', effect: Math.random() < 0.5 ? { power: 12 } : { hp: -30, power: -10 } },
+        { text: '🚫 警惕拒绝', next: 'explore', effect: { brave: 8 } }
+      ]);
+    } else if (r < 0.35) {
+      // ⚡ 意外触发机关
+      showText('⚡ 意外！', '你意外触发了一个古老机关！\n\n一道光芒闪过...', [
+        { text: '✨ 接受洗礼', next: 'explore', effect: { power: Math.floor(Math.random() * 10) + 5, hp: Math.floor(Math.random() * 20) + 10 } },
+        { text: '🏃 赶紧跑', next: 'explore', effect: { brave: 5 } }
+      ]);
+    } else {
+      // 普通幸运事件
+      const luckies = [
+        { name: '🍀 幸运草', effect: { hp: 12, power: 3 } },
+        { name: '💰 宝箱', effect: { power: 6, hp: 8 } },
+        { name: '🌟 灵泉', effect: { hp: 20 } },
+        { name: '📜 秘籍', effect: { power: 8 } },
+        { name: '🔮 法杖', effect: { power: 5, hp: 10 } },
+        { name: '💎 宝石', effect: { power: 7 } },
+        { name: '🎁 礼物', effect: { hp: 15, power: 4 } }
+      ];
+      const l = luckies[Math.floor(Math.random() * luckies.length)];
+      showText(l.name, '你发现了好东西！', [{ text: '🎉 太好了', next: 'explore', effect: l.effect }]);
+    }
   },
 
   rest_spot: () => {
