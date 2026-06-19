@@ -227,7 +227,7 @@ this.weapons = [];
                     comboCount++; comboTimer = 180;
                     if(comboCount % 10 === 0) { screenShake = 10; addFloatingText(CANVAS_W/2, 100, `${comboCount} COMBO!`, '#ffaa00'); audio.levelUp(); }
                     audio.zombieDie();
-                    addFloatingText(z.x, z.y, "车祸现场!", "#ffcc00");
+                    addFloatingText(z.x, z.y, "🏍️ 碾压!", "#ffcc00");
                 }
             });
         }
@@ -260,7 +260,7 @@ this.weapons = [];
                                 this.isDowned = false;
                                 this.hp = this.maxHp / 2;
                                 this.reviveProgress = 0;
-                                addFloatingText(this.x, this.y - 40, "被队友救活!", "#00ff00");
+                                addFloatingText(this.x, this.y - 40, "💉 重新加入战斗!", "#00ff00");
                                 audio.levelUp();
                             }
                         }
@@ -349,7 +349,7 @@ this.weapons = [];
                 if(this.weaponLevel !== i) {
                     this.weaponLevel = i;
                     audio.levelUp();
-                    addFloatingText(this.x, this.y - 30, "WEAPON UPGRADE!", "#ffff00");
+                    addFloatingText(this.x, this.y - 30, "🔫 火力升级!", "#ffff00");
                     if(this.id === 1) document.getElementById('current-weapon').textContent = this.weapons[i].name;
                 }
                 break;
@@ -747,15 +747,15 @@ class LootBox {
                 this.active = false;
                 if(this.type === 'heal') {
                     p.hp = Math.min(p.maxHp, p.hp + 1);
-                    addFloatingText(p.x, p.y - 30, "❤️ 获得生命!", "#00ff00");
+                    addFloatingText(p.x, p.y - 30, "❤️ 护甲修复!", "#00ff00");
                     audio.levelUp();
                 } else if(this.type === 'shield') {
                     p.shieldTime = 300;
-                    addFloatingText(p.x, p.y - 30, "🛡️ 护盾!", "#0000ff");
+                    addFloatingText(p.x, p.y - 30, "🛡️ 能量偏导盾!", "#0000ff");
                     audio.levelUp();
                 } else if(this.type === 'buff') {
                     p.buffTime = 300;
-                    addFloatingText(p.x, p.y - 30, "⚡ 攻速提升!", "#00ffff");
+                    addFloatingText(p.x, p.y - 30, "🌀 射速超频!", "#00ffff");
                     audio.levelUp();
                 } else if(this.type === 'weapon_box') {
                     if(p.weaponLevel < 29) p.weaponLevel++;
@@ -766,20 +766,20 @@ class LootBox {
                 } else if(this.type === 'mech') {
                     p.mechTime = 600;
                     p.mechHp = 500;
-                    addFloatingText(p.x, p.y - 30, "🤖 机甲降临!", "#555555");
+                    addFloatingText(p.x, p.y - 30, "🤖 战术机甲部署!", "#555555");
                     audio.levelUp();
                 } else if(this.type === 'vehicle') {
                     p.vehicleTime = 600;
-                    addFloatingText(p.x, p.y - 30, "🏍️ 摩托车!", "#ffaa00");
+                    addFloatingText(p.x, p.y - 30, "🏍️ 机动载具就绪!", "#ffaa00");
                     audio.levelUp();
                 } else if(this.type === 'nuke') {
                     zombies.forEach(z => { z.active = false; score += z.scoreVal; createParticles(z.x, z.y, z.color, 15); });
                     screenShake = 30;
                     audio.shootShotgun();
-                    addFloatingText(CANVAS_W/2, CANVAS_H/2, "☢️ 核弹清屏!", "#ff0000");
+                    addFloatingText(CANVAS_W/2, CANVAS_H/2, "☢️ 战术核打击!", "#ff0000");
                 } else if(this.type === 'trap') {
                     p.hp -= 1;
-                    addFloatingText(p.x, p.y - 30, "⚠️ 陷阱!", "#ff0000");
+                    addFloatingText(p.x, p.y - 30, "⚠️ 踩中地雷!", "#ff0000");
                     audio.playerHit();
                 } else if(this.type === 'revive') {
                     let deadPlayer = players.find(pl => pl.hp <= 0);
@@ -787,16 +787,16 @@ class LootBox {
                         deadPlayer.hp = 3;
                         deadPlayer.isDowned = false;
                         deadPlayer.x = p.x; deadPlayer.y = p.y;
-                        addFloatingText(p.x, p.y - 30, "👼 队友复活!", "#ffffff");
+                        addFloatingText(p.x, p.y - 30, "👼 战地救援!", "#ffffff");
                         audio.levelUp();
                     } else {
                         p.hp = Math.min(p.maxHp, p.hp + 1);
-                        addFloatingText(p.x, p.y - 30, "❤️ 生命+1", "#ff3333");
+                        addFloatingText(p.x, p.y - 30, "❤️ 护甲+1", "#ff3333");
                         audio.levelUp();
                     }
                 } else if(this.type === 'ult') {
                     p.hasUlt = true;
-                    addFloatingText(p.x, p.y - 30, "⚡ 获得大招！按Q或右Shift释放！", "#00ffff");
+                    addFloatingText(p.x, p.y - 30, "⚡ 战术充能完毕 (按Q/Shift释放)", "#00ffff");
                     audio.levelUp();
                 }
             }
@@ -928,16 +928,16 @@ function update() {
         eventTimer = 600; // 10 seconds duration
         
         if(activeEvent === 'swarm') {
-            addFloatingText(CANVAS_W/2, CANVAS_H/2, "⚠️ 警告：尸潮来袭！ ⚠️", "#ff0000");
+            addFloatingText(CANVAS_W/2, CANVAS_H/2, "⚠️ 警告：侦测到大规模感染者群！ ⚠️", "#ff0000");
             audio.levelUp();
             screenShake = 30;
             for(let i=0; i<30; i++) zombies.push(new Zombie());
         } else if(activeEvent === 'bloodmoon') {
-            addFloatingText(CANVAS_W/2, CANVAS_H/2, "🌙 血月降临：丧尸狂暴！ 🌙", "#ff0000");
+            addFloatingText(CANVAS_W/2, CANVAS_H/2, "🌙 战地预警：目标进入狂暴状态！ 🌙", "#ff0000");
             audio.levelUp();
             screenShake = 20;
         } else if(activeEvent === 'orbital') {
-            addFloatingText(CANVAS_W/2, CANVAS_H/2, "🚀 天降正义：全图轰炸！ 🚀", "#00ffff");
+            addFloatingText(CANVAS_W/2, CANVAS_H/2, "🚀 轨道打击火力覆盖中！ 🚀", "#00ffff");
             audio.levelUp();
             screenShake = 20;
         }
@@ -964,7 +964,7 @@ function update() {
                         createParticles(z.x, z.y, '#ffaa00', 30);
                         audio.shootShotgun();
                         screenShake = Math.max(screenShake, 10);
-                        addFloatingText(z.x, z.y, "💥 自爆!", "#ff5500");
+                        addFloatingText(z.x, z.y, "💥 异种自爆!", "#ff5500");
                         players.forEach(p => {
                             if(p.hp > 0 && Math.hypot(p.x - z.x, p.y - z.y) < 80) {
                                 p.hp -= 2;
@@ -1009,7 +1009,7 @@ function update() {
     // Boss spawn every 30 seconds
     if(frameCount % 1800 === 0) {
         zombies.push(new Zombie(true));
-        addFloatingText(CANVAS_W/2, CANVAS_H/2, "⚠️ BOSS 出现 ⚠️", "#ff00ff");
+        addFloatingText(CANVAS_W/2, CANVAS_H/2, "⚠️ 极度危险：首领级变异体出现！ ⚠️", "#ff00ff");
         screenShake = 20;
     }
 
@@ -1066,7 +1066,7 @@ function update() {
                         createParticles(z.x, z.y, '#ffaa00', 30);
                         audio.shootShotgun();
                         screenShake = Math.max(screenShake, 10);
-                        addFloatingText(z.x, z.y, "💥 自爆!", "#ff5500");
+                        addFloatingText(z.x, z.y, "💥 异种自爆!", "#ff5500");
                         players.forEach(p => {
                             if(p.hp > 0 && Math.hypot(p.x - z.x, p.y - z.y) < 80) {
                                 p.hp -= 2;
@@ -1195,7 +1195,7 @@ function gameLoop(timestamp) {
         console.error("Game Loop Error:", e);
         // Ensure game doesn't pause silently
         if(frameCount % 60 === 0) { // Notify only once a second
-             addFloatingText(CANVAS_W/2, 50, "⚠️ 极小概率引擎错误已自动修复", "#ff0000");
+             addFloatingText(CANVAS_W/2, 50, "⚠️ 战术头盔系统已自动重启", "#ff0000");
         }
     }
     
