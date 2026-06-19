@@ -109,7 +109,7 @@ window.addEventListener('keydown', e => {
                 screenShake = 30;
                 addFloatingText(p.x, p.y - 50, "⚡ 万剑归宗 ⚡", "#00ffff");
                 for(let angle=0; angle<Math.PI*2; angle+=Math.PI/16) {
-                    let b = new Bullet(p.x, p.y, Math.cos(angle), Math.sin(angle), 20, 150, '#00ffff', true);
+                    let b = new Bullet(p.x, p.y, Math.cos(angle), Math.sin(angle), 20, 150, '#00ffff', true, p.id);
                     b.size = 10;
                     bullets.push(b);
                 }
@@ -144,6 +144,7 @@ class Player {
         this.color = id === 1 ? '#00bfff' : '#ff9900';
         this.facing = {x: 1, y: 0}; // default facing right
         this.hp = 3;
+        this.score = 0;
         this.maxHp = 10;
         this.weaponLevel = 0;
         this.cooldown = 0;
@@ -157,12 +158,50 @@ class Player {
         this.lastInputTime = Date.now();
         this.isAI = false;
         
-        this.weapons = [
-            { name: "双持手枪 Pistols", cd: 20, type: "pistol", req: 0 },
-            { name: "重型霰弹枪 Shotgun", cd: 35, type: "shotgun", req: 20 },
-            { name: "突击步枪 Rifle", cd: 8, type: "machinegun", req: 60 },
-            { name: "等离子激光 Laser", cd: 2, type: "laser", req: 150 }
-        ];
+this.weapons = [];
+        for(let i=1; i<=30; i++) {
+            let w = {name: `Lv.${i} 暴雨`, cd: 15, damage: 20, speed: 10, count: 1, spread: 0, pierce: false};
+            
+            w.damage = 15 + Math.floor(i / 2) * 5;
+            w.speed = 10 + i * 0.3;
+            
+            if(i <= 5) {
+                w.count = 1;
+                w.cd = 16 - i * 2;
+            } else if (i <= 10) {
+                w.count = 2;
+                w.spread = 0.2;
+                w.cd = 14 - (i - 5) * 1.5;
+            } else if (i <= 15) {
+                w.count = 3;
+                w.spread = 0.4;
+                w.cd = 10 - (i - 10) * 1;
+            } else if (i <= 20) {
+                w.count = 4;
+                w.spread = 0.6;
+                w.cd = 8 - (i - 15) * 0.5;
+                w.pierce = true;
+            } else if (i <= 25) {
+                w.count = 5;
+                w.spread = 1.0;
+                w.cd = 6 - (i - 20) * 0.4;
+                w.pierce = true;
+            } else if (i < 30) {
+                w.count = 6 + (i - 26)*2;
+                w.spread = Math.PI; 
+                w.cd = 5;
+                w.pierce = true;
+            } else { 
+                w.name = "🔥 毁灭者光轮 🔥";
+                w.count = 16;
+                w.spread = Math.PI * 2;
+                w.cd = 3;
+                w.pierce = true;
+                w.damage = 150;
+            }
+            this.weapons.push(w);
+        }
+        this.weapon = this.weapons[this.weaponLevel];
     }
 
     update() {
@@ -319,44 +358,38 @@ class Player {
     }
 
     shoot() {
-        if(this.hp <= 0 || this.isDowned || this.cooldown > 0) return;
+        if(this.hp <= 0 || this.isDowned || this.cooldown > 0 || this.vehicleTime > 0) return;
         const w = this.weapons[this.weaponLevel];
         this.cooldown = w.cd;
         
-        let fx = this.facing.x;
-        let fy = this.facing.y;
-        
-        
-        if(this.vehicleTime > 0) return; // Cannot shoot while driving
-        
         if(this.mechTime > 0) {
             audio.shootLaser();
-            // Mech shoots 360 degree lasers and huge missiles
             for(let i=0; i<8; i++) {
                 let angle = Math.PI/4 * i + (frameCount*0.1);
-                bullets.push(new Bullet(this.x, this.y, Math.cos(angle), Math.sin(angle), 15, 50, '#ff0000', true));
+                bullets.push(new Bullet(this.x, this.y, Math.cos(angle), Math.sin(angle), 15, 50, '#ff0000', true, this.id));
             }
             return;
         }
 
-        if(w.type === "pistol") {
-            audio.shootPistol();
-            bullets.push(new Bullet(this.x, this.y, fx, fy, 10, 20, '#fff'));
-            bullets.push(new Bullet(this.x, this.y, -fx, -fy, 10, 20, '#fff'));
-        } else if(w.type === "shotgun") {
-            audio.shootShotgun();
-            for(let i = -2; i <= 2; i++) {
-                let angle = Math.atan2(fy, fx) + i * 0.2;
-                bullets.push(new Bullet(this.x, this.y, Math.cos(angle), Math.sin(angle), 12, 15, '#ffaa00'));
-            }
-        } else if(w.type === "machinegun") {
-            audio.shootMachine();
-            let angle = Math.atan2(fy, fx) + (Math.random() - 0.5) * 0.2;
-            bullets.push(new Bullet(this.x, this.y, Math.cos(angle), Math.sin(angle), 15, 18, '#00ffff'));
-        } else if(w.type === "laser") {
-            audio.shootLaser();
-            bullets.push(new Bullet(this.x, this.y, fx, fy, 25, 30, '#ff00ff', true));
+        let baseAngle = Math.atan2(this.facing.y, this.facing.x);
+        let count = w.count;
+        let spread = w.spread;
+        
+        let startAngle = count === 1 ? baseAngle : baseAngle - spread/2;
+        let angleStep = count === 1 ? 0 : spread / (count - 1);
+        
+        for(let i = 0; i < count; i++) {
+            let angle = startAngle + i * angleStep;
+            let b = new Bullet(this.x, this.y, Math.cos(angle), Math.sin(angle), w.speed, w.damage, '#fff', w.pierce, this.id);
+            
+            if(this.weaponLevel >= 29) b.color = '#ff00ff';
+            else if(count >= 5) b.color = '#ffaa00';
+            else if(w.pierce) b.color = '#00ffff';
+            
+            b.size = w.pierce ? 5 : 4;
+            bullets.push(b);
         }
+        audio.shootPistol();
     }
 
     draw(ctx) {
@@ -493,7 +526,8 @@ class Player {
 }
 
 class Bullet {
-    constructor(x, y, dx, dy, speed, damage, color, pierce=false) {
+    constructor(x, y, dx, dy, speed, damage, color, pierce=false, ownerId=0) {
+        this.ownerId = ownerId;
         this.x = x; this.y = y;
         this.dx = dx; this.dy = dy;
         this.speed = speed;
@@ -726,7 +760,7 @@ class LootBox {
                 } else if(this.type === 'weapon_box') {
                     if(p.weaponLevel < 29) p.weaponLevel++;
                     p.weapon = p.weapons[p.weaponLevel];
-                    document.getElementById('current-weapon').textContent = p.weapon.name;
+                    
                     addFloatingText(p.x, p.y - 30, `🔫 火力升级! ${p.weapon.name}`, "#aa00ff");
                     audio.levelUp();
                 } else if(this.type === 'mech') {
@@ -1013,6 +1047,8 @@ function update() {
                 if(z.hp <= 0) {
                     z.active = false;
                     score += z.scoreVal;
+                    let owner = players.find(pl => pl.id === b.ownerId);
+                    if(owner) owner.score += z.scoreVal;
                     killCount++;
                     
                     // 怪物死亡掉落道具
@@ -1068,6 +1104,31 @@ function update() {
     floatingTexts = floatingTexts.filter(ft => ft.life > 0);
     lootBoxes = lootBoxes.filter(lb => lb.active);
     if(typeof boars !== 'undefined') boars = boars.filter(b => b.active);
+
+    // Update Player HUD
+    if(players.length >= 2) {
+        let p1 = players[0];
+        document.getElementById('p1-score').textContent = p1.score;
+        document.getElementById('p1-weapon').textContent = p1.weapon.name;
+        let p1b = [];
+        if(p1.shieldTime > 0) p1b.push('🛡️');
+        if(p1.buffTime > 0) p1b.push('🌀');
+        if(p1.mechTime > 0) p1b.push('🤖');
+        if(p1.vehicleTime > 0) p1b.push('🏍️');
+        if(p1.hasUlt) p1b.push('⚡');
+        document.getElementById('p1-buffs').textContent = p1b.length > 0 ? p1b.join(' ') : '无';
+
+        let p2 = players[1];
+        document.getElementById('p2-score').textContent = p2.score;
+        document.getElementById('p2-weapon').textContent = p2.weapon.name;
+        let p2b = [];
+        if(p2.shieldTime > 0) p2b.push('🛡️');
+        if(p2.buffTime > 0) p2b.push('🌀');
+        if(p2.mechTime > 0) p2b.push('🤖');
+        if(p2.vehicleTime > 0) p2b.push('🏍️');
+        if(p2.hasUlt) p2b.push('⚡');
+        document.getElementById('p2-buffs').textContent = p2b.length > 0 ? p2b.join(' ') : '无';
+    }
 }
 
 function draw() {
