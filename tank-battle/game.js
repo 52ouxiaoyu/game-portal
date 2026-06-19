@@ -452,10 +452,10 @@ class Tank {
         if (this.cooldown > 0) return;
         let bulletCount = 0;
         for (const b of this.game.bullets) { if (b.owner === this && b.active) bulletCount++; }
-        const maxBullets = this instanceof Player ? 1 : 2;
+        const maxBullets = this.isBoss ? 2 : 1;
         if (bulletCount >= maxBullets) return;
-        if (this.game.bullets.length >= 50) return;
-        this.cooldown = this instanceof Player ? Math.max(25, 45 - this.level * 5) : Math.max(5, 20 - this.level * 5);
+        if (this.game.bullets.length >= 30) return;
+        this.cooldown = this instanceof Player ? Math.max(25, 45 - this.level * 5) : Math.max(30, 60 - this.level * 10);
         let bx = this.x + 26; let by = this.y + 26;
         if (this.direction === 'UP') by = this.y - 10; else if (this.direction === 'DOWN') by = this.y + 60; else if (this.direction === 'LEFT') bx = this.x - 10; else if (this.direction === 'RIGHT') bx = this.x + 60;
         if (this instanceof Player) audio.play('shoot');
@@ -755,7 +755,7 @@ class Player extends Tank {
         return perpDirs[0];
     }
 }
-class Enemy extends Tank { constructor(game, x, y, stage = 0) { super(game, x, y, COLORS.ENEMY); const diffMult = game.difficulty === 'easy' ? 0.8 : (game.difficulty === 'hard' ? 1.2 : 1); this.speed = (2 + Math.min(stage * 0.1, 2)) * diffMult; this.dirTimer = 0; } update() { super.update(); if (this.dirTimer <= 0) { this.direction = ['UP', 'DOWN', 'LEFT', 'RIGHT'][Math.floor(Math.random() * 4)]; this.dirTimer = 30 + Math.random() * 60; } else this.dirTimer--; const ox = this.x; const oy = this.y; this.move(this.direction); if (this.x === ox && this.y === oy) this.dirTimer = 0; if (Math.random() * 100 < 5) this.shoot(); } }
+class Enemy extends Tank { constructor(game, x, y, stage = 0) { super(game, x, y, COLORS.ENEMY); const diffMult = game.difficulty === 'easy' ? 0.8 : (game.difficulty === 'hard' ? 1.2 : 1); this.speed = (2 + Math.min(stage * 0.1, 2)) * diffMult; this.dirTimer = 0; } update() { super.update(); if (this.dirTimer <= 0) { this.direction = ['UP', 'DOWN', 'LEFT', 'RIGHT'][Math.floor(Math.random() * 4)]; this.dirTimer = 30 + Math.random() * 60; } else this.dirTimer--; const ox = this.x; const oy = this.y; this.move(this.direction); if (this.x === ox && this.y === oy) this.dirTimer = 0; if (Math.random() * 100 < 2) this.shoot(); } }
 
 class Boss extends Enemy {
     constructor(game, x, y, stage = 0) {
@@ -776,7 +776,7 @@ class Boss extends Enemy {
         this.game.weather = weathers[Math.floor(Math.random() * weathers.length)];
     }
     shoot() {
-        if (this.cooldown > 0) return; this.cooldown = Math.max(3, 15 - this.level * 3);
+        if (this.cooldown > 0) return; this.cooldown = Math.max(15, 30 - this.level * 3);
         const cx = this.x + this.width / 2;
         const cy = this.y + this.height / 2;
         const angle = this.turretAngle;
