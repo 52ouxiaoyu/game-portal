@@ -27,7 +27,6 @@
             overflow-x: hidden;
         }
 
-        /* Animated Background */
         .bg-animation {
             position: fixed;
             top: 0;
@@ -84,40 +83,38 @@
             66% { transform: translateY(20px) rotate(-5deg); }
         }
 
-        /* Header */
         .header {
-            padding: 60px 20px 40px;
+            padding: 40px 20px 30px;
             text-align: center;
-            position: relative;
         }
 
         .logo {
             display: inline-flex;
             align-items: center;
             gap: 15px;
-            margin-bottom: 20px;
+            margin-bottom: 15px;
         }
 
         .logo-icon {
-            width: 80px;
-            height: 80px;
+            width: 60px;
+            height: 60px;
             background: linear-gradient(135deg, var(--primary), var(--accent));
-            border-radius: 24px;
+            border-radius: 18px;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 40px;
+            font-size: 30px;
             box-shadow: 0 10px 40px rgba(108, 92, 231, 0.4);
             animation: logoFloat 3s ease-in-out infinite;
         }
 
         @keyframes logoFloat {
             0%, 100% { transform: translateY(0); }
-            50% { transform: translateY(-10px); }
+            50% { transform: translateY(-8px); }
         }
 
         h1 {
-            font-size: 3.5rem;
+            font-size: 2.5rem;
             font-weight: 900;
             background: linear-gradient(135deg, #fff 0%, var(--secondary) 50%, var(--accent) 100%);
             -webkit-background-clip: text;
@@ -127,32 +124,29 @@
         }
 
         .tagline {
-            font-size: 1.3rem;
+            font-size: 1.1rem;
             color: rgba(255, 255, 255, 0.5);
-            margin-top: 10px;
-            font-weight: 400;
+            margin-top: 8px;
         }
 
-        /* Stats Bar */
         .stats-bar {
             display: flex;
             justify-content: center;
-            gap: 60px;
-            margin-top: 50px;
+            gap: 40px;
+            margin-top: 30px;
             flex-wrap: wrap;
         }
 
         .stat {
             text-align: center;
-            padding: 20px 30px;
+            padding: 15px 25px;
             background: var(--glass);
-            border-radius: 16px;
+            border-radius: 12px;
             border: 1px solid rgba(255, 255, 255, 0.08);
-            backdrop-filter: blur(10px);
         }
 
         .stat-value {
-            font-size: 2.8rem;
+            font-size: 2rem;
             font-weight: 900;
             background: linear-gradient(135deg, var(--primary), var(--accent));
             -webkit-background-clip: text;
@@ -161,24 +155,23 @@
         }
 
         .stat-label {
-            font-size: 0.9rem;
+            font-size: 0.8rem;
             color: rgba(255, 255, 255, 0.5);
-            margin-top: 5px;
+            margin-top: 3px;
         }
 
-        /* Games Section */
         .section-title {
             text-align: center;
-            font-size: 1.8rem;
+            font-size: 1.4rem;
             font-weight: 700;
-            margin: 80px 0 40px;
+            margin: 50px 0 30px;
             color: rgba(255, 255, 255, 0.9);
         }
 
         .games-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
-            gap: 30px;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 20px;
             max-width: 1400px;
             margin: 0 auto;
             padding: 0 20px;
@@ -186,9 +179,9 @@
 
         .game-card {
             background: var(--card-bg);
-            border-radius: 24px;
+            border-radius: 16px;
             overflow: hidden;
-            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            transition: all 0.3s ease;
             border: 1px solid rgba(255, 255, 255, 0.06);
             position: relative;
         }
@@ -202,16 +195,14 @@
             bottom: 0;
             background: linear-gradient(135deg, var(--card-glow) 0%, transparent 50%);
             opacity: 0;
-            transition: opacity 0.4s ease;
+            transition: opacity 0.3s ease;
             pointer-events: none;
         }
 
         .game-card:hover {
-            transform: translateY(-12px) scale(1.02);
+            transform: translateY(-8px);
             border-color: rgba(255, 255, 255, 0.15);
-            box-shadow: 
-                0 25px 50px rgba(0, 0, 0, 0.4),
-                0 0 100px var(--card-glow);
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.3);
         }
 
         .game-card:hover::before {
@@ -219,7 +210,7 @@
         }
 
         .game-preview {
-            height: 200px;
+            height: 120px;
             background: linear-gradient(135deg, var(--card-bg) 0%, rgba(255, 255, 255, 0.02) 100%);
             display: flex;
             align-items: center;
@@ -243,131 +234,132 @@
         }
 
         .game-emoji {
-            font-size: 80px;
+            font-size: 50px;
             position: relative;
             z-index: 1;
-            filter: drop-shadow(0 10px 30px rgba(0, 0, 0, 0.3));
-            transition: transform 0.4s ease;
+            filter: drop-shadow(0 5px 15px rgba(0, 0, 0, 0.3));
+            transition: transform 0.3s ease;
         }
 
         .game-card:hover .game-emoji {
-            transform: scale(1.15) rotate(-5deg);
+            transform: scale(1.1) rotate(-5deg);
         }
 
         .game-content {
-            padding: 30px;
+            padding: 15px;
         }
 
         .game-title {
-            font-size: 1.6rem;
+            font-size: 1.1rem;
             font-weight: 700;
-            margin-bottom: 12px;
+            margin-bottom: 8px;
             color: #fff;
         }
 
-        .game-desc {
+        .game-stats {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 12px;
+            font-size: 0.75rem;
             color: rgba(255, 255, 255, 0.5);
-            line-height: 1.7;
-            margin-bottom: 20px;
-            font-size: 0.95rem;
-            min-height: 50px;
+        }
+
+        .game-stats span {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .game-stats .icon {
+            font-size: 0.85rem;
         }
 
         .game-tags {
             display: flex;
             flex-wrap: wrap;
-            gap: 8px;
-            margin-bottom: 25px;
+            gap: 6px;
+            margin-bottom: 15px;
         }
 
         .tag {
-            padding: 4px 10px;
-            border-radius: 12px;
-            font-size: 0.7rem;
+            padding: 3px 8px;
+            border-radius: 10px;
+            font-size: 0.65rem;
             font-weight: 500;
             background: rgba(255, 255, 255, 0.06);
             color: rgba(255, 255, 255, 0.6);
             border: 1px solid rgba(255, 255, 255, 0.08);
-            transition: all 0.3s ease;
-        }
-
-        .game-card:hover .tag {
-            background: rgba(255, 255, 255, 0.1);
-            border-color: rgba(255, 255, 255, 0.15);
         }
 
         .play-btn {
             display: inline-flex;
             align-items: center;
-            gap: 10px;
-            padding: 14px 32px;
+            gap: 8px;
+            padding: 10px 20px;
             background: linear-gradient(135deg, var(--primary), var(--accent));
             color: #fff;
             text-decoration: none;
-            border-radius: 50px;
+            border-radius: 25px;
             font-weight: 600;
-            font-size: 0.95rem;
+            font-size: 0.85rem;
             transition: all 0.3s ease;
-            position: relative;
-            overflow: hidden;
-        }
-
-        .play-btn::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: -100%;
             width: 100%;
-            height: 100%;
-            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
-            transition: left 0.5s ease;
-        }
-
-        .play-btn:hover::before {
-            left: 100%;
+            justify-content: center;
         }
 
         .play-btn:hover {
-            transform: translateX(5px);
-            box-shadow: 0 10px 30px rgba(108, 92, 231, 0.4);
+            transform: scale(1.02);
+            box-shadow: 0 8px 20px rgba(108, 92, 231, 0.4);
         }
 
         .play-btn svg {
-            width: 18px;
-            height: 18px;
-            transition: transform 0.3s ease;
+            width: 16px;
+            height: 16px;
         }
 
-        .play-btn:hover svg {
-            transform: translateX(3px);
+        .rank-badge {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            background: linear-gradient(135deg, #ffd700, #ffaa00);
+            color: #000;
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 0.7rem;
+            font-weight: 700;
+            z-index: 2;
         }
 
-        /* Footer */
         .footer {
             text-align: center;
-            padding: 60px 20px;
-            margin-top: 80px;
+            padding: 40px 20px;
+            margin-top: 60px;
             border-top: 1px solid rgba(255, 255, 255, 0.05);
         }
 
         .footer-text {
             color: rgba(255, 255, 255, 0.3);
-            font-size: 0.85rem;
+            font-size: 0.8rem;
         }
 
-        /* Responsive */
-        @media (max-width: 768px) {
-            h1 { font-size: 2.2rem; }
-            .tagline { font-size: 1rem; }
-            .stats-bar { gap: 20px; }
-            .stat { padding: 15px 20px; }
-            .stat-value { font-size: 2rem; }
+        @media (max-width: 1200px) {
+            .games-grid { grid-template-columns: repeat(3, 1fr); }
+        }
+
+        @media (max-width: 900px) {
+            .games-grid { grid-template-columns: repeat(2, 1fr); }
+        }
+
+        @media (max-width: 600px) {
+            h1 { font-size: 1.8rem; }
             .games-grid { grid-template-columns: 1fr; padding: 0 15px; }
-            .game-preview { height: 160px; }
-            .game-emoji { font-size: 60px; }
+            .game-preview { height: 100px; }
+            .game-emoji { font-size: 40px; }
+            .stats-bar { gap: 15px; }
+            .stat { padding: 10px 15px; }
+            .stat-value { font-size: 1.5rem; }
         }
 
-        /* Card Colors */
         .card-tank { --card-glow: #E7E721; }
         .card-snake { --card-glow: #00b894; }
         .card-kingdom { --card-glow: #e17055; }
@@ -396,110 +388,171 @@
             <div class="stat-label">款游戏</div>
         </div>
         <div class="stat">
-            <div class="stat-value">100%</div>
-            <div class="stat-label">免费游玩</div>
+            <div class="stat-value" id="total-plays">0</div>
+            <div class="stat-label">总游玩次数</div>
         </div>
         <div class="stat">
-            <div class="stat-value">0</div>
-            <div class="stat-label">广告干扰</div>
-        </div>
-        <div class="stat">
-            <div class="stat-value">∞</div>
-            <div class="stat-label">游戏乐趣</div>
+            <div class="stat-value" id="total-time">0</div>
+            <div class="stat-label">总游玩时长</div>
         </div>
     </div>
 
-    <h2 class="section-title">🎯 选择你的游戏</h2>
+    <h2 class="section-title">🔥 热门游戏</h2>
 
-    <div class="games-grid">
-        <div class="game-card card-tank">
-            <div class="game-preview">
-                <span class="game-emoji">🪖</span>
-            </div>
-            <div class="game-content">
-                <h3 class="game-title">坦克大战</h3>
-                <p class="game-desc">经典坦克大战网页版，支持双人对战。1000关随机生成，AI自动托管，Boss战加天气特效！</p>
-                <div class="game-tags">
-                    <span class="tag">🎮 双人对战</span>
-                    <span class="tag">🎯 射击</span>
-                    <span class="tag">🗺️ 1000关</span>
-                    <span class="tag">🤖 AI托管</span>
-                </div>
-                <a href="坦克大战/index.html" class="play-btn" target="_blank">
-                    开始游戏
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <path d="M5 12h14M12 5l7 7-7 7"/>
-                    </svg>
-                </a>
-            </div>
-        </div>
-
-        <div class="game-card card-snake">
-            <div class="game-preview">
-                <span class="game-emoji">🐍</span>
-            </div>
-            <div class="game-content">
-                <h3 class="game-title">贪吃蛇</h3>
-                <p class="game-desc">经典贪吃蛇游戏，流畅的操作体验，多种玩法模式，挑战你的极限长度！</p>
-                <div class="game-tags">
-                    <span class="tag">🎯 经典</span>
-                    <span class="tag">🎯 休闲</span>
-                    <span class="tag">🏆 高分挑战</span>
-                </div>
-                <a href="贪吃蛇/index.html" class="play-btn" target="_blank">
-                    开始游戏
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <path d="M5 12h14M12 5l7 7-7 7"/>
-                    </svg>
-                </a>
-            </div>
-        </div>
-
-        <div class="game-card card-kingdom">
-            <div class="game-preview">
-                <span class="game-emoji">🏰</span>
-            </div>
-            <div class="game-content">
-                <h3 class="game-title">王国保卫战</h3>
-                <p class="game-desc">策略塔防游戏，建造防御塔抵御敌人入侵，策略与反应的完美结合！</p>
-                <div class="game-tags">
-                    <span class="tag">🏰 塔防</span>
-                    <span class="tag">🧠 策略</span>
-                    <span class="tag">⭐ 经典</span>
-                </div>
-                <a href="王国保卫战/index.html" class="play-btn" target="_blank">
-                    开始游戏
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <path d="M5 12h14M12 5l7 7-7 7"/>
-                    </svg>
-                </a>
-            </div>
-        </div>
-
-        <div class="game-card card-calabash">
-            <div class="game-preview">
-                <span class="game-emoji">🎃</span>
-            </div>
-            <div class="game-content">
-                <h3 class="game-title">葫芦兄弟</h3>
-                <p class="game-desc">致敬经典动画！七兄弟各有神通，拯救爷爷的冒险之旅！</p>
-                <div class="game-tags">
-                    <span class="tag">🎯 冒险</span>
-                    <span class="tag">⭐ 经典</span>
-                    <span class="tag">🇨🇳 国产动画</span>
-                </div>
-                <a href="葫芦兄弟/index.html" class="play-btn" target="_blank">
-                    开始游戏
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <path d="M5 12h14M12 5l7 7-7 7"/>
-                    </svg>
-                </a>
-            </div>
-        </div>
+    <div class="games-grid" id="games-grid">
+        <!-- Games will be inserted by JavaScript -->
     </div>
 
     <footer class="footer">
         <p class="footer-text">© 2026 游戏中心 · HTML/CSS/JS 纯手工打造</p>
     </footer>
+
+    <script>
+        // Game data with localStorage tracking
+        const games = [
+            {
+                id: 'tank',
+                title: '坦克大战',
+                emoji: '🪖',
+                color: '#E7E721',
+                cardClass: 'card-tank',
+                url: '坦克大战/index.html',
+                tags: ['双人', '射击', '1000关'],
+                desc: '经典坦克大战，支持双人对战'
+            },
+            {
+                id: 'snake',
+                title: '贪吃蛇',
+                emoji: '🐍',
+                color: '#00b894',
+                cardClass: 'card-snake',
+                url: '贪吃蛇/index.html',
+                tags: ['经典', '休闲'],
+                desc: '流畅操作，多种玩法'
+            },
+            {
+                id: 'kingdom',
+                title: '王国保卫战',
+                emoji: '🏰',
+                color: '#e17055',
+                cardClass: 'card-kingdom',
+                url: '王国保卫战/index.html',
+                tags: ['塔防', '策略'],
+                desc: '建造防御塔抵御敌人'
+            },
+            {
+                id: 'calabash',
+                title: '葫芦兄弟',
+                emoji: '🎃',
+                color: '#0984e3',
+                cardClass: 'card-calabash',
+                url: '葫芦兄弟/index.html',
+                tags: ['冒险', '经典'],
+                desc: '七兄弟拯救爷爷'
+            }
+        ];
+
+        // Load stats from localStorage
+        function loadStats() {
+            const stats = localStorage.getItem('gamePortalStats');
+            return stats ? JSON.parse(stats) : {};
+        }
+
+        // Save stats to localStorage
+        function saveStats(stats) {
+            localStorage.setItem('gamePortalStats', JSON.stringify(stats));
+        }
+
+        // Track game click
+        function trackGame(gameId) {
+            const stats = loadStats();
+            if (!stats[gameId]) {
+                stats[gameId] = { plays: 0, time: 0 };
+            }
+            stats[gameId].plays++;
+            saveStats(stats);
+            
+            // Start tracking time
+            const startTime = Date.now();
+            window.onbeforeunload = () => {
+                const elapsed = Math.floor((Date.now() - startTime) / 1000);
+                const currentStats = loadStats();
+                if (currentStats[gameId]) {
+                    currentStats[gameId].time += elapsed;
+                    saveStats(currentStats);
+                }
+            };
+        }
+
+        // Format time
+        function formatTime(seconds) {
+            if (seconds < 60) return seconds + '秒';
+            if (seconds < 3600) return Math.floor(seconds / 60) + '分';
+            return Math.floor(seconds / 3600) + '时' + Math.floor((seconds % 3600) / 60) + '分';
+        }
+
+        // Get total stats
+        function getTotalStats() {
+            const stats = loadStats();
+            let totalPlays = 0;
+            let totalTime = 0;
+            for (const key in stats) {
+                totalPlays += stats[key].plays || 0;
+                totalTime += stats[key].time || 0;
+            }
+            return { plays: totalPlays, time: totalTime };
+        }
+
+        // Render games sorted by play count
+        function renderGames() {
+            const stats = loadStats();
+            const grid = document.getElementById('games-grid');
+            
+            // Sort games by play count (descending)
+            const sortedGames = [...games].sort((a, b) => {
+                const aPlays = stats[a.id]?.plays || 0;
+                const bPlays = stats[b.id]?.plays || 0;
+                return bPlays - aPlays;
+            });
+
+            grid.innerHTML = sortedGames.map((game, index) => {
+                const gameStats = stats[game.id] || { plays: 0, time: 0 };
+                const rankBadge = index < 3 ? `<div class="rank-badge">TOP ${index + 1}</div>` : '';
+                
+                return `
+                    <div class="game-card ${game.cardClass}">
+                        ${rankBadge}
+                        <div class="game-preview">
+                            <span class="game-emoji">${game.emoji}</span>
+                        </div>
+                        <div class="game-content">
+                            <h3 class="game-title">${game.title}</h3>
+                            <div class="game-stats">
+                                <span><span class="icon">👁️</span> ${gameStats.plays} 次</span>
+                                <span><span class="icon">⏱️</span> ${formatTime(gameStats.time)}</span>
+                            </div>
+                            <div class="game-tags">
+                                ${game.tags.map(tag => `<span class="tag">${tag}</span>`).join('')}
+                            </div>
+                            <a href="${game.url}" class="play-btn" target="_blank" onclick="trackGame('${game.id}')">
+                                开始游戏
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M5 12h14M12 5l7 7-7 7"/>
+                                </svg>
+                            </a>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+
+            // Update total stats
+            const total = getTotalStats();
+            document.getElementById('total-plays').textContent = total.plays;
+            document.getElementById('total-time').textContent = formatTime(total.time);
+        }
+
+        // Initialize
+        renderGames();
+    </script>
 </body>
 </html>
