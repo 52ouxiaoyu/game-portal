@@ -530,7 +530,21 @@ function showText(speaker, text, choices) {
   document.getElementById('speaker').textContent = speaker;
   document.getElementById('choices').innerHTML = '';
   typeText(text, () => {
-    if (choices) {
+    // If the only choice is to continue exploring, we don't render the button.
+    // Instead, we just apply its effect and enter idle state.
+    if (choices && choices.length === 1 && choices[0].next === 'explore') {
+      const c = choices[0];
+      if (c.data) events._tempData = c.data;
+      if (c.effect) applyEffect(c.effect); 
+      updateUI();
+      
+      window.isIdle = true;
+      document.getElementById('actions').style.opacity = '1';
+      document.getElementById('actions').style.pointerEvents = 'auto';
+      return;
+    }
+
+    if (choices && choices.length > 0) {
       const div = document.getElementById('choices');
       choices.forEach(c => {
         const btn = document.createElement('button');
