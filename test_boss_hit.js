@@ -15,12 +15,17 @@ const document = {
     getElementById: (id) => {
         if (id === 'game-canvas') {
             return {
-                getContext: () => ({ fillRect: ()=>{}, beginPath: ()=>{}, moveTo: ()=>{}, lineTo: ()=>{}, stroke: ()=>{}, fill: ()=>{}, arc: ()=>{}, fillText: ()=>{}, save: ()=>{}, translate: ()=>{}, rotate: ()=>{}, restore: ()=>{}, strokeRect: ()=>{}, roundRect: ()=>{}, ellipse: ()=>{} }),
+                getContext: () => ({ fillRect: ()=>{}, beginPath: ()=>{}, moveTo: ()=>{}, lineTo: ()=>{}, stroke: ()=>{}, fill: ()=>{}, arc: ()=>{}, fillText: ()=>{}, save: ()=>{}, translate: ()=>{}, rotate: ()=>{}, restore: ()=>{}, strokeRect: ()=>{}, roundRect: ()=>{}, ellipse: ()=>{}, drawImage: ()=>{} }),
                 width: 1000,
                 height: 800
             };
         }
         return { classList: { add: ()=>{}, remove: ()=>{} }, textContent: '' };
+    },
+    createElement: () => {
+        return {
+            getContext: () => ({ fillRect: ()=>{}, beginPath: ()=>{}, moveTo: ()=>{}, lineTo: ()=>{}, stroke: ()=>{}, fill: ()=>{}, arc: ()=>{}, fillText: ()=>{}, save: ()=>{}, translate: ()=>{}, rotate: ()=>{}, restore: ()=>{}, strokeRect: ()=>{}, roundRect: ()=>{}, ellipse: ()=>{}, drawImage: ()=>{} })
+        };
     },
     addEventListener: () => {}
 };

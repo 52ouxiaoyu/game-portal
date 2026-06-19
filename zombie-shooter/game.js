@@ -10,6 +10,9 @@ window.addEventListener('resize', () => {
     CANVAS_H = window.innerHeight;
     canvas.width = CANVAS_W;
     canvas.height = CANVAS_H;
+
+    bgCanvas.width = CANVAS_W;
+    bgCanvas.height = CANVAS_H;
 });
 
 // --- AUDIO SYSTEM (Web Audio API) ---
@@ -64,6 +67,13 @@ let lootTimer = 0;
 let spawnTimer = 0;
 let spawnRate = 100; // frames
 let frameCount = 0;
+let screenShake = 0;
+let comboCount = 0;
+let comboTimer = 0;
+let bgCanvas = document.createElement('canvas');
+bgCanvas.width = window.innerWidth;
+bgCanvas.height = window.innerHeight;
+let bgCtx = bgCanvas.getContext('2d');
 
 // Inputs
 const keys = {
@@ -156,6 +166,10 @@ class Player {
                     score += z.scoreVal;
                     killCount++;
                     createParticles(z.x, z.y, '#ff0000', 15);
+                    screenShake = Math.max(screenShake, 5);
+                    for(let b=0; b<5; b++) bgCtx.fillRect(z.x + (Math.random()-0.5)*40, z.y + (Math.random()-0.5)*40, Math.random()*8+4, Math.random()*8+4);
+                    comboCount++; comboTimer = 180;
+                    if(comboCount % 10 === 0) { screenShake = 10; addFloatingText(CANVAS_W/2, 100, `${comboCount} COMBO!`, '#ffaa00'); audio.levelUp(); }
                     audio.zombieDie();
                     addFloatingText(z.x, z.y, "车祸现场!", "#ffcc00");
                 }
@@ -540,6 +554,7 @@ class Zombie {
                         audio.playerHit();
                     } else if(target.vehicleTime <= 0) {
                         target.hp -= this.damage;
+                        screenShake = 15;
                         audio.playerHit();
                     }
                 }
@@ -701,6 +716,14 @@ function gameOver() {
 function update() {
     if(gameState !== 'PLAYING') return;
     frameCount++;
+    if(screenShake > 0) screenShake--;
+    if(comboTimer > 0) {
+        comboTimer--;
+        if(comboTimer <= 0) {
+            if(comboCount >= 10) addFloatingText(CANVAS_W/2, 150, `🔥 ${comboCount} 连杀终结!`, '#ffaa00');
+            comboCount = 0;
+        }
+    }
 
     // Time
     survivalTime = Math.floor((Date.now() - startTime) / 1000);
@@ -715,6 +738,7 @@ function update() {
     if(frameCount % 1800 === 0) {
         zombies.push(new Zombie(true));
         addFloatingText(CANVAS_W/2, CANVAS_H/2, "⚠️ BOSS 出现 ⚠️", "#ff00ff");
+        screenShake = 20;
     }
 
     // Difficulty increase
@@ -754,6 +778,10 @@ function update() {
                     killCount++;
                     document.getElementById('score').textContent = score;
                     createParticles(z.x, z.y, z.color, 15);
+                    bgCtx.fillStyle = '#800000';
+                    for(let b=0; b<5; b++) bgCtx.fillRect(z.x + (Math.random()-0.5)*40, z.y + (Math.random()-0.5)*40, Math.random()*8+4, Math.random()*8+4);
+                    comboCount++; comboTimer = 180;
+                    if(comboCount % 10 === 0) { screenShake = 10; addFloatingText(CANVAS_W/2, 100, `🔥 ${comboCount} COMBO!`, '#ffaa00'); audio.levelUp(); }
                     audio.zombieDie();
                     if(z.isBoss) {
                         addFloatingText(z.x, z.y, `+${z.scoreVal} BOSS击杀!`, '#ff00ff');
@@ -778,6 +806,11 @@ function update() {
 }
 
 function draw() {
+    ctx.save();
+    if(screenShake > 0) {
+        ctx.translate((Math.random()-0.5)*screenShake, (Math.random()-0.5)*screenShake);
+    }
+
     // Clear background
     ctx.fillStyle = '#111';
     ctx.fillRect(0, 0, CANVAS_W, CANVAS_H);
@@ -787,6 +820,9 @@ function draw() {
     ctx.lineWidth = 1;
     for(let i=0; i<CANVAS_W; i+=40) { ctx.beginPath(); ctx.moveTo(i,0); ctx.lineTo(i,CANVAS_H); ctx.stroke(); }
     for(let i=0; i<CANVAS_H; i+=40) { ctx.beginPath(); ctx.moveTo(0,i); ctx.lineTo(CANVAS_W,i); ctx.stroke(); }
+    
+    // Draw Blood Stains
+    ctx.drawImage(bgCanvas, 0, 0);
 
     particles.forEach(p => p.draw(ctx));
     bullets.forEach(b => b.draw(ctx));
@@ -803,6 +839,20 @@ function draw() {
         ctx.fillText(ft.text, ft.x, ft.y);
         ctx.globalAlpha = 1.0;
     });
+    
+    // Draw Combo HUD
+    if(comboCount > 1) {
+        ctx.fillStyle = `rgba(255, 170, 0, ${comboTimer/180})`;
+        ctx.font = 'bold 30px "ZCOOL KuaiLe"';
+        ctx.textAlign = 'right';
+        ctx.fillText(`${comboCount} 连杀!`, CANVAS_W - 20, 40);
+        ctx.fillStyle = '#555';
+        ctx.fillRect(CANVAS_W - 120, 50, 100, 5);
+        ctx.fillStyle = '#ffaa00';
+        ctx.fillRect(CANVAS_W - 120, 50, 100 * (comboTimer/180), 5);
+    }
+    
+    ctx.restore();
 }
 
 function gameLoop(timestamp) {
