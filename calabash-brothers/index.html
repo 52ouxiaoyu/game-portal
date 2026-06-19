@@ -442,8 +442,8 @@ let player = null, boss = null, turn = 1, logEntries = [];
 let winStreak = 0; // 连胜计数
 
 function initGame(charId) {
-  player = { char: characters[charId], hp: 100, maxHp: 100, power: 15 + charId * 2, maxPower: 60, brave: 30, karma: 0, skills: [characters[charId].skill] };
-  boss = { hp: 120, maxHp: 120, power: 18, maxPower: 55, brave: 70, growRate: 1.1 };
+  player = { char: characters[charId], hp: 80, maxHp: 80, power: 8 + charId, maxPower: 80, brave: 20, karma: 0, skills: [characters[charId].skill] };
+  boss = { hp: 200, maxHp: 200, power: 35, maxPower: 80, brave: 80, growRate: 1.1 };
   turn = 1; logEntries = [];
   document.getElementById('start-screen').style.display = 'none';
   document.getElementById('game-screen').style.display = 'block';
@@ -695,35 +695,50 @@ const events = {
 
   npc_encounter: () => {
     const npc = npcs[Math.floor(Math.random() * npcs.length)];
-    const good = Math.random() > 0.4;
-    if (good) {
-      showText(npc.name, npc.desc, [{ 
-        text: '🤝 接受', 
-        next: 'npc_result', 
-        effect: npc.effectGood,
-        data: { npc, isGood: true }
-      }, { 
-        text: '👋 离开', 
-        next: 'npc_leave',
-        data: { npc }
-      }]);
+    if (npc.dialogues && npc.dialogues.length > 0) {
+      const choices = npc.dialogues.map(d => ({
+        text: d.text,
+        next: 'npc_dialogue_result',
+        effect: d.effect,
+        data: { npc, dialogue: d }
+      }));
+      showText(npc.name, npc.desc, choices);
     } else {
-      showText(npc.name, npc.desc + '\n\n⚠️ 感觉不太对劲...', [{ 
-        text: '🤝 接受', 
-        next: 'npc_result', 
-        effect: npc.effectBad,
-        data: { npc, isGood: false }
-      }, { 
-        text: '🚫 拒绝', 
-        next: 'npc_reject',
-        data: { npc }
-      }]);
+      const good = Math.random() > 0.4;
+      if (good) {
+        showText(npc.name, npc.desc, [{ 
+          text: '🤝 接受', 
+          next: 'npc_result', 
+          effect: npc.effectGood,
+          data: { npc, isGood: true }
+        }, { 
+          text: '👋 离开', 
+          next: 'npc_leave',
+          data: { npc }
+        }]);
+      } else {
+        showText(npc.name, npc.desc + '\n\n⚠️ 感觉不太对劲...', [{ 
+          text: '🤝 接受', 
+          next: 'npc_result', 
+          effect: npc.effectBad,
+          data: { npc, isGood: false }
+        }, { 
+          text: '🚫 拒绝', 
+          next: 'npc_reject',
+          data: { npc }
+        }]);
+      }
     }
+  },
+
+  npc_dialogue_result: () => {
+    const { npc, dialogue } = events._tempData;
+    showText(`🎭 ${npc.name}`, dialogue.result, [{ text: '继续探索', next: 'explore' }]);
   },
 
   npc_result: () => {
     const { npc, isGood } = events._tempData;
-    const resultText = isGood ? npc.result : npc.result;
+    const resultText = isGood ? (npc.result || '你做出了选择...') : (npc.result || '结果出乎意料...');
     const emoji = isGood ? '✅' : '❌';
     showText(`${emoji} ${npc.name}`, resultText, [{ text: '继续探索', next: 'explore' }]);
   },
@@ -991,7 +1006,7 @@ const events = {
     else difficulty = '蛇精的力量远超你的预期...';
     
     showText('🐍 蛇精', 
-      `哈哈哈！你终于来了！\n\n我现在的战力是 ${boss.power}，生命是 ${boss.hp}！\n\n${difficulty}`, 
+      `哈哈哈！你终于来了！\n\n我现在的战力是 ${boss.power}，生命是 ${boss.hp}！\n\n${difficulty}\n\n💡 提示：收集更多兄弟可以大幅降低受到的伤害！`, 
       [
         { text: '⚔️ 决战！', next: 'boss_fight' },
         { text: '😰 再准备', next: 'explore', effect: { hp: 10 } }
@@ -1001,24 +1016,25 @@ const events = {
   boss_fight: () => {
     // 战斗公式：基于实力对比
     const powerRatio = player.power / boss.power;
-    const skillBonus = 1 + player.skills.length * 0.05;
+    const skillBonus = 1 + player.skills.length * 0.03;
     
-    // 玩家伤害（基于实力对比）
+    // 玩家伤害（基于实力对比）- 大幅降低
     let pDmg;
-    if (powerRatio >= 1.5) pDmg = Math.floor(player.power * 0.8 * skillBonus);
-    else if (powerRatio >= 1.0) pDmg = Math.floor(player.power * 0.6 * skillBonus);
-    else if (powerRatio >= 0.8) pDmg = Math.floor(player.power * 0.4 * skillBonus);
-    else pDmg = Math.floor(player.power * 0.25 * skillBonus);
+    if (powerRatio >= 1.5) pDmg = Math.floor(player.power * 0.5 * skillBonus);
+    else if (powerRatio >= 1.2) pDmg = Math.floor(player.power * 0.4 * skillBonus);
+    else if (powerRatio >= 1.0) pDmg = Math.floor(player.power * 0.3 * skillBonus);
+    else if (powerRatio >= 0.8) pDmg = Math.floor(player.power * 0.2 * skillBonus);
+    else pDmg = Math.floor(player.power * 0.12 * skillBonus);
     
-    // Boss伤害（实力越强，Boss反击越狠）
-    const baseBossDmg = boss.power * 0.4;
-    const bossBonus = 1 + Math.floor(turn / 5) * 0.1; // 每5回合Boss变强
-    let bDmg = Math.floor(baseBossDmg * bossBonus * (1 - player.skills.length * 0.02));
+    // Boss伤害 - 大幅提高
+    const baseBossDmg = boss.power * 0.6;
+    const bossBonus = 1 + Math.floor(turn / 3) * 0.15; // 每3回合Boss变强
+    let bDmg = Math.floor(baseBossDmg * bossBonus * (1 - player.skills.length * 0.015));
     
     // 加入随机因素
-    const randomFactor = 0.8 + Math.random() * 0.4;
+    const randomFactor = 0.85 + Math.random() * 0.3;
     pDmg = Math.floor(pDmg * randomFactor);
-    bDmg = Math.floor(bDmg * (2 - randomFactor));
+    bDmg = Math.floor(bDmg * (1.8 - randomFactor * 0.6));
     
     applyEffect({ hp: -bDmg, bossHp: -pDmg });
     
@@ -1040,15 +1056,59 @@ const events = {
     }
     else {
       const progress = Math.floor((1 - boss.hp / boss.maxHp) * 100);
+      
+      // 根据Boss剩余生命触发不同阶段
+      let phaseEffect = '';
+      let phaseChoices = [];
+      
+      if (boss.hp <= boss.maxHp * 0.3 && boss.hp > 0) {
+        // Boss 低血量 - 狂暴阶段
+        const狂暴 = Math.floor(Math.random() * 15) + 10;
+        boss.power = Math.min(boss.maxPower, boss.power + 狂暴);
+        phaseEffect = `\n\n🔥 蛇精进入狂暴状态！战力+${狂暴}！\n蛇精释放出黑暗力量，准备同归于尽！`;
+        phaseChoices = [
+          { text: '⚔️ 继续战斗', next: 'boss_fight' },
+          { text: '🌀 使用联合技', next: 'combo_attack', effect: { power: 15 }, data: { pDmg, bDmg } },
+          { text: '😰 撤退', next: 'explore', effect: { hp: 15 } }
+        ];
+      } else if (boss.hp <= boss.maxHp * 0.6 && boss.hp > 0) {
+        // Boss 中等血量 - 特殊攻击
+        const attacks = [
+          '🐍 蛇精释放毒雾！你受到持续伤害！',
+          '⚡ 蛇精召唤雷电！地面震动！',
+          '🌪️ 蛇精制造幻象！你分不清真假！'
+        ];
+        phaseEffect = `\n\n${attacks[Math.floor(Math.random() * attacks.length)]}`;
+        bDmg += Math.floor(Math.random() * 10) + 5;
+        applyEffect({ hp: -Math.floor(Math.random() * 10) - 5 });
+        phaseChoices = [
+          { text: '⚔️ 继续战斗', next: 'boss_fight' },
+          { text: '🛡️ 防御反击', next: 'boss_fight', effect: { hp: 10 } }
+        ];
+      } else {
+        phaseChoices = [
+          { text: `继续战斗（${progress}%）`, next: 'boss_fight' },
+          { text: '😰 撤退', next: 'explore', effect: { hp: 15 } }
+        ];
+      }
+      
       const fightTexts = [
-        `激烈的战斗！造成 ${pDmg} 伤害，受到 ${bDmg} 伤害。\n蛇精还剩 ${boss.hp} 生命！（${progress}%）`,
-        `你和蛇精打得难解难分！\n造成 ${pDmg} 伤害，受到 ${bDmg} 伤害。\n蛇精还剩 ${boss.hp} 生命！（${progress}%）`
+        `激烈的战斗！造成 ${pDmg} 伤害，受到 ${bDmg} 伤害。\n蛇精还剩 ${boss.hp} 生命！（${progress}%）${phaseEffect}`,
+        `你和蛇精打得难解难分！\n造成 ${pDmg} 伤害，受到 ${bDmg} 伤害。\n蛇精还剩 ${boss.hp} 生命！（${progress}%）${phaseEffect}`
       ];
-      showText('⚔️ 战斗', fightTexts[Math.floor(Math.random() * fightTexts.length)], [
-        { text: `继续战斗（${progress}%）`, next: 'boss_fight' },
-        { text: '😰 撤退', next: 'explore', effect: { hp: 15 } }
-      ]);
+      showText('⚔️ 战斗', fightTexts[Math.floor(Math.random() * fightTexts.length)], phaseChoices);
     }
+  },
+
+  combo_attack: () => {
+    // 联合技 - 大幅伤害但消耗大量生命
+    const comboDmg = Math.floor(player.power * 0.8);
+    const comboCost = Math.floor(player.hp * 0.3);
+    applyEffect({ hp: -comboCost, bossHp: -comboDmg });
+    
+    showText('🌀 联合技！', 
+      `你使出了七兄弟的联合技能！\n\n造成 ${comboDmg} 伤害！\n但你消耗了 ${comboCost} 生命值...\n\n蛇精还剩 ${boss.hp} 生命！`, 
+      [{ text: '⚔️ 继续', next: boss.hp > 0 ? 'boss_fight' : 'ending' }]);
   },
 
   ending: () => { document.getElementById('chapter').textContent = '🌟 完美结局'; showText('爷爷', '好孩子！你做到了！', [{ text: '🔄 再玩', next: 'restart' }]); },
@@ -1065,7 +1125,26 @@ function doAction(action) {
     else showText('🔍 寻找', '你仔细搜寻兄弟的踪迹...\n\n但这次没有找到...', [{ text: '继续', next: 'explore' }]);
   }
   else if (action === 'rest') { growBoss(); turn++; applyEffect({ hp: 22 }); showText('💤 休息', '恢复了体力。', [{ text: '继续', next: 'explore' }]); }
-  else if (action === 'fight') { if (player.power >= boss.power * 0.85) showEvent('boss_entrance'); else showText('旁白', '现在还不是时候...', [{ text: '继续', next: 'explore' }]); }
+  else if (action === 'fight') { 
+    const ratio = player.power / boss.power;
+    if (ratio >= 1.2) {
+      showEvent('boss_entrance');
+    } else if (ratio >= 0.9) {
+      showText('⚠️ 实力分析', 
+        `蛇精战力：${boss.power}\n你的战力：${player.power}\n\n实力接近但还有风险...`, 
+        [
+          { text: '⚔️ 要挑战', next: 'boss_entrance' },
+          { text: '😰 再准备', next: 'explore', effect: { hp: 10 } }
+        ]);
+    } else {
+      showText('💀 实力分析', 
+        `蛇精战力：${boss.power}\n你的战力：${player.power}\n\n蛇精比你强太多了！但现在就去挑战是勇敢还是鲁莽？`, 
+        [
+          { text: '🔥 明知山有虎，偏向虎山行！', next: 'boss_entrance' },
+          { text: '😰 还是再准备吧', next: 'explore', effect: { hp: 15 } }
+        ]);
+    }
+  }
 }
 
 document.getElementById('charSelect').innerHTML = characters.map(c =>
