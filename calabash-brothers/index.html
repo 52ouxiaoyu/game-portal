@@ -7,53 +7,75 @@
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;700;900&display=swap');
 * { margin: 0; padding: 0; box-sizing: border-box; }
-body { background: #1a1a2e; margin: 0; padding: 0; width: 100vw; height: 100vh; overflow: hidden; font-family: 'Noto Sans SC', sans-serif; color: #eee; }
-#game { width: 100vw; height: 100vh; background: #1a1a2e; overflow: hidden; }
-#top-bar { display: flex; justify-content: space-between; padding: 10px 20px; background: rgba(0,0,0,0.3); border-bottom: 2px solid #333; }
-#chapter { font-size: 16px; color: #ffd700; font-weight: bold; }
-#turn { font-size: 14px; color: #888; }
-#boss-warning { color: #ff6b6b; font-size: 12px; animation: pulse 1s infinite; }
+body { background: #0a0a1a; font-family: 'Noto Sans SC', sans-serif; color: #eee; width: 100vw; height: 100vh; overflow: hidden; }
+#game { width: 100vw; height: 100vh; display: flex; flex-direction: column; background: #0a0a1a; }
+
+/* 顶栏 */
+#top-bar { display: flex; justify-content: space-between; align-items: center; padding: 10px 30px; background: rgba(0,0,0,0.5); border-bottom: 1px solid #333; flex-shrink: 0; }
+#chapter { font-size: 20px; color: #ffd700; font-weight: bold; }
+#turn { font-size: 18px; color: #aaa; }
+#boss-warning { color: #ff6b6b; font-size: 16px; animation: pulse 1s infinite; }
 @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.5; } }
+
+/* 主区域 */
 #main-area { display: flex; flex: 1; min-height: 0; }
-#left-panel, #right-panel { flex: 1; padding: 12px; overflow-y: auto; }
-#left-panel { border-right: 2px solid #333; }
-.panel-title { font-size: 14px; font-weight: bold; margin-bottom: 8px; padding-bottom: 4px; border-bottom: 2px solid; }
+
+/* 左右面板 */
+#left-panel, #right-panel { flex: 1; padding: 20px 25px; overflow-y: auto; }
+#left-panel { border-right: 1px solid #333; }
+.panel-title { font-size: 22px; font-weight: bold; margin-bottom: 15px; padding-bottom: 10px; border-bottom: 2px solid; }
 .player-title { color: #4ecdc4; border-color: #4ecdc4; }
 .boss-title { color: #ff6b6b; border-color: #ff6b6b; }
-.stat-row { display: flex; justify-content: space-between; align-items: center; margin: 4px 0; font-size: 12px; }
-.stat-bar { width: 90px; height: 12px; background: #333; border-radius: 6px; overflow: hidden; }
-.stat-fill { height: 100%; border-radius: 6px; transition: width 0.5s; }
+
+/* 属性行 */
+.stat-row { display: flex; justify-content: space-between; align-items: center; margin: 10px 0; font-size: 18px; }
+.stat-bar { width: 250px; height: 20px; background: #333; border-radius: 10px; overflow: hidden; }
+.stat-fill { height: 100%; border-radius: 10px; transition: width 0.5s; }
 .hp-fill { background: linear-gradient(90deg, #ff6b6b, #ff8e8e); }
 .power-fill { background: linear-gradient(90deg, #ffd700, #ffed4a); }
 .brave-fill { background: linear-gradient(90deg, #4ecdc4, #7ee8e0); }
 .karma-fill { background: linear-gradient(90deg, #a78bfa, #c4b5fd); }
-.stat-name { width: 40px; }
-.stat-num { width: 45px; text-align: right; font-size: 11px; }
-#skills { margin-top: 8px; }
-.skill-tag { display: inline-block; padding: 2px 5px; margin: 2px; border-radius: 8px; font-size: 10px; background: rgba(255,255,255,0.1); border: 1px solid #444; }
+.stat-name { width: 70px; font-weight: bold; }
+.stat-num { width: 100px; text-align: right; font-size: 16px; font-weight: bold; }
+
+/* 技能 */
+#skills { margin-top: 15px; }
+.skill-tag { display: inline-block; padding: 8px 14px; margin: 5px; border-radius: 12px; font-size: 16px; background: rgba(255,255,255,0.08); border: 1px solid #444; }
 .skill-active { background: rgba(78,205,196,0.3); border-color: #4ecdc4; color: #4ecdc4; }
-#narrative { padding: 12px 18px; min-height: 200px; background: rgba(0,0,0,0.3); overflow-y: auto; }
-#speaker { font-size: 15px; font-weight: bold; color: #ffd700; margin-bottom: 6px; }
-#text { font-size: 13px; line-height: 1.7; color: #ddd; min-height: 50px; }
-#choices { margin-top: 8px; display: flex; flex-wrap: wrap; gap: 6px; }
-.choice-btn { padding: 6px 12px; background: linear-gradient(135deg, #3a3a5a, #2a2a4a); border: 2px solid #555; border-radius: 6px; color: #fff; font-size: 12px; cursor: pointer; transition: all 0.2s; }
+
+/* 叙事区 */
+#narrative { padding: 25px 35px; flex: 1; min-height: 0; background: rgba(0,0,0,0.4); overflow-y: auto; display: flex; flex-direction: column; }
+#speaker { font-size: 24px; font-weight: bold; color: #ffd700; margin-bottom: 12px; }
+#text { font-size: 20px; line-height: 1.9; color: #ddd; min-height: 80px; flex: 1; }
+#choices { margin-top: 15px; display: flex; flex-wrap: wrap; gap: 12px; padding-bottom: 15px; }
+.choice-btn { padding: 14px 24px; background: linear-gradient(135deg, #3a3a5a, #2a2a4a); border: 2px solid #555; border-radius: 12px; color: #fff; font-size: 18px; cursor: pointer; transition: all 0.2s; }
 .choice-btn:hover { background: linear-gradient(135deg, #5a5a8a, #4a4a7a); border-color: #ffd700; transform: translateY(-2px); }
-#actions { display: flex; justify-content: center; gap: 10px; padding: 12px; background: rgba(0,0,0,0.3); border-top: 2px solid #333; }
-.action-btn { padding: 10px 18px; border-radius: 8px; font-size: 13px; font-weight: bold; cursor: pointer; border: 2px solid; transition: all 0.2s; }
+
+/* 底部操作栏 */
+#actions { display: flex; justify-content: center; gap: 20px; padding: 18px; background: rgba(0,0,0,0.5); border-top: 1px solid #333; flex-shrink: 0; }
+.action-btn { padding: 16px 32px; border-radius: 12px; font-size: 20px; font-weight: bold; cursor: pointer; border: 2px solid; transition: all 0.2s; }
 .btn-search { background: linear-gradient(135deg, #9b59b6, #8e44ad); border-color: #bb77dd; color: #fff; }
 .btn-fight { background: linear-gradient(135deg, #ff6b6b, #cc4444); border-color: #ff8888; color: #fff; }
 .btn-explore { background: linear-gradient(135deg, #4ecdc4, #2a9d8f); border-color: #6ee8e0; color: #fff; }
 .btn-rest { background: linear-gradient(135deg, #ffd700, #cc9900); border-color: #ffed4a; color: #333; }
 .action-btn:hover { transform: scale(1.05); }
-#start-screen { padding: 30px; text-align: center; }
-#start-screen h1 { font-size: 32px; color: #ffd700; margin-bottom: 12px; }
-.char-select { display: flex; justify-content: center; gap: 10px; flex-wrap: wrap; margin-top: 15px; }
-.char-card { width: 80px; padding: 10px 6px; background: linear-gradient(135deg, #2a2a4a, #1a1a3a); border: 2px solid #555; border-radius: 8px; cursor: pointer; transition: all 0.3s; }
-.char-card:hover { border-color: #ffd700; transform: translateY(-3px); }
-.char-name { font-size: 12px; font-weight: bold; margin-top: 4px; }
-.char-skill { font-size: 9px; color: #888; margin-top: 2px; }
-#log { max-height: 60px; overflow-y: auto; font-size: 10px; color: #666; padding: 5px; background: rgba(0,0,0,0.2); border-radius: 4px; margin-top: 5px; }
-</style>
+
+/* 开始界面 */
+#start-screen { padding: 60px; text-align: center; flex: 1; display: flex; flex-direction: column; justify-content: center; align-items: center; }
+#start-screen h1 { font-size: 56px; color: #ffd700; margin-bottom: 20px; }
+.char-select { display: flex; justify-content: center; gap: 20px; flex-wrap: wrap; margin-top: 30px; }
+.char-card { width: 140px; padding: 20px 15px; background: linear-gradient(135deg, #2a2a4a, #1a1a3a); border: 2px solid #555; border-radius: 14px; cursor: pointer; transition: all 0.3s; }
+.char-card:hover { border-color: #ffd700; transform: translateY(-8px); }
+.char-name { font-size: 20px; font-weight: bold; margin-top: 8px; }
+.char-skill { font-size: 14px; color: #888; margin-top: 6px; }
+
+/* 日志 */
+#log { max-height: 120px; overflow-y: auto; font-size: 15px; color: #666; padding: 10px; background: rgba(0,0,0,0.2); border-radius: 8px; margin-top: 12px; }
+
+/* 实力分析 */
+.analysis-box { margin-top: 10px; padding: 10px; background: rgba(255,107,107,0.1); border-radius: 6px; }
+.analysis-title { color: #ff6b6b; font-size: 14px; font-weight: bold; }
+.analysis-text { color: #aaa; font-size: 14px; margin-top: 4px; }
 </head>
 <body>
 <div id="game">
@@ -459,15 +481,15 @@ function updateUI() {
   else warn.textContent = '';
 
   document.getElementById('playerStats').innerHTML = `
-    <div class="stat-row"><span class="stat-name">生命</span><div class="stat-bar"><div class="stat-fill hp-fill" style="width:${player.hp/player.maxHp*100}%"></div></div><span class="stat-num">${player.hp}/${player.maxHp}</span></div>
-    <div class="stat-row"><span class="stat-name">战力</span><div class="stat-bar"><div class="stat-fill power-fill" style="width:${player.power/player.maxPower*100}%"></div></div><span class="stat-num">${player.power}</span></div>
-    <div class="stat-row"><span class="stat-name">勇气</span><div class="stat-bar"><div class="stat-fill brave-fill" style="width:${player.brave}%"></div></div><span class="stat-num">${player.brave}</span></div>
-    <div class="stat-row"><span class="stat-name">善恶</span><div class="stat-bar"><div class="stat-fill karma-fill" style="width:${Math.min(100,Math.max(0,50+player.karma))}%"></div></div><span class="stat-num">${player.karma>0?'+':''}${player.karma}</span></div>`;
+    <div class="stat-row"><span class="stat-name">生命</span><div class="stat-bar"><div class="stat-fill hp-fill" style="width:${Math.round(player.hp/player.maxHp*100)}%"></div></div><span class="stat-num">${Math.round(player.hp)}/${Math.round(player.maxHp)}</span></div>
+    <div class="stat-row"><span class="stat-name">战力</span><div class="stat-bar"><div class="stat-fill power-fill" style="width:${Math.round(player.power/player.maxPower*100)}%"></div></div><span class="stat-num">${Math.round(player.power)}/${Math.round(player.maxPower)}</span></div>
+    <div class="stat-row"><span class="stat-name">勇气</span><div class="stat-bar"><div class="stat-fill brave-fill" style="width:${Math.round(player.brave)}%"></div></div><span class="stat-num">${Math.round(player.brave)}/100</span></div>
+    <div class="stat-row"><span class="stat-name">善恶</span><div class="stat-bar"><div class="stat-fill karma-fill" style="width:${Math.round(Math.min(100,Math.max(0,50+player.karma)))}%"></div></div><span class="stat-num">${player.karma>0?'+':''}${Math.round(player.karma)}</span></div>`;
 
   document.getElementById('bossStats').innerHTML = `
-    <div class="stat-row"><span class="stat-name">生命</span><div class="stat-bar"><div class="stat-fill hp-fill" style="width:${boss.hp/boss.maxHp*100}%"></div></div><span class="stat-num">${boss.hp}/${boss.maxHp}</span></div>
-    <div class="stat-row"><span class="stat-name">战力</span><div class="stat-bar"><div class="stat-fill power-fill" style="width:${boss.power/boss.maxPower*100}%"></div></div><span class="stat-num">${boss.power}</span></div>
-    <div class="stat-row"><span class="stat-name">气势</span><div class="stat-bar"><div class="stat-fill brave-fill" style="width:${boss.brave}%"></div></div><span class="stat-num">${boss.brave}</span></div>
+    <div class="stat-row"><span class="stat-name">生命</span><div class="stat-bar"><div class="stat-fill hp-fill" style="width:${Math.round(boss.hp/boss.maxHp*100)}%"></div></div><span class="stat-num">${Math.round(boss.hp)}/${Math.round(boss.maxHp)}</span></div>
+    <div class="stat-row"><span class="stat-name">战力</span><div class="stat-bar"><div class="stat-fill power-fill" style="width:${Math.round(boss.power/boss.maxPower*100)}%"></div></div><span class="stat-num">${Math.round(boss.power)}/${Math.round(boss.maxPower)}</span></div>
+    <div class="stat-row"><span class="stat-name">气势</span><div class="stat-bar"><div class="stat-fill brave-fill" style="width:${Math.round(boss.brave)}%"></div></div><span class="stat-num">${Math.round(boss.brave)}/100</span></div>
     <div style="margin-top:6px; padding:4px; background:rgba(255,107,107,0.1); border-radius:4px;">
       <div style="color:#ff6b6b; font-size:9px;">📍 蛇精动态</div>
       <div style="color:#aaa; font-size:9px; margin-top:2px;">${boss.lastAction || '正在修炼中...'}</div>
@@ -522,14 +544,85 @@ function showText(speaker, text, choices) {
   });
 }
 
-function applyEffect(e) {
-  if (e.hp) player.hp = Math.max(1, Math.min(player.maxHp, player.hp + e.hp));
-  if (e.power) player.power = Math.max(0, Math.min(player.maxPower, player.power + e.power));
-  if (e.brave) player.brave = Math.max(0, Math.min(100, player.brave + e.brave));
-  if (e.karma) player.karma += e.karma;
-  if (e.skill && !player.skills.includes(e.skill)) player.skills.push(e.skill);
+function checkDeath() {
+  if (player.hp <= 0) {
+    const deathTexts = [
+      `你的生命值降到了0...\n\n${player.char.name}倒在了地上，意识渐渐模糊...\n\n「爷爷...我...对不起...」\n\n你的冒险就这样结束了...`,
+      `${player.char.name}再也撑不住了...\n\n「不...还差一点...就能救出爷爷了...」\n\n你倒在了冰冷的地上...`,
+      `你的身体已经到达极限...\n\n葫芦开始发出微弱的光芒，仿佛在为你哭泣...\n\n${player.char.name}闭上了眼睛...`
+    ];
+    showText('💀 你倒下了', deathTexts[Math.floor(Math.random() * deathTexts.length)], [
+      { text: '🔄 重新开始', next: 'restart' }
+    ]);
+    return true;
+  }
+  return false;
+}
+  let changes = [];
+  
+  // 处理生命值 - 可以死亡
+  if (e.hp) {
+    player.hp = player.hp + e.hp;
+    
+    // 如果生命值超过上限，提升上限
+    if (player.hp > player.maxHp) {
+      const increase = Math.floor((player.hp - player.maxHp) * 0.1);
+      player.maxHp += increase;
+      player.hp = player.maxHp;
+      changes.push(`❤️ 生命上限 +${increase}！达到 ${Math.round(player.maxHp)}`);
+    } else if (e.hp > 0) {
+      changes.push(`❤️ 生命 +${e.hp} (${Math.round(player.hp)}/${Math.round(player.maxHp)})`);
+    } else {
+      changes.push(`💔 生命 ${e.hp} (${Math.round(Math.max(0, player.hp))}/${Math.round(player.maxHp)})`);
+    }
+  }
+  
+  // 处理战力 - 可以突破上限
+  if (e.power) {
+    player.power = Math.max(0, player.power + e.power);
+    // 如果战力超过上限，提升上限
+    if (player.power > player.maxPower) {
+      const increase = Math.floor(player.power * 0.1);
+      player.maxPower += increase;
+      player.power = player.maxPower;
+      changes.push(`⚔️ 战力上限 +${increase}！达到 ${Math.round(player.maxPower)}`);
+    } else {
+      changes.push(`⚔️ 战力 ${e.power > 0 ? '+' : ''}${e.power} (${Math.round(player.power)}/${Math.round(player.maxPower)})`);
+    }
+  }
+  
+  // 处理勇气
+  if (e.brave) {
+    player.brave = Math.max(0, Math.min(100, player.brave + e.brave));
+    changes.push(`💪 勇气 ${e.brave > 0 ? '+' : ''}${e.brave} (${Math.round(player.brave)}/100)`);
+  }
+  
+  // 处理善恶
+  if (e.karma) {
+    player.karma += e.karma;
+    changes.push(`✨ 善恶 ${e.karma > 0 ? '+' : ''}${e.karma} (${player.karma >= 0 ? '+' : ''}${Math.round(player.karma)})`);
+  }
+  
+  // 处理技能 - 每获得一个技能提升上限
+  if (e.skill && !player.skills.includes(e.skill)) {
+    player.skills.push(e.skill);
+    player.maxHp += 15; // 每个技能增加15点生命上限
+    player.maxPower += 10; // 每个技能增加10点战力上限
+    player.hp = Math.min(player.maxHp, player.hp + 10); // 同时恢复一些生命
+    changes.push(`🌟 获得技能：${e.skill}`);
+    changes.push(`📈 属性上限提升！生命上限+15→${player.maxHp}，战力上限+10→${player.maxPower}`);
+  }
+  
+  // 处理Boss伤害
   if (e.bossHp) boss.hp = Math.max(0, boss.hp + e.bossHp);
   if (e.bossPower) boss.power = Math.max(0, Math.min(boss.maxPower, boss.power + e.bossPower));
+  
+  return changes;
+}
+
+function showFeedback(changes) {
+  if (!changes || changes.length === 0) return '';
+  return '\n\n━━━━━━━━━━━━━━━━━━\n📊 属性变化：\n' + changes.join('\n') + '\n━━━━━━━━━━━━━━━━━━';
 }
 
 function growBoss() {
@@ -806,7 +899,7 @@ const events = {
       { text: `💨 战术撤退`, effect: { hp: -2, brave: -2 }, successRate: 1 }
     ].filter(s => !s.condition || s.condition);
     
-    showText(e.name, `⚔️ ${e.desc}！\n\n${difficulty}\n敌人战力：${e.power} | 敌人生命：${e.hp}\n你的战力：${player.power}`, strategies.map(s => ({
+    showText(e.name, `⚔️ ${e.desc}！\n\n${difficulty}\n敌人战力：${Math.round(e.power)} | 敌人生命：${Math.round(e.hp)}\n你的战力：${Math.round(player.power)}`, strategies.map(s => ({
       text: s.text,
       next: 'combat_result',
       effect: s.effect,
@@ -1084,7 +1177,7 @@ const events = {
     else difficulty = '蛇精的力量远超你的预期...';
     
     showText('🐍 蛇精', 
-      `哈哈哈！你终于来了！\n\n我现在的战力是 ${boss.power}，生命是 ${boss.hp}！\n\n${difficulty}\n\n💡 提示：收集更多兄弟可以大幅降低受到的伤害！`, 
+      `哈哈哈！你终于来了！\n\n我现在的战力是 ${Math.round(boss.power)}，生命是 ${Math.round(boss.hp)}！\n\n${difficulty}\n\n💡 提示：收集更多兄弟可以大幅降低受到的伤害！`, 
       [
         { text: '⚔️ 决战！', next: 'boss_fight' },
         { text: '😰 再准备', next: 'explore', effect: { hp: 10 } }
@@ -1127,8 +1220,8 @@ const events = {
     }
     else if (player.hp <= 0) {
       const failTexts = [
-        `你被打败了...蛇精还剩 ${boss.hp} 生命。\n\n看来还需要更多历练...`,
-        `蛇精的力量太强了！你倒在了地上...\n\n蛇精还剩 ${boss.hp} 生命。`
+        `你被打败了...蛇精还剩 ${Math.round(boss.hp)} 生命。\n\n看来还需要更多历练...`,
+        `蛇精的力量太强了！你倒在了地上...\n\n蛇精还剩 ${Math.round(boss.hp)} 生命。`
       ];
       showText('💀 失败', failTexts[Math.floor(Math.random() * failTexts.length)], [{ text: '🔄 重来', next: 'restart' }]);
     }
@@ -1171,8 +1264,8 @@ const events = {
       }
       
       const fightTexts = [
-        `激烈的战斗！造成 ${pDmg} 伤害，受到 ${bDmg} 伤害。\n蛇精还剩 ${boss.hp} 生命！（${progress}%）${phaseEffect}`,
-        `你和蛇精打得难解难分！\n造成 ${pDmg} 伤害，受到 ${bDmg} 伤害。\n蛇精还剩 ${boss.hp} 生命！（${progress}%）${phaseEffect}`
+        `激烈的战斗！造成 ${Math.round(pDmg)} 伤害，受到 ${Math.round(bDmg)} 伤害。\n蛇精还剩 ${Math.round(boss.hp)} 生命！（${progress}%）${phaseEffect}`,
+        `你和蛇精打得难解难分！\n造成 ${Math.round(pDmg)} 伤害，受到 ${Math.round(bDmg)} 伤害。\n蛇精还剩 ${Math.round(boss.hp)} 生命！（${progress}%）${phaseEffect}`
       ];
       showText('⚔️ 战斗', fightTexts[Math.floor(Math.random() * fightTexts.length)], phaseChoices);
     }
@@ -1185,7 +1278,7 @@ const events = {
     applyEffect({ hp: -comboCost, bossHp: -comboDmg });
     
     showText('🌀 联合技！', 
-      `你使出了七兄弟的联合技能！\n\n造成 ${comboDmg} 伤害！\n但你消耗了 ${comboCost} 生命值...\n\n蛇精还剩 ${boss.hp} 生命！`, 
+      `你使出了七兄弟的联合技能！\n\n造成 ${Math.round(comboDmg)} 伤害！\n但你消耗了 ${Math.round(comboCost)} 生命值...\n\n蛇精还剩 ${Math.round(boss.hp)} 生命！`, 
       [{ text: '⚔️ 继续', next: boss.hp > 0 ? 'boss_fight' : 'ending' }]);
   },
 
@@ -1209,14 +1302,14 @@ function doAction(action) {
       showEvent('boss_entrance');
     } else if (ratio >= 0.9) {
       showText('⚠️ 实力分析', 
-        `蛇精战力：${boss.power}\n你的战力：${player.power}\n\n实力接近但还有风险...`, 
+        `蛇精战力：${Math.round(boss.power)}\n你的战力：${Math.round(player.power)}\n\n实力接近但还有风险...`, 
         [
           { text: '⚔️ 要挑战', next: 'boss_entrance' },
           { text: '😰 再准备', next: 'explore', effect: { hp: 10 } }
         ]);
     } else {
       showText('💀 实力分析', 
-        `蛇精战力：${boss.power}\n你的战力：${player.power}\n\n蛇精比你强太多了！但现在就去挑战是勇敢还是鲁莽？`, 
+        `蛇精战力：${Math.round(boss.power)}\n你的战力：${Math.round(player.power)}\n\n蛇精比你强太多了！但现在就去挑战是勇敢还是鲁莽？`, 
         [
           { text: '🔥 明知山有虎，偏向虎山行！', next: 'boss_entrance' },
           { text: '😰 还是再准备吧', next: 'explore', effect: { hp: 15 } }
