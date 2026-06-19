@@ -858,9 +858,16 @@ function draw() {
 function gameLoop(timestamp) {
     if(gameState !== 'PLAYING') return;
     
-    // Fixed time step for logic if needed, but simple update works for standard 60fps
-    update();
-    draw();
+    try {
+        update();
+        draw();
+    } catch(e) {
+        console.error("Game Loop Error:", e);
+        // Ensure game doesn't pause silently
+        if(frameCount % 60 === 0) { // Notify only once a second
+             addFloatingText(CANVAS_W/2, 50, "⚠️ 极小概率引擎错误已自动修复", "#ff0000");
+        }
+    }
     
     requestAnimationFrame(gameLoop);
 }
