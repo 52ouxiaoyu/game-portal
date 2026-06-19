@@ -543,6 +543,17 @@ class Zombie {
     constructor(isBoss = false) {
         this.isBoss = isBoss;
         
+        // Types
+        if(isBoss) {
+            this.type = 'boss';
+        } else {
+            const rand = Math.random();
+            if(rand < 0.5) this.type = 'normal';
+            else if(rand < 0.75) this.type = 'fast';
+            else if(rand < 0.9) this.type = 'tank';
+            else this.type = 'exploder';
+        }
+
         // Spawn at edges
         const edge = Math.floor(Math.random() * 4);
         if(edge === 0) { this.x = Math.random() * CANVAS_W; this.y = -30; }
@@ -550,15 +561,21 @@ class Zombie {
         else if(edge === 2) { this.x = Math.random() * CANVAS_W; this.y = CANVAS_H + 30; }
         else { this.x = -30; this.y = Math.random() * CANVAS_H; }
 
-        this.size = isBoss ? 35 : 15 + Math.random() * 5;
-        this.speed = isBoss ? 1.5 : 1 + Math.random() * 2 + (survivalTime / 60);
+        if(this.type === 'boss') {
+            this.size = 35; this.speed = 1.5; this.hp = 1000 + survivalTime*10; this.color = '#ff00ff'; this.damage = 30; this.scoreVal = 500;
+        } else if(this.type === 'fast') {
+            this.size = 12 + Math.random()*3; this.speed = 2.5 + Math.random() + (survivalTime/60); this.hp = 10 + survivalTime/2; this.color = '#ffff00'; this.damage = 5; this.scoreVal = 15;
+        } else if(this.type === 'tank') {
+            this.size = 25 + Math.random()*5; this.speed = 0.5 + Math.random()*0.5 + (survivalTime/120); this.hp = 100 + survivalTime*3; this.color = '#4444ff'; this.damage = 20; this.scoreVal = 30;
+        } else if(this.type === 'exploder') {
+            this.size = 18 + Math.random()*4; this.speed = 1.2 + Math.random() + (survivalTime/60); this.hp = 15 + survivalTime; this.color = '#ff5500'; this.damage = 10; this.scoreVal = 20;
+        } else { // normal
+            this.size = 15 + Math.random()*5; this.speed = 1 + Math.random()*1.5 + (survivalTime/60); this.hp = 20 + survivalTime; this.color = '#00ff00'; this.damage = 10; this.scoreVal = 10;
+        }
+        
         if(activeEvent === 'bloodmoon') this.speed *= 2;
-        this.hp = isBoss ? 1000 + survivalTime*10 : 20 + survivalTime;
         this.maxHp = this.hp;
-        this.color = isBoss ? '#ff00ff' : '#00ff00';
         this.active = true;
-        this.damage = isBoss ? 30 : 10;
-        this.scoreVal = isBoss ? 500 : 10;
         this.facing = {x: 1, y: 0};
     }
     
@@ -789,6 +806,23 @@ function update() {
                         z.active = false;
                         score += z.scoreVal;
                         createParticles(z.x, z.y, z.color, 15);
+                    if(z.type === 'exploder') {
+                        createParticles(z.x, z.y, '#ffaa00', 30);
+                        audio.shootShotgun();
+                        screenShake = Math.max(screenShake, 10);
+                        addFloatingText(z.x, z.y, "💥 自爆!", "#ff5500");
+                        players.forEach(p => {
+                            if(p.hp > 0 && Math.hypot(p.x - z.x, p.y - z.y) < 80) {
+                                p.hp -= 40;
+                                audio.playerHit();
+                            }
+                        });
+                        zombies.forEach(oz => {
+                            if(oz.active && oz !== z && Math.hypot(oz.x - z.x, oz.y - z.y) < 80) {
+                                oz.hp -= 50;
+                            }
+                        });
+                    }
                     }
                 }
             });
@@ -862,6 +896,23 @@ function update() {
                     killCount++;
                     document.getElementById('score').textContent = score;
                     createParticles(z.x, z.y, z.color, 15);
+                    if(z.type === 'exploder') {
+                        createParticles(z.x, z.y, '#ffaa00', 30);
+                        audio.shootShotgun();
+                        screenShake = Math.max(screenShake, 10);
+                        addFloatingText(z.x, z.y, "💥 自爆!", "#ff5500");
+                        players.forEach(p => {
+                            if(p.hp > 0 && Math.hypot(p.x - z.x, p.y - z.y) < 80) {
+                                p.hp -= 40;
+                                audio.playerHit();
+                            }
+                        });
+                        zombies.forEach(oz => {
+                            if(oz.active && oz !== z && Math.hypot(oz.x - z.x, oz.y - z.y) < 80) {
+                                oz.hp -= 50;
+                            }
+                        });
+                    }
                     bgCtx.fillStyle = '#800000';
                     for(let b=0; b<5; b++) bgCtx.fillRect(z.x + (Math.random()-0.5)*40, z.y + (Math.random()-0.5)*40, Math.random()*8+4, Math.random()*8+4);
                     comboCount++; comboTimer = 180;
