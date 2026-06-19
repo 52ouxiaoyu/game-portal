@@ -145,8 +145,8 @@ class Player {
         this.speed = 5;
         this.color = id === 1 ? '#00bfff' : '#ff9900';
         this.facing = {x: 1, y: 0}; // default facing right
-        this.hp = 100;
-        this.maxHp = 100;
+        this.hp = 3;
+        this.maxHp = 10;
         this.weaponLevel = 0;
         this.cooldown = 0;
         this.buffTime = 0;
@@ -782,14 +782,14 @@ class LootBox {
         ctx.font = '12px Arial';
         ctx.textAlign = 'center';
         let text = '?';
-        if(this.type === 'heal') text = '+';
-        else if(this.type === 'shield') text = 'S';
-        else if(this.type === 'buff') text = 'B';
-        else if(this.type === 'weapon_box') text = 'W';
-        else if(this.type === 'mech') text = 'M';
-        else if(this.type === 'vehicle') text = 'V';
-        else if(this.type === 'nuke') text = 'N';
-        else if(this.type === 'trap') text = 'T';
+        if(this.type === 'heal') text = '💖';
+        else if(this.type === 'shield') text = '🛡️';
+        else if(this.type === 'buff') text = '🌀';
+        else if(this.type === 'weapon_box') text = '🔫';
+        else if(this.type === 'mech') text = '🤖';
+        else if(this.type === 'vehicle') text = '🏍️';
+        else if(this.type === 'nuke') text = '☢️';
+        else if(this.type === 'trap') text = '⚠️';
         else if(this.type === 'revive') text = '👼';
         else if(this.type === 'ult') text = '⚡';
         ctx.fillText(text, this.x, this.y + 4);
