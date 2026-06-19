@@ -2,7 +2,7 @@ class Game {
     constructor() {
         this.canvas = document.getElementById('gameCanvas');
         this.renderer = new Renderer(this.canvas);
-        this.ui = new UI(this.renderer);
+        this.ui = new UI(this.renderer, this);
         
         this.state = 'menu';
         this.currentMap = null;
@@ -165,6 +165,17 @@ class Game {
             const towerType = this.ui.getTowerAtPosition(pos.x, pos.y);
             if (towerType) {
                 this.startPlacement(towerType);
+                return;
+            }
+        }
+        
+        if (this.selectedPlacedTower) {
+            const action = this.ui.handleTowerInfoClick(pos.x, pos.y);
+            if (action === 'upgrade') {
+                this.upgradeTower(this.selectedPlacedTower);
+                return;
+            } else if (action === 'sell') {
+                this.sellTower(this.selectedPlacedTower);
                 return;
             }
         }

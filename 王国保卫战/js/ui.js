@@ -1,7 +1,8 @@
 class UI {
-    constructor(renderer) {
+    constructor(renderer, game) {
         this.renderer = renderer;
         this.ctx = renderer.ctx;
+        this.game = game;
         this.selectedTower = null;
         this.selectedPlacedTower = null;
         this.hoveredCell = null;
@@ -15,6 +16,7 @@ class UI {
         };
         
         this.towerTypes = ['ARCHER', 'MAGE', 'CANNON', 'ICE'];
+        this.towerInfoButtons = [];
     }
     
     getTowerAtPosition(x, y) {
@@ -73,21 +75,29 @@ class UI {
         const panel = this.towerPanel;
         const infoY = panel.y + panel.height + 10;
         
-        this.renderer.drawPanel(panel.x, infoY, panel.width, 120);
+        this.renderer.drawPanel(panel.x, infoY, panel.width, 130);
         
         this.renderer.drawText(tower.config.name, panel.x + 10, infoY + 10, 14, '#FFD700');
         this.renderer.drawText(`等级: ${tower.level + 1}`, panel.x + 10, infoY + 30, 12, '#FFFFFF');
         this.renderer.drawText(`伤害: ${tower.damage}`, panel.x + 10, infoY + 45, 12, '#FF6B6B');
         this.renderer.drawText(`范围: ${tower.range}`, panel.x + 10, infoY + 60, 12, '#4ECDC4');
         
+        this.towerInfoButtons = [];
+        
         const upgradeCost = tower.getUpgradeCost();
         if (upgradeCost !== null) {
+            const canUpgrade = this.game && this.game.gold >= upgradeCost;
             this.renderer.drawButton(
                 panel.x + 10, infoY + 80,
                 panel.width - 20, 25,
                 `升级 $${upgradeCost}`,
-                '#4CAF50'
+                canUpgrade ? '#4CAF50' : '#666'
             );
+            this.towerInfoButtons.push({
+                x: panel.x + 10, y: infoY + 80,
+                width: panel.width - 20, height: 25,
+                action: 'upgrade'
+            });
         }
         
         this.renderer.drawButton(
@@ -96,6 +106,21 @@ class UI {
             `出售 $${tower.getSellValue()}`,
             '#F44336'
         );
+        this.towerInfoButtons.push({
+            x: panel.x + 10, y: infoY + 110,
+            width: panel.width - 20, height: 25,
+            action: 'sell'
+        });
+    }
+    
+    handleTowerInfoClick(x, y) {
+        for (const btn of this.towerInfoButtons) {
+            if (x >= btn.x && x <= btn.x + btn.width &&
+                y >= btn.y && y <= btn.y + btn.height) {
+                return btn.action;
+            }
+        }
+        return null;
     }
     
     renderPlacementPreview(gridX, gridY, towerType) {
