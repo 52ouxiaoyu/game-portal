@@ -57,8 +57,6 @@ let zombies = [];
 let bullets = [];
 let particles = [];
 let floatingTexts = [];
-    lootBoxes = [];
-    lootTimer = 0;
 let lootBoxes = [];
 let lootTimer = 0;
 
@@ -70,13 +68,13 @@ let frameCount = 0;
 const keys = {
     ArrowUp: false, ArrowDown: false, ArrowLeft: false, ArrowRight: false,
     KeyW: false, KeyS: false, KeyA: false, KeyD: false,
-    Space: false, Enter: false
+    Space: false, Enter: false, NumpadEnter: false
 };
 
 window.addEventListener('keydown', e => {
     if(keys.hasOwnProperty(e.code)) keys[e.code] = true;
-    if((e.code === 'Space' || e.code === 'Enter') && gameState === 'PLAYING') {
-        players.forEach(p => { if((e.code==='Space'&&p.id===1) || (e.code==='Enter'&&p.id===2)) p.shoot(); });
+    if((e.code === 'Space' || e.code === 'Enter' || e.code === 'NumpadEnter') && gameState === 'PLAYING') {
+        players.forEach(p => { if((e.code==='Space'&&p.id===1) || ((e.code==='Enter'||e.code==='NumpadEnter')&&p.id===2)) p.shoot(); });
         e.preventDefault();
     }
 });
@@ -417,7 +415,12 @@ function update() {
     bullets.forEach(b => b.update());
     zombies.forEach(z => z.update());
     particles.forEach(p => p.update());
-    lootBoxes.forEach(lb => lb.draw(ctx));
+    lootBoxes.forEach(lb => lb.update());
+    lootTimer++;
+    if(lootTimer > 600) {
+        lootTimer = 0;
+        if(Math.random() < 0.5) lootBoxes.push(new LootBox());
+    }
     floatingTexts.forEach(ft => { ft.y -= 1; ft.life -= 0.02; });
 
     // Collisions
@@ -459,6 +462,7 @@ function update() {
     zombies = zombies.filter(z => z.active);
     particles = particles.filter(p => p.life > 0);
     floatingTexts = floatingTexts.filter(ft => ft.life > 0);
+    lootBoxes = lootBoxes.filter(lb => lb.active);
 }
 
 function draw() {
