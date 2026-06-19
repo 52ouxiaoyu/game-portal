@@ -266,8 +266,8 @@ class Player {
         
         if(this.vehicleTime > 0) return; // Cannot shoot while driving
         
-        audio.shoot();
         if(this.mechTime > 0) {
+            audio.shootLaser();
             // Mech shoots 360 degree lasers and huge missiles
             for(let i=0; i<8; i++) {
                 let angle = Math.PI/4 * i + (frameCount*0.1);
@@ -277,17 +277,21 @@ class Player {
         }
 
         if(w.type === "pistol") {
+            audio.shootPistol();
             bullets.push(new Bullet(this.x, this.y, fx, fy, 10, 20, '#fff'));
             bullets.push(new Bullet(this.x, this.y, -fx, -fy, 10, 20, '#fff'));
         } else if(w.type === "shotgun") {
+            audio.shootShotgun();
             for(let i = -2; i <= 2; i++) {
                 let angle = Math.atan2(fy, fx) + i * 0.2;
                 bullets.push(new Bullet(this.x, this.y, Math.cos(angle), Math.sin(angle), 12, 15, '#ffaa00'));
             }
         } else if(w.type === "machinegun") {
+            audio.shootMachine();
             let angle = Math.atan2(fy, fx) + (Math.random() - 0.5) * 0.2;
             bullets.push(new Bullet(this.x, this.y, Math.cos(angle), Math.sin(angle), 15, 18, '#00ffff'));
         } else if(w.type === "laser") {
+            audio.shootLaser();
             bullets.push(new Bullet(this.x, this.y, fx, fy, 25, 30, '#ff00ff', true));
         }
     }
