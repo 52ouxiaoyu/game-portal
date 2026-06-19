@@ -612,7 +612,25 @@ function showText(speaker, text, choices) {
         btn.onclick = () => { 
           if (c.data) events._tempData = c.data;
           if (c.effect) applyEffect(c.effect); 
-          if (c.next) showEvent(c.next); 
+          
+          if (c.next === 'explore') {
+            // 直接显示选项结果，不再展示傻逼旁白
+            let resultStr = '';
+            if (c.effect) {
+              if (c.effect.hp) resultStr += `生命 ${c.effect.hp > 0 ? '+' : ''}${c.effect.hp} `;
+              if (c.effect.power) resultStr += `战力 ${c.effect.power > 0 ? '+' : ''}${c.effect.power} `;
+              if (c.effect.brave) resultStr += `勇气 ${c.effect.brave > 0 ? '+' : ''}${c.effect.brave} `;
+            }
+            document.getElementById('speaker').textContent = '🎯 结果';
+            document.getElementById('text').textContent = c.resultMsg ? c.resultMsg : (resultStr ? `你选择了「${c.text}」... ${resultStr}` : `你选择了「${c.text}」。行动结束。`);
+            document.getElementById('choices').innerHTML = '';
+            window.isIdle = true;
+            document.getElementById('actions').style.opacity = '1';
+            document.getElementById('actions').style.pointerEvents = 'auto';
+          } else {
+            if (c.next) showEvent(c.next); 
+          }
+          
           updateUI(); 
         };
         div.appendChild(btn);
@@ -790,8 +808,6 @@ const events = {
 
   explore: () => {
     window.isIdle = true;
-    document.getElementById('speaker').textContent = '旁白';
-    document.getElementById('text').textContent = '这一回合结束了，接下来你想做什么？请点击下方的按钮。';
     document.getElementById('choices').innerHTML = '';
     document.getElementById('actions').style.opacity = '1';
     document.getElementById('actions').style.pointerEvents = 'auto';
