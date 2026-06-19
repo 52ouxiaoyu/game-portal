@@ -719,6 +719,16 @@ function applyEffect(e) {
     player.hp = Math.min(player.maxHp, player.hp + 10); // 同时恢复一些生命
     changes.push(`🌟 获得技能：${e.skill}`);
     changes.push(`📈 属性上限提升！生命上限+15→${player.maxHp}，战力上限+10→${player.maxPower}`);
+    
+    // 金刚葫芦娃合体！
+    if (player.skills.length >= 7 && !player.isKingKong) {
+      player.isKingKong = true;
+      player.maxHp += 200;
+      player.maxPower += 150;
+      player.hp = player.maxHp;
+      player.power = player.maxPower;
+      changes.push(`\n🌈 七子连心！奇迹发生了！\n你进化成了【金刚葫芦娃】！\n生命和战力上限暴涨，且全部恢复全满！`);
+    }
   }
   
   // 处理Boss伤害
@@ -1370,10 +1380,10 @@ const events = {
     else if (powerRatio >= 0.8) pDmg = Math.floor(player.power * 0.2 * skillBonus);
     else pDmg = Math.floor(player.power * 0.12 * skillBonus);
     
-    // Boss伤害 - 大幅提高
-    const baseBossDmg = boss.power * 0.6;
-    const bossBonus = 1 + Math.floor(turn / 3) * 0.15; // 每3回合Boss变强
-    let bDmg = Math.floor(baseBossDmg * bossBonus * (1 - player.skills.length * 0.015));
+    // Boss伤害 - 修复之前过于离谱的指数级加成
+    const baseBossDmg = boss.power * 0.45;
+    const defenseBonus = player.isKingKong ? 0.3 : Math.max(0.4, 1 - player.skills.length * 0.08); // 金刚葫芦娃免伤70%，普通兄弟每个减伤8%
+    let bDmg = Math.floor(baseBossDmg * defenseBonus);
     
     // 加入随机因素
     const randomFactor = 0.85 + Math.random() * 0.3;
