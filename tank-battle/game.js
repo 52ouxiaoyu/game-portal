@@ -962,13 +962,40 @@ class Boss extends Enemy {
 
         if (this.health <= 0) {
             this.alive = false; this.game.weather = 'NONE';
-            for (let i = 0; i < 6; i++) {
+            for (let i = 0; i < 12; i++) {
                 const types = Object.values(POWERUP_TYPES);
-                this.game.powerUps.push(new PowerUp(this.game, this.x + Math.random()*this.width, this.y + Math.random()*this.height, types[Math.floor(Math.random()*types.length)]));
+                const angle = (i / 12) * Math.PI * 2;
+                const dist = TILE_SIZE * 3;
+                let px = this.x + this.width/2 + Math.cos(angle) * dist - 32;
+                let py = this.y + this.height/2 + Math.sin(angle) * dist - 32;
+                px = Math.max(0, Math.min(CANVAS_SIZE - 64, px));
+                py = Math.max(0, Math.min(CANVAS_SIZE - 64, py));
+                this.game.powerUps.push(new PowerUp(this.game, px, py, types[Math.floor(Math.random()*types.length)]));
             }
-            if (killer instanceof Player) { killer.score += 5000; this.game.updateHUD(); }
-            this.game.effects.push(new Effect(this.x + this.width/2, this.y + this.height/2, 'EXPLOSION', 5));
-            this.game.shakeScreen(30);
+            
+            for(let i = 0; i < 5; i++) {
+                setTimeout(() => {
+                    this.game.effects.push(new Effect(this.x + Math.random()*this.width, this.y + Math.random()*this.height, 'EXPLOSION', 3));
+                    audio.play('explosion');
+                }, i * 200);
+            }
+            this.game.effects.push(new Effect(this.x + this.width/2, this.y + this.height/2, 'EXPLOSION', 8));
+            this.game.shakeScreen(40);
+            
+            this.game.baseHealth = this.game.maxBaseHealth;
+            this.game.fortifyBase();
+            this.game.enemies.forEach(e => { if (e !== this && e.alive) e.destroy(killer, 999); });
+            
+            if (killer instanceof Player) { 
+                killer.score += 20000; 
+                killer.level = 3; 
+                killer.speed = 4 + killer.level * 0.5;
+                killer.setShield(600);
+                this.game.showFloatingText('+20000', this.x + this.width/2, this.y - 20, '#ff0');
+                this.game.showAnnouncement('BOSS DESTROYED!', '#ff0');
+                this.game.showAnnouncement('BASE RESTORED!', '#0f0');
+                this.game.updateHUD(); 
+            }
         }
     }
     draw(ctx) {
