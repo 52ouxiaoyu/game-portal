@@ -1016,6 +1016,16 @@ function update() {
                     z.active = false;
                     score += z.scoreVal;
                     killCount++;
+                    
+                    // 怪物死亡掉落道具
+                    if(z.isBoss) {
+                        lootBoxes.push(new LootBox(z.x, z.y));
+                        lootBoxes.push(new LootBox(z.x+30, z.y+30));
+                        lootBoxes.push(new LootBox(z.x-30, z.y-30));
+                    } else if(Math.random() < 0.15) {
+                        lootBoxes.push(new LootBox(z.x, z.y));
+                    }
+                    
                     document.getElementById('score').textContent = score;
                     createParticles(z.x, z.y, z.color, 15);
                     if(z.type === 'exploder') {
