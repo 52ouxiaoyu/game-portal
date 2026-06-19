@@ -83,7 +83,7 @@ body { background: #0a0a1a; font-family: 'Noto Sans SC', 'Microsoft YaHei', 'Sim
   <div id="start-screen">
     <h1>🎮 葫芦兄弟：拯救爷爷</h1>
     <p style="color:#aaa; margin-bottom:8px;">选择你的葫芦娃，踏上拯救爷爷的冒险之旅！</p>
-    <p style="color:#ff6b6b; font-size:12px;">⚠️ 蛇精每回合都在变强！拖太久就打不过了！</p>
+    <p style="color:#ff6b6b; font-size:16px; margin-top: 10px;">⚠️ 蛇精每回合都在变强！拖太久就打不过了！</p>
     <div class="char-select" id="charSelect"></div>
   </div>
   <div id="game-screen" style="display:none;">
@@ -101,9 +101,9 @@ body { background: #0a0a1a; font-family: 'Noto Sans SC', 'Microsoft YaHei', 'Sim
       <div id="right-panel">
         <div class="panel-title boss-title">🐍 蛇精</div>
         <div id="bossStats"></div>
-        <div style="margin-top:8px; padding:6px; background:rgba(255,107,107,0.1); border-radius:4px;">
-          <div style="color:#ff6b6b; font-size:10px;">⚠️ 实力分析</div>
-          <div id="bossAnalysis" style="color:#aaa; font-size:10px; margin-top:2px;"></div>
+        <div style="margin-top:8px; padding:8px; background:rgba(255,107,107,0.1); border-radius:4px;">
+          <div style="color:#ff6b6b; font-size:14px; font-weight:bold;">⚠️ 实力分析</div>
+          <div id="bossAnalysis" style="color:#aaa; font-size:14px; margin-top:4px;"></div>
         </div>
         <div id="log"></div>
       </div>
@@ -491,9 +491,9 @@ function updateUI() {
     <div class="stat-row"><span class="stat-name">生命</span><div class="stat-bar"><div class="stat-fill hp-fill" style="width:${Math.round(boss.hp/boss.maxHp*100)}%"></div></div><span class="stat-num">${Math.round(boss.hp)}/${Math.round(boss.maxHp)}</span></div>
     <div class="stat-row"><span class="stat-name">战力</span><div class="stat-bar"><div class="stat-fill power-fill" style="width:${Math.round(boss.power/boss.maxPower*100)}%"></div></div><span class="stat-num">${Math.round(boss.power)}/${Math.round(boss.maxPower)}</span></div>
     <div class="stat-row"><span class="stat-name">气势</span><div class="stat-bar"><div class="stat-fill brave-fill" style="width:${Math.round(boss.brave)}%"></div></div><span class="stat-num">${Math.round(boss.brave)}/100</span></div>
-    <div style="margin-top:6px; padding:4px; background:rgba(255,107,107,0.1); border-radius:4px;">
-      <div style="color:#ff6b6b; font-size:9px;">📍 蛇精动态</div>
-      <div style="color:#aaa; font-size:9px; margin-top:2px;">${boss.lastAction || '正在修炼中...'}</div>
+    <div style="margin-top:8px; padding:8px; background:rgba(255,107,107,0.1); border-radius:4px;">
+      <div style="color:#ff6b6b; font-size:14px; font-weight:bold;">📍 蛇精动态</div>
+      <div style="color:#aaa; font-size:14px; margin-top:4px;">${boss.lastAction || '正在修炼中...'}</div>
     </div>`;
 
   const ratio = player.power / boss.power;
@@ -503,18 +503,18 @@ function updateUI() {
   else if (ratio >= 0.7) { analysis.textContent = '❌ 实力不足'; analysis.style.color = '#ff8844'; }
   else { analysis.textContent = '💀 几乎不可能赢'; analysis.style.color = '#ff6b6b'; }
 
-  let sh = '<div style="color:#666; font-size:10px;">已找到的兄弟 (' + player.skills.length + '/7)：</div>';
+  let sh = '<div style="color:#eee; font-size:15px; font-weight:bold; margin-bottom:6px;">已找到的兄弟 (' + player.skills.length + '/7)：</div>';
   player.skills.forEach(s => { 
     const brother = characters.find(c => c.skill === s);
     sh += `<span class="skill-tag skill-active" style="background:${brother.color}33; border-color:${brother.color}">${brother.icon} ${brother.name}</span>`; 
   });
   const missing = allSkills.filter(s => !player.skills.includes(s));
   if (missing.length > 0) {
-    sh += '<div style="color:#666; font-size:10px; margin-top:4px;">未找到：</div>';
+    sh += '<div style="color:#eee; font-size:15px; font-weight:bold; margin-top:10px; margin-bottom:6px;">未找到：</div>';
     missing.forEach(s => { sh += `<span class="skill-tag">???</span>`; });
   }
   document.getElementById('skills').innerHTML = sh;
-  document.getElementById('log').innerHTML = logEntries.slice(-4).map(e => `<div style="font-size:9px;color:${e.color};padding:2px 0;">${e.text}</div>`).join('');
+  document.getElementById('log').innerHTML = logEntries.slice(-4).map(e => `<div style="font-size:13px;color:${e.color};padding:4px 0;">${e.text}</div>`).join('');
 }
 
 function addLog(text, color) { logEntries.push({ text, color: color || '#666' }); }
