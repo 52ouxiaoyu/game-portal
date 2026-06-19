@@ -1115,6 +1115,7 @@ class Game {
         document.getElementById('start-screen').classList.add('hidden'); document.getElementById('game-over-screen').classList.add('hidden');
         document.getElementById('stage-info').innerText = `STAGE ${this.currentStage + 1}`;
         this.map.reset(this.currentStage); this.bullets = []; this.enemies = []; this.effects = []; this.powerUps = []; this.fortifyTimer = 0;
+        this.stageClearTimer = 0;
         this.currentLevel = this.map.currentLevel;
         const diffMult = this.difficulty === 'easy' ? 0.7 : (this.difficulty === 'hard' ? 1.3 : 1);
         this.enemiesRemaining = Math.floor(this.currentLevel.totalEnemies * diffMult);
@@ -1222,7 +1223,18 @@ class Game {
                 const sx = [TILE_SIZE * 2, TILE_SIZE * 12, TILE_SIZE * 22][Math.floor(Math.random() * 3)]; const sy = TILE_SIZE * 2; this.effects.push(new Effect(sx + TILE_SIZE, sy + TILE_SIZE, 'SPAWN'));
                 setTimeout(() => { if (this.gameState === 'PLAYING') { this.enemies.push(new Enemy(this, sx, sy, this.currentStage)); this.enemiesRemaining--; this.updateHUD(); } }, 1000); this.spawnTimer = 180;
             }
-        } else if (this.enemiesRemaining === 0 && this.enemies.length === 0) { this.gameState = 'STAGE_CLEAR'; setTimeout(() => this.nextLevel(), 2000); }
+        } else if (this.enemiesRemaining === 0 && this.enemies.length === 0) {
+            if (this.stageClearTimer === 0) {
+                this.stageClearTimer = 300;
+                this.showAnnouncement('BONUS TIME: 5 SECONDS!', '#0f0');
+            } else {
+                this.stageClearTimer--;
+                if (this.stageClearTimer <= 0) {
+                    this.gameState = 'STAGE_CLEAR';
+                    setTimeout(() => this.nextLevel(), 2000);
+                }
+            }
+        }
         
         this.players.forEach(p => p.update()); this.enemies.forEach(e => e.update());
         this.bullets.forEach(b => b.update());
