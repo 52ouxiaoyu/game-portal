@@ -24,7 +24,7 @@ function generateLevel(index) {
     const pattern = patterns[index % patterns.length];
     const brickDensity = 0.15 + difficulty * 0.2;
     const steelDensity = 0.02 + difficulty * 0.08;
-    const forestDensity = (index % 5 === 0) ? 0.3 : 0;
+    const forestDensity = (index % 10 === 0) ? 0.15 : 0;
     const iceDensity = (index % 7 === 0) ? 0.15 : 0;
     const isProtected = (x, y) => (x >= 7 && x <= 17 && y >= 21) || (x >= 11 && x <= 14 && y >= 23);
     const isSpawn = (x, y) => (x >= 0 && x <= 3 && y >= 0 && y <= 3) || (x >= 11 && x <= 14 && y >= 0 && y <= 3) || (x >= 22 && x <= 25 && y >= 0 && y <= 3);
@@ -125,7 +125,16 @@ function generateLevel(index) {
             level.waters.push([y, x, h, w]);
         }
     }
-    if (forestDensity > 0) level.forests.push([1, 1, 24, 24]);
+    if (forestDensity > 0) {
+        const forestCount = Math.floor(3 + forestDensity * 10);
+        for (let i = 0; i < forestCount; i++) {
+            const x = 3 + Math.floor(rng() * 20);
+            const y = 3 + Math.floor(rng() * 16);
+            const w = 2 + Math.floor(rng() * 2);
+            const h = 2 + Math.floor(rng() * 2);
+            level.forests.push([y, x, h, w]);
+        }
+    }
     if (iceDensity > 0) {
         const iceCount = Math.floor(iceDensity * 20);
         for (let i = 0; i < iceCount; i++) {
@@ -1022,7 +1031,7 @@ class Game {
         }
         if (this.highScore > 0) { this.ctx.fillStyle = '#ff0'; this.ctx.font = '16px Arial'; this.ctx.textAlign = 'right'; this.ctx.fillText(`HIGH SCORE: ${this.highScore}`, CANVAS_SIZE - 10, CANVAS_SIZE - 10); }
     }
-    drawForest() { for (let y = 0; y < GRID_SIZE; y++) for (let x = 0; x < GRID_SIZE; x++) if (this.map.grid[y][x] === TILE_TYPES.FOREST) { this.ctx.fillStyle = 'rgba(33, 181, 33, 0.7)'; this.ctx.fillRect(x * TILE_SIZE, y * TILE_SIZE, TILE_SIZE, TILE_SIZE); } }
+    drawForest() { for (let y = 0; y < GRID_SIZE; y++) for (let x = 0; x < GRID_SIZE; x++) if (this.map.grid[y][x] === TILE_TYPES.FOREST) { this.ctx.fillStyle = '#21B521'; this.ctx.fillRect(x * TILE_SIZE, y * TILE_SIZE, TILE_SIZE, TILE_SIZE); this.ctx.fillStyle = '#1a8a1a'; this.ctx.fillRect(x * TILE_SIZE + 4, y * TILE_SIZE + 4, TILE_SIZE - 8, TILE_SIZE - 8); } }
     loop() { this.update(); this.draw(); requestAnimationFrame(() => this.loop()); }
 }
 window.onload = () => new Game();
