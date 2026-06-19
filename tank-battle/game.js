@@ -5,7 +5,7 @@ const CANVAS_SIZE = TILE_SIZE * GRID_SIZE; // 832px
 
 const TILE_TYPES = { EMPTY: 0, BRICK: 1, STEEL: 2, WATER: 3, FOREST: 4, ICE: 5, BASE: 9, BASE_DESTROYED: 10 };
 const COLORS = { BRICK: '#B53120', BRICK_LIGHT: '#DC5341', STEEL: '#AAAAAA', STEEL_LIGHT: '#EEEEEE', WATER: '#2131E7', FOREST: '#21B521', PLAYER1: '#E7E721', PLAYER2: '#63C6FF', ENEMY: '#E7E7E7', BASE: '#E79C21' };
-const POWERUP_TYPES = { SHIELD: '🛡️', BOMB: '💣', STAR: '⭐', SHOVEL: '🏗️', LIFE: '❤️' };
+const POWERUP_TYPES = { SHIELD: '🛡️', BOMB: '💣', STAR: '⭐', SHOVEL: '🏗️', LIFE: '❤️', TIME: '⏳' };
 
 function seededRandom(seed) {
     let s = seed;
@@ -18,6 +18,24 @@ function seededRandom(seed) {
 function generateLevel(index) {
     const rng = seededRandom(index * 7919 + 12345);
     const level = { bricks: [], steels: [], waters: [], forests: [], ices: [], totalEnemies: 0 };
+    if (index === 0) {
+        level.totalEnemies = 10;
+        for (let x of [2, 6, 10, 14, 18, 22]) {
+            for (let y = 2; y < 10; y += 2) level.bricks.push([y, x, 2, 2]);
+            for (let y = 14; y < 20; y += 2) level.bricks.push([y, x, 2, 2]);
+        }
+        level.steels.push([12, 12, 2, 2]);
+        return level;
+    }
+    if (index === 1) {
+        level.totalEnemies = 12;
+        for (let x of [4, 8, 12, 16, 20]) {
+            for (let y = 4; y < 18; y += 2) if (y !== 10) level.bricks.push([y, x, 2, 2]);
+        }
+        level.steels.push([10, 4, 2, 2]); level.steels.push([10, 20, 2, 2]);
+        for (let x = 6; x <= 18; x += 4) level.forests.push([20, x, 2, 4]);
+        return level;
+    }
     const difficulty = Math.min(index / 100, 1);
     level.totalEnemies = Math.floor(8 + index * 0.25 + difficulty * 8);
     const patterns = ['grid', 'cross', 'maze', 'circle', 'diamond', 'spiral', 'fortress', 'arena', 'corridor', 'scattered'];
@@ -206,19 +224,29 @@ class AudioManager {
 const audio = new AudioManager();
 
 class Effect {
-    constructor(x, y, type, sizeScale = 1) { this.x = x; this.y = y; this.type = type; this.timer = type === 'SPAWN' ? 60 : 20; this.active = true; this.sizeScale = sizeScale; }
+    constructor(x, y, type, data = 1) { this.x = x; this.y = y; this.type = type; this.timer = type === 'SPAWN' ? 60 : (type === 'TRACK' ? 30 : 20); this.active = true; this.data = data; }
     update() { this.timer--; if (this.timer <= 0) this.active = false; }
     draw(ctx) {
         if (this.type === 'EXPLOSION') {
             const progress = (20 - this.timer) / 20;
-            const size = (TILE_SIZE * this.sizeScale) * progress;
+            const size = (TILE_SIZE * this.data) * progress;
             ctx.beginPath(); ctx.arc(this.x, this.y, size, 0, Math.PI * 2);
             ctx.fillStyle = progress < 0.5 ? '#fff' : (progress < 0.8 ? '#ff0' : '#f00');
             ctx.fill(); ctx.strokeStyle = '#fff'; ctx.lineWidth = 2; ctx.stroke();
         } else if (this.type === 'SPAWN') {
             if (Math.floor(this.timer / 4) % 2 === 0) {
-                ctx.fillStyle = '#fff'; ctx.beginPath(); const s = 20 * this.sizeScale;
+                ctx.fillStyle = '#fff'; ctx.beginPath(); const s = 20 * this.data;
                 ctx.moveTo(this.x, this.y - s); ctx.lineTo(this.x + s/3, this.y - s/3); ctx.lineTo(this.x + s, this.y); ctx.lineTo(this.x + s/3, this.y + s/3); ctx.lineTo(this.x, this.y + s); ctx.lineTo(this.x - s/3, this.y + s/3); ctx.lineTo(this.x - s, this.y); ctx.lineTo(this.x - s/3, this.y - s/3); ctx.closePath(); ctx.fill();
+            }
+        } else if (this.type === 'TRACK') {
+            const { dir, w, h } = this.data;
+            ctx.fillStyle = `rgba(0, 0, 0, ${this.timer / 150})`;
+            if (dir === 'UP' || dir === 'DOWN') {
+                ctx.fillRect(this.x - w/2 + 6, this.y - 4, 6, 8);
+                ctx.fillRect(this.x + w/2 - 12, this.y - 4, 6, 8);
+            } else {
+                ctx.fillRect(this.x - 4, this.y - h/2 + 6, 8, 6);
+                ctx.fillRect(this.x - 4, this.y + h/2 - 12, 8, 6);
             }
         }
     }
@@ -233,11 +261,12 @@ class PowerUp {
     applyEffect(player) {
         audio.play('powerup');
         this.game.effects.push(new Effect(this.x + 32, this.y + 32, 'EXPLOSION'));
-        if (this.type === POWERUP_TYPES.BOMB) this.game.enemies.forEach(e => e.destroy());
+        if (this.type === POWERUP_TYPES.BOMB) this.game.enemies.forEach(e => { if (e.isBoss) e.destroy(player, 10); else e.destroy(player, 100); });
         else if (this.type === POWERUP_TYPES.SHIELD) player.setShield(360);
         else if (this.type === POWERUP_TYPES.STAR) player.upgrade();
         else if (this.type === POWERUP_TYPES.SHOVEL) this.game.fortifyBase();
         else if (this.type === POWERUP_TYPES.LIFE) this.game.lives++;
+        else if (this.type === POWERUP_TYPES.TIME) this.game.enemies.forEach(e => e.frozenTimer = 300);
         this.game.updateHUD();
     }
     draw(ctx) { if (Math.floor(this.timer / 10) % 2 === 0) { ctx.font = '48px Arial'; ctx.fillText(this.type, this.x, this.y + 48); } }
@@ -443,10 +472,26 @@ class Tank {
         const onWater = this.game.map.isOnWater(this.x, this.y, this.width, this.height);
         const moveSpeed = onWater ? this.speed * 0.5 : this.speed;
         if (dir === 'UP') ny -= moveSpeed; else if (dir === 'DOWN') ny += moveSpeed; else if (dir === 'LEFT') nx -= moveSpeed; else if (dir === 'RIGHT') nx += moveSpeed;
-        if (!this.game.map.isBlocked(nx, ny, this.width, this.height)) { this.x = nx; this.y = ny; this.onIce = false; }
+        if (!this.game.map.isBlocked(nx, ny, this.width, this.height)) { 
+            this.x = nx; this.y = ny; this.onIce = false; 
+            this.moveCounter = (this.moveCounter || 0) + 1;
+            if (this.moveCounter % 5 === 0) this.game.effects.push(new Effect(this.x + this.width/2, this.y + this.height/2, 'TRACK', { dir: this.direction, w: this.width, h: this.height }));
+        }
         else {
-            if (dir === 'UP' || dir === 'DOWN') { const cx = this.x + this.width / 2; const gx = Math.floor(cx / TILE_SIZE) * TILE_SIZE + 4; if (Math.abs(this.x - gx) < 16) this.x += (gx - this.x) * 0.2; }
-            else { const cy = this.y + this.height / 2; const gy = Math.floor(cy / TILE_SIZE) * TILE_SIZE + 4; if (Math.abs(this.y - gy) < 16) this.y += (gy - this.y) * 0.2; }
+            if (dir === 'UP' || dir === 'DOWN') { 
+                const gx = Math.round(this.x / TILE_SIZE) * TILE_SIZE + 2; 
+                if (Math.abs(this.x - gx) < 24) {
+                    if (this.x < gx) this.x = Math.min(gx, this.x + moveSpeed);
+                    else if (this.x > gx) this.x = Math.max(gx, this.x - moveSpeed);
+                }
+            } else { 
+                const cy = this.y + this.height / 2; 
+                const gy = Math.round(this.y / TILE_SIZE) * TILE_SIZE + 2; 
+                if (Math.abs(this.y - gy) < 24) {
+                    if (this.y < gy) this.y = Math.min(gy, this.y + moveSpeed);
+                    else if (this.y > gy) this.y = Math.max(gy, this.y - moveSpeed);
+                }
+            }
         }
         const gx = Math.floor((this.x + this.width/2) / TILE_SIZE);
         const gy = Math.floor((this.y + this.height/2) / TILE_SIZE);
@@ -476,16 +521,19 @@ class Tank {
     }
     destroy(killer, damage = 1) {
         if (this.shieldTimer > 0) return; 
-        if (this instanceof Player) {
-            this.health = (this.health || 1) - damage;
-            if (this.health > 0) {
-                audio.play('hit');
+        this.health = (this.health || 1) - damage;
+        if (this.health > 0) {
+            audio.play('hit');
+            this.game.effects.push(new Effect(this.x + 30, this.y + 30, 'EXPLOSION', 1));
+            if (this instanceof Player) {
+                this.game.shakeScreen(4);
                 this.level = Math.max(0, Math.floor((this.health - 1) / 2));
                 this.speed = 4 + this.level;
-                this.shieldTimer = 30; // Brief invincibility after hit
-                this.game.effects.push(new Effect(this.x + 30, this.y + 30, 'EXPLOSION', 1));
-                return;
+                this.shieldTimer = 30;
+            } else if (this.variant === 'HEAVY') {
+                this.color = this.health === 2 ? '#B56B20' : '#B53120';
             }
+            return;
         }
         this.alive = false; this.game.effects.push(new Effect(this.x + 30, this.y + 30, 'EXPLOSION', this.isBoss ? 3 : 1));
         this.game.shakeScreen(this.isBoss ? 15 : 5);
@@ -768,7 +816,30 @@ class Player extends Tank {
         return perpDirs[0];
     }
 }
-class Enemy extends Tank { constructor(game, x, y, stage = 0) { super(game, x, y, COLORS.ENEMY); const diffMult = game.difficulty === 'easy' ? 0.8 : (game.difficulty === 'hard' ? 1.2 : 1); this.speed = (2 + Math.min(stage * 0.1, 2)) * diffMult; this.dirTimer = 0; } update() { super.update(); if (this.dirTimer <= 0) { this.direction = ['UP', 'DOWN', 'LEFT', 'RIGHT'][Math.floor(Math.random() * 4)]; this.dirTimer = 30 + Math.random() * 60; } else this.dirTimer--; const ox = this.x; const oy = this.y; this.move(this.direction); if (this.x === ox && this.y === oy) this.dirTimer = 0; if (Math.random() * 100 < 2) this.shoot(); } }
+class Enemy extends Tank { 
+    constructor(game, x, y, stage = 0) { 
+        super(game, x, y, COLORS.ENEMY); 
+        const diffMult = game.difficulty === 'easy' ? 0.8 : (game.difficulty === 'hard' ? 1.2 : 1); 
+        const r = Math.random();
+        if (stage > 5 && r < 0.15) this.variant = 'ELITE';
+        else if (stage > 2 && r < 0.4) this.variant = 'HEAVY';
+        else if (r < 0.6) this.variant = 'FAST';
+        else this.variant = 'BASIC';
+
+        if (this.variant === 'FAST') { this.speed = (3.5 + Math.min(stage * 0.1, 1.5)) * diffMult; this.health = 1; this.color = '#FF9999'; }
+        else if (this.variant === 'HEAVY') { this.speed = (1.5 + Math.min(stage * 0.05, 1)) * diffMult; this.health = 3; this.color = '#777777'; }
+        else if (this.variant === 'ELITE') { this.speed = (2.5 + Math.min(stage * 0.1, 1.5)) * diffMult; this.health = 1; this.level = 2; this.color = '#FF55FF'; }
+        else { this.speed = (2 + Math.min(stage * 0.1, 2)) * diffMult; this.health = 1; }
+        
+        this.dirTimer = 0; 
+        this.frozenTimer = 0;
+    } 
+    update() { 
+        super.update(); 
+        if (this.frozenTimer > 0) { this.frozenTimer--; return; }
+        if (this.dirTimer <= 0) { this.direction = ['UP', 'DOWN', 'LEFT', 'RIGHT'][Math.floor(Math.random() * 4)]; this.dirTimer = 30 + Math.random() * 60; } else this.dirTimer--; const ox = this.x; const oy = this.y; this.move(this.direction); if (this.x === ox && this.y === oy) this.dirTimer = 0; if (Math.random() * 100 < (this.variant==='ELITE'? 4 : 2)) this.shoot(); 
+    } 
+}
 
 class Boss extends Enemy {
     constructor(game, x, y, stage = 0) {
