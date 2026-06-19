@@ -918,8 +918,8 @@ class Game {
         if (this.gameState === 'STAGE_START') { this.stageStartTimer--; if (this.stageStartTimer <= 0) this.gameState = 'PLAYING'; return; }
         if (this.gameState !== 'PLAYING') return;
 
-        if (this.game.input.isDown('KeyP') && !this.pausePressed) { this.paused = !this.paused; this.pausePressed = true; }
-        if (!this.game.input.isDown('KeyP')) this.pausePressed = false;
+        if (this.input.isDown('KeyP') && !this.pausePressed) { this.paused = !this.paused; this.pausePressed = true; }
+        if (!this.input.isDown('KeyP')) this.pausePressed = false;
         if (this.paused) return;
 
         if (this.weather !== 'NONE') {
