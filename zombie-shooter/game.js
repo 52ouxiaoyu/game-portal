@@ -558,15 +558,15 @@ class Zombie {
         else { this.x = -30; this.y = Math.random() * CANVAS_H; }
 
         if(this.type === 'boss') {
-            this.size = 35; this.speed = 1.5; this.hp = 1000 + survivalTime*10; this.color = '#ff00ff'; this.damage = 2; this.scoreVal = 500;
+            this.size = 35; this.speed = 0.8; this.hp = 1000 + survivalTime*10; this.color = '#ff00ff'; this.damage = 2; this.scoreVal = 500;
         } else if(this.type === 'fast') {
-            this.size = 12 + Math.random()*3; this.speed = 2.5 + Math.random() + (survivalTime/60); this.hp = 10 + survivalTime/2; this.color = '#ffff00'; this.damage = 1; this.scoreVal = 15;
+            this.size = 12 + Math.random()*3; this.speed = 1.5 + Math.random()*0.5 + (survivalTime/180); this.hp = 10 + survivalTime/2; this.color = '#ffff00'; this.damage = 1; this.scoreVal = 15;
         } else if(this.type === 'tank') {
-            this.size = 25 + Math.random()*5; this.speed = 0.5 + Math.random()*0.5 + (survivalTime/120); this.hp = 100 + survivalTime*3; this.color = '#4444ff'; this.damage = 2; this.scoreVal = 30;
+            this.size = 25 + Math.random()*5; this.speed = 0.3 + Math.random()*0.3 + (survivalTime/300); this.hp = 100 + survivalTime*3; this.color = '#4444ff'; this.damage = 2; this.scoreVal = 30;
         } else if(this.type === 'exploder') {
-            this.size = 18 + Math.random()*4; this.speed = 1.2 + Math.random() + (survivalTime/60); this.hp = 15 + survivalTime; this.color = '#ff5500'; this.damage = 1; this.scoreVal = 20;
+            this.size = 18 + Math.random()*4; this.speed = 0.8 + Math.random()*0.5 + (survivalTime/180); this.hp = 15 + survivalTime; this.color = '#ff5500'; this.damage = 1; this.scoreVal = 20;
         } else { // normal
-            this.size = 15 + Math.random()*5; this.speed = 1 + Math.random()*1.5 + (survivalTime/60); this.hp = 20 + survivalTime; this.color = '#00ff00'; this.damage = 1; this.scoreVal = 10;
+            this.size = 15 + Math.random()*5; this.speed = 0.6 + Math.random()*0.6 + (survivalTime/180); this.hp = 20 + survivalTime; this.color = '#00ff00'; this.damage = 1; this.scoreVal = 10;
         }
         
         if(activeEvent === 'bloodmoon') this.speed *= 2;
