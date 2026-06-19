@@ -843,15 +843,17 @@ class Enemy extends Tank {
 
 class Boss extends Enemy {
     constructor(game, x, y, stage = 0) {
-        super(game, x, y);
+        super(game, x, y, stage);
         const difficulty = Math.min(stage / 50, 1);
-        const scale = 1.8 + Math.random() * 1.2 + difficulty * 0.5;
+        const scale = 1.5 + Math.random() * 0.5 + difficulty * 0.5;
         this.width = TILE_SIZE * scale; this.height = TILE_SIZE * scale;
-        this.health = Math.floor((4 + stage * 0.5) * scale); this.maxHealth = this.health;
-        this.speed = 0.8 + difficulty * 0.5; this.isBoss = true;
+        this.health = Math.floor((50 + stage * 8) * scale); 
+        this.maxHealth = this.health;
+        this.speed = 1.0 + difficulty * 0.8; 
+        this.isBoss = true;
         this.turretAngle = 0; this.turretTargetAngle = 0;
-        this.barrelLength = this.width * 0.7;
-        this.armorLevel = Math.floor(Math.random() * (1 + difficulty * 2));
+        this.barrelLength = this.width * 0.6;
+        this.level = 2 + Math.floor(difficulty * 2);
         const titles = ['IRON TITAN', 'WAR MACHINE', 'STEEL FURY', 'DEATH DEALER', 'MECH OVERLORD'];
         this.title = titles[Math.floor(Math.random() * titles.length)];
         this.color = `hsl(${200 + Math.random() * 40}, 60%, 35%)`;
@@ -860,23 +862,31 @@ class Boss extends Enemy {
         this.game.weather = weathers[Math.floor(Math.random() * weathers.length)];
     }
     shoot() {
-        if (this.cooldown > 0) return; this.cooldown = Math.max(15, 30 - this.level * 3);
+        if (this.cooldown > 0) return; 
+        this.cooldown = Math.max(25, 45 - this.level * 4);
         const cx = this.x + this.width / 2;
         const cy = this.y + this.height / 2;
-        const angle = this.turretAngle;
-        const bx = cx + Math.cos(angle) * (this.barrelLength + 10);
-        const by = cy + Math.sin(angle) * (this.barrelLength + 10);
-        let dir = this.direction;
-        if (angle > -Math.PI/4 && angle <= Math.PI/4) dir = 'RIGHT';
-        else if (angle > Math.PI/4 && angle <= 3*Math.PI/4) dir = 'DOWN';
-        else if (angle > -3*Math.PI/4 && angle <= -Math.PI/4) dir = 'UP';
-        else dir = 'LEFT';
-        const gx = Math.floor(bx / TILE_SIZE);
-        const gy = Math.floor(by / TILE_SIZE);
-        if (gx < 0 || gx >= GRID_SIZE || gy < 0 || gy >= GRID_SIZE) return;
-        const tile = this.game.map.grid[gy][gx];
-        if (tile === TILE_TYPES.BRICK || tile === TILE_TYPES.STEEL) return;
-        this.game.bullets.push(new Bullet(this.game, this, bx - 8, by - 8, dir, this.level));
+        
+        for (let offset of [-0.25, 0, 0.25]) {
+            const angle = this.turretAngle + offset;
+            const bx = cx + Math.cos(angle) * (this.barrelLength + 10);
+            const by = cy + Math.sin(angle) * (this.barrelLength + 10);
+            let dir = 'DOWN';
+            if (angle > -Math.PI/4 && angle <= Math.PI/4) dir = 'RIGHT';
+            else if (angle > Math.PI/4 && angle <= 3*Math.PI/4) dir = 'DOWN';
+            else if (angle > -3*Math.PI/4 && angle <= -Math.PI/4) dir = 'UP';
+            else dir = 'LEFT';
+            
+            const gx = Math.floor(bx / TILE_SIZE);
+            const gy = Math.floor(by / TILE_SIZE);
+            if (gx >= 0 && gx < GRID_SIZE && gy >= 0 && gy < GRID_SIZE) {
+                const tile = this.game.map.grid[gy][gx];
+                if (tile !== TILE_TYPES.BRICK && tile !== TILE_TYPES.STEEL) {
+                    this.game.bullets.push(new Bullet(this.game, this, bx - 8, by - 8, dir, this.level));
+                }
+            }
+        }
+        audio.play('shoot');
     }
     update() {
         super.update();
@@ -891,21 +901,37 @@ class Boss extends Enemy {
             const cx = this.x + this.width / 2;
             const cy = this.y + this.height / 2;
             this.turretTargetAngle = Math.atan2(nearestEnemy.y + nearestEnemy.height/2 - cy, nearestEnemy.x + nearestEnemy.width/2 - cx);
+            if (nearestDist < TILE_SIZE * 15 && Math.random() < 0.05) this.shoot();
         }
         let diff = this.turretTargetAngle - this.turretAngle;
         while (diff > Math.PI) diff -= Math.PI * 2;
         while (diff < -Math.PI) diff += Math.PI * 2;
-        this.turretAngle += diff * 0.08;
+        this.turretAngle += diff * 0.1;
+        
+        for (const p of this.game.players) {
+            if (!p.alive) continue;
+            if (this.x < p.x + p.width && this.x + this.width > p.x && this.y < p.y + p.height && this.y + this.height > p.y) {
+                p.destroy(this, 999);
+            }
+        }
     }
     destroy(killer, damage = 1) {
-        this.health -= damage; this.game.effects.push(new Effect(this.x + Math.random()*this.width, this.y + Math.random()*this.height, 'EXPLOSION', 2.5));
+        this.health -= damage; 
+        this.game.effects.push(new Effect(this.x + Math.random()*this.width, this.y + Math.random()*this.height, 'EXPLOSION', 2.5));
+        audio.play('hit');
+        const oldColor = this.color;
+        this.color = '#ffffff';
+        setTimeout(() => { if (this.alive) this.color = oldColor; }, 100);
+
         if (this.health <= 0) {
             this.alive = false; this.game.weather = 'NONE';
             for (let i = 0; i < 6; i++) {
                 const types = Object.values(POWERUP_TYPES);
                 this.game.powerUps.push(new PowerUp(this.game, this.x + Math.random()*this.width, this.y + Math.random()*this.height, types[Math.floor(Math.random()*types.length)]));
             }
-            if (killer instanceof Player) { killer.score += 1500; this.game.updateHUD(); }
+            if (killer instanceof Player) { killer.score += 5000; this.game.updateHUD(); }
+            this.game.effects.push(new Effect(this.x + this.width/2, this.y + this.height/2, 'EXPLOSION', 5));
+            this.game.shakeScreen(30);
         }
     }
     draw(ctx) {
