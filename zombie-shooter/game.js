@@ -370,7 +370,7 @@ class Player {
             ctx.fillStyle = '#000'; ctx.font = '20px Arial'; ctx.fillText('RIP', this.x, this.y + 5);
             
             ctx.fillStyle = '#fff';
-            ctx.font = '12px ZCOOL KuaiLe';
+            ctx.font = '12px "Share Tech Mono", monospace';
             ctx.fillText('P' + this.id + ' 等待救援...', this.x, this.y - 35);
             
             // Draw Revive Progress Bar
@@ -447,7 +447,7 @@ class Player {
 
         // Player ID and Lives
         ctx.fillStyle = '#fff';
-        ctx.font = '12px ZCOOL KuaiLe';
+        ctx.font = '12px "Share Tech Mono", monospace';
         ctx.textAlign = 'center';
         let idText = this.isAI ? 'P' + this.id + ' (AI托管)' : 'P' + this.id;
         ctx.fillText(idText, this.x, this.y - 35);
