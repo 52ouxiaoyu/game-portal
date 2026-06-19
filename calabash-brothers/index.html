@@ -766,6 +766,8 @@ const events = {
       { text: `💪 蛮力碾压`, effect: { hp: -e.power * 0.1, power: 6 }, condition: player.skills.includes('力大无穷'), successRate: Math.min(0.95, powerRatio * 1.2) },
       { text: `👀 侦查敌情`, effect: { power: 2 }, condition: player.skills.includes('千里眼'), successRate: 1 },
       { text: `🛡️ 铜墙铁壁`, effect: { hp: -e.power * 0.05, power: 4 }, condition: player.skills.includes('铜头铁臂'), successRate: 0.95 },
+      { text: `💧 水幕护体`, effect: { hp: -e.power * 0.08, power: 3, hp: 5 }, condition: player.skills.includes('吸水'), successRate: 0.9, desc: '用水流抵挡伤害' },
+      { text: `🏺 宝葫芦收妖`, effect: { hp: -e.power * 0.25, power: 8 }, condition: player.skills.includes('宝葫芦'), successRate: 0.92, desc: '用宝葫芦直接收服敌人' },
       { text: `💨 战术撤退`, effect: { hp: -2, brave: -2 }, successRate: 1 }
     ].filter(s => !s.condition || s.condition);
     
