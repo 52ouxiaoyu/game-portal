@@ -739,7 +739,7 @@ function growBoss() {
     addLog(`💥 蛇精与神秘强者激战！生命-${damage}，但战力上限+5！`, '#ff8800');
   } else if (bossEvent < 0.18) {
     // 🎁 蛇精获得神秘法器
-    const artifacts = ['千年蛇丹', '妖王内丹', '毒蛇胆', '蛇皮护甲', '魔蛇之眼'];
+    const artifacts = ['千年蛇丹', '妖王内丹', '毒蛇胆', '蛇皮护甲', '魔蛇之眼', '灭霸的无限手套', '伏地魔的魔杖', '东方不败的绣花针', '恶毒王后的毒苹果', '容嬷嬷的银针', '夜王的长矛', '死神海拉的夜空之剑'];
     const artifact = artifacts[Math.floor(Math.random() * artifacts.length)];
     const hpGain = Math.floor(Math.random() * 25) + 15;
     const powerGain = Math.floor(Math.random() * 10) + 5;
@@ -1222,7 +1222,17 @@ const events = {
         { name: '🛡️ 金刚护盾', hp: 50, desc: '一个金色护盾！生命+50！' },
         { name: '🔮 魔法水晶', power: 15, hp: 20, desc: '一颗神秘水晶！战力+15，生命+20！' },
         { name: '💊 九转金丹', hp: 80, desc: '一颗金丹！生命直接回满！' },
-        { name: '📖 天书秘籍', power: 30, desc: '一本古老秘籍！战力+30！' }
+        { name: '📖 天书秘籍', power: 30, desc: '一本古老秘籍！战力+30！' },
+        { name: '⚔️ 倚天剑', power: 35, desc: '武林至尊，宝刀屠龙，号令天下，莫敢不从！战力+35！' },
+        { name: '🪓 屠龙刀', power: 40, desc: '一把沉甸甸的黑色大刀，蕴含着无尽的煞气！战力+40！' },
+        { name: '🐒 如意金箍棒', power: 50, desc: '重达一万三千五百斤的定海神针！战力+50！' },
+        { name: '🪭 芭蕉扇', power: 30, desc: '一扇熄火，二扇生风，三扇下雨！战力+30！' },
+        { name: '💍 至尊魔戒', power: 25, hp: -10, desc: '一枚统御众戒的魔戒！战力+25，但会反噬生命-10！' },
+        { name: '⚡ 雷神之锤', power: 45, desc: '只有被认可的人才能举起的锤子！战力+45！' },
+        { name: '🛡️ 美国队长的盾牌', hp: 60, desc: '振金打造的绝对防御！生命+60！' },
+        { name: '💊 九转大肠', hp: 80, desc: '保留了一部分原味的九转大肠...吃了生命+80！' },
+        { name: '📖 九阴真经', power: 35, desc: '天下武学总纲！战力+35！' },
+        { name: '✨ 仙豆', hp: 100, desc: '卡林塔的神奇豆子，吃一颗满血复活！生命+100！' }
       ];
       const artifact = artifacts[Math.floor(Math.random() * artifacts.length)];
       showText(artifact.name, `你发现了一个神秘宝箱！\n\n打开后里面是...${artifact.name}！\n\n${artifact.desc}`, 
@@ -1248,7 +1258,12 @@ const events = {
         { name: '📜 秘籍', effect: { power: 8 } },
         { name: '🔮 法杖', effect: { power: 5, hp: 10 } },
         { name: '💎 宝石', effect: { power: 7 } },
-        { name: '🎁 礼物', effect: { hp: 15, power: 4 } }
+        { name: '🎁 礼物', effect: { hp: 15, power: 4 } },
+        { name: '📱 诺基亚手机', effect: { hp: 25, power: 5 } },
+        { name: '🍳 灰太狼的平底锅', effect: { power: 15, hp: 5 } },
+        { name: '🥤 肥宅快乐水', effect: { hp: 30, brave: 5 } },
+        { name: '🥿 妈妈的拖鞋', effect: { power: 20 } },
+        { name: '🔦 哆啦A梦的缩小电筒', effect: { power: 12, brave: 10 } }
       ];
       const l = luckies[Math.floor(Math.random() * luckies.length)];
       showText(l.name, '你发现了好东西！', [{ text: '🎉 太好了', next: 'explore', effect: l.effect }]);
