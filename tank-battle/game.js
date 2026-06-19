@@ -590,7 +590,7 @@ class Player extends Tank {
         } else if (baseThreat && baseThreatDist < TILE_SIZE * 12) {
             targetX = baseThreat.x + baseThreat.width / 2;
             targetY = baseThreat.y + baseThreat.height / 2;
-        } else if (nearestEnemy && nearestDist < TILE_SIZE * 15) {
+        } else if (nearestEnemy) {
             targetX = nearestEnemy.x + nearestEnemy.width / 2;
             targetY = nearestEnemy.y + nearestEnemy.height / 2;
         } else {
@@ -618,7 +618,7 @@ class Player extends Tank {
         }
 
         if (this.isTileBlocked(myX, myY, this.aiMoveDir)) {
-            this.aiMoveDir = this.getAlternateDir(this.aiMoveDir, dx, dy);
+            this.aiMoveDir = this.getAlternateDir(this.aiMoveDir, dx, dy, myX, myY);
             this.aiMoveTimer = 20;
         }
 
@@ -653,13 +653,21 @@ class Player extends Tank {
         else if (dir === 'LEFT') tx -= checkDist; else if (dir === 'RIGHT') tx += checkDist;
         return this.game.map.isBlocked(tx - this.width/2, ty - this.height/2, this.width, this.height);
     }
-    getAlternateDir(blockedDir, dx, dy) {
-        const dirs = ['UP', 'DOWN', 'LEFT', 'RIGHT'].filter(d => d !== blockedDir);
-        if (Math.abs(dx) > Math.abs(dy)) {
-            return dx > 0 ? (dirs.includes('RIGHT') ? 'RIGHT' : 'LEFT') : (dirs.includes('LEFT') ? 'LEFT' : 'RIGHT');
-        } else {
-            return dy > 0 ? (dirs.includes('DOWN') ? 'DOWN' : 'UP') : (dirs.includes('UP') ? 'UP' : 'DOWN');
+    getAlternateDir(blockedDir, dx, dy, myX, myY) {
+        let dirs = ['UP', 'DOWN', 'LEFT', 'RIGHT'].filter(d => d !== blockedDir);
+        if (myX !== undefined && myY !== undefined) {
+            dirs = dirs.filter(d => !this.isTileBlocked(myX, myY, d));
         }
+        if (dirs.length === 0) {
+            const rev = { 'UP': 'DOWN', 'DOWN': 'UP', 'LEFT': 'RIGHT', 'RIGHT': 'LEFT' };
+            return rev[blockedDir] || 'UP';
+        }
+        dirs.sort((a, b) => {
+            const costA = (a === 'UP' && dy < 0) || (a === 'DOWN' && dy > 0) || (a === 'LEFT' && dx < 0) || (a === 'RIGHT' && dx > 0) ? 0 : 1;
+            const costB = (b === 'UP' && dy < 0) || (b === 'DOWN' && dy > 0) || (b === 'LEFT' && dx < 0) || (b === 'RIGHT' && dx > 0) ? 0 : 1;
+            return costA - costB;
+        });
+        return dirs[0];
     }
     canShootTarget(target) {
         const myX = this.x + this.width / 2;
