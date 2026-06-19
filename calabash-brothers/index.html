@@ -645,54 +645,81 @@ function showFeedback(changes) {
 }
 
 function growBoss() {
-  // Boss基础增长（随回合数增加）
+  // Boss基础成长：每回合不仅增加属性，也提升上限
   const baseGain = Math.floor(boss.power * 0.08 + turn * 0.5);
+  boss.maxPower += 2;
+  boss.maxHp += 5;
   boss.power = Math.min(boss.maxPower, boss.power + baseGain);
   boss.hp = Math.min(boss.maxHp, boss.hp + 10);
-  addLog(`🐍 蛇精修炼中...战力+${baseGain}`, '#ff6b6b');
+  boss.lastAction = `修炼中... 战力+${baseGain}`;
+  addLog(`🐍 蛇精修炼中...战力+${baseGain}，上限提升`, '#ff6b6b');
   
-  // 蛇精偶遇事件（30%概率）
+  // 蛇精偶遇事件（增加概率和结盟事件）
   const bossEvent = Math.random();
-  if (bossEvent < 0.08) {
+  if (bossEvent < 0.06) {
+    // 🤝 新增：反派大妖结盟事件
+    const villains = ['黑熊精', '金角大王', '银角大王', '黄袍怪', '白骨精', '牛魔王', '红孩儿', '六耳猕猴', '蝎子精', '百眼魔君'];
+    const villain = villains[Math.floor(Math.random() * villains.length)];
+    const hpMaxGain = Math.floor(Math.random() * 30) + 20;
+    const powerMaxGain = Math.floor(Math.random() * 15) + 10;
+    boss.maxHp += hpMaxGain;
+    boss.maxPower += powerMaxGain;
+    boss.hp += hpMaxGain;
+    boss.power += powerMaxGain;
+    boss.lastAction = `与【${villain}】结盟！`;
+    addLog(`🤝 蛇精与${villain}结盟！生命上限+${hpMaxGain}，战力上限+${powerMaxGain}！`, '#ff4444');
+  } else if (bossEvent < 0.12) {
     // 💥 蛇精遇到强敌，两败俱伤
     const damage = Math.floor(Math.random() * 30) + 20;
     boss.hp = Math.max(30, boss.hp - damage);
+    boss.maxPower += 5;
     boss.power = Math.min(boss.maxPower, boss.power + 15);
-    addLog(`💥 蛇精与神秘强者激战！生命-${damage}，但战力+15！`, '#ff8800');
-  } else if (bossEvent < 0.15) {
+    boss.lastAction = `与神秘强者激战！`;
+    addLog(`💥 蛇精与神秘强者激战！生命-${damage}，但战力上限+5！`, '#ff8800');
+  } else if (bossEvent < 0.18) {
     // 🎁 蛇精获得神秘法器
     const artifacts = ['千年蛇丹', '妖王内丹', '毒蛇胆', '蛇皮护甲', '魔蛇之眼'];
     const artifact = artifacts[Math.floor(Math.random() * artifacts.length)];
     const hpGain = Math.floor(Math.random() * 25) + 15;
     const powerGain = Math.floor(Math.random() * 10) + 5;
+    boss.maxHp += Math.floor(hpGain / 2);
+    boss.maxPower += Math.floor(powerGain / 2);
     boss.hp = Math.min(boss.maxHp, boss.hp + hpGain);
     boss.power = Math.min(boss.maxPower, boss.power + powerGain);
-    addLog(`🎁 蛇精找到了${artifact}！生命+${hpGain}，战力+${powerGain}！`, '#9b59b6');
-  } else if (bossEvent < 0.20) {
+    boss.lastAction = `获得了${artifact}！`;
+    addLog(`🎁 蛇精找到了${artifact}！生命上限+${Math.floor(hpGain/2)}，战力上限+${Math.floor(powerGain/2)}！`, '#9b59b6');
+  } else if (bossEvent < 0.23) {
     // 😈 蛇精蛊惑了无辜
     const victims = ['村民', '商人', '书生', '农夫', '猎人'];
     const victim = victims[Math.floor(Math.random() * victims.length)];
     const powerGain = Math.floor(Math.random() * 8) + 3;
+    boss.maxPower += Math.floor(powerGain / 2);
     boss.power = Math.min(boss.maxPower, boss.power + powerGain);
-    addLog(`😈 蛇精蛊惑了${victim}，吸取精气！战力+${powerGain}`, '#ff8800');
-  } else if (bossEvent < 0.25) {
+    boss.lastAction = `吸取了${victim}的精气！`;
+    addLog(`😈 蛇精蛊惑了${victim}，吸取精气！战力上限+${Math.floor(powerGain/2)}`, '#ff8800');
+  } else if (bossEvent < 0.28) {
     // 🐍 蛇精遇到手下
     const minions = ['小妖精', '蜘蛛精', '蝙蝠怪', '蛤蟆精', '蛇妖'];
     const minion = minions[Math.floor(Math.random() * minions.length)];
     const gainBonus = Math.floor(Math.random() * 6) + 2;
+    boss.maxPower += 2;
     boss.power = Math.min(boss.maxPower, boss.power + gainBonus);
-    addLog(`🐍 蛇精收服了${minion}！战力+${gainBonus}`, '#ff6b6b');
-  } else if (bossEvent < 0.28) {
+    boss.lastAction = `收服了${minion}！`;
+    addLog(`🐍 蛇精收服了${minion}！战力上限+2`, '#ff6b6b');
+  } else if (bossEvent < 0.32) {
     // 😵 蛇精走火入魔
     const moodLoss = Math.floor(Math.random() * 10) + 5;
     boss.power = Math.max(10, boss.power - moodLoss);
+    boss.lastAction = `修炼走火入魔！`;
     addLog(`😵 蛇精修炼走火入魔！战力-${moodLoss}`, '#4ecdc4');
-  } else if (bossEvent < 0.32) {
+  } else if (bossEvent < 0.38) {
     // 💪 蛇精怒气爆发
-    const怒气Gain = Math.floor(Math.random() * 12) + 8;
+    const 怒气Gain = Math.floor(Math.random() * 12) + 8;
+    boss.maxPower += 5;
     boss.power = Math.min(boss.maxPower, boss.power + 怒气Gain);
     boss.brave = Math.min(100, boss.brave + 10);
-    addLog(`💪 蛇精怒气爆发！战力+${怒气Gain}，气势+10！`, '#ff4444');
+    boss.lastAction = `怒气爆发！`;
+    addLog(`💪 蛇精怒气爆发！战力上限+5，气势+10！`, '#ff4444');
   }
 }
 
