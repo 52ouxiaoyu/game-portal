@@ -169,6 +169,42 @@ function generateLevel(index) {
     return level;
 }
 
+class AudioManager {
+    constructor() { this.ctx = null; this.enabled = false; }
+    init() {
+        if (!this.ctx) { const AudioContext = window.AudioContext || window.webkitAudioContext; if (AudioContext) { this.ctx = new AudioContext(); this.enabled = true; } }
+        if (this.ctx && this.ctx.state === 'suspended') this.ctx.resume();
+    }
+    play(type) {
+        if (!this.enabled || !this.ctx) return;
+        const osc = this.ctx.createOscillator(); const gain = this.ctx.createGain();
+        osc.connect(gain); gain.connect(this.ctx.destination);
+        const now = this.ctx.currentTime;
+        if (type === 'shoot') {
+            osc.type = 'square'; osc.frequency.setValueAtTime(300, now); osc.frequency.exponentialRampToValueAtTime(10, now + 0.1);
+            gain.gain.setValueAtTime(0.05, now); gain.gain.exponentialRampToValueAtTime(0.01, now + 0.1);
+            osc.start(now); osc.stop(now + 0.1);
+        } else if (type === 'explosion') {
+            osc.type = 'sawtooth'; osc.frequency.setValueAtTime(100, now); osc.frequency.exponentialRampToValueAtTime(10, now + 0.3);
+            gain.gain.setValueAtTime(0.1, now); gain.gain.exponentialRampToValueAtTime(0.01, now + 0.3);
+            osc.start(now); osc.stop(now + 0.3);
+        } else if (type === 'powerup') {
+            osc.type = 'sine'; osc.frequency.setValueAtTime(400, now); osc.frequency.setValueAtTime(800, now + 0.1);
+            gain.gain.setValueAtTime(0.1, now); gain.gain.linearRampToValueAtTime(0, now + 0.2);
+            osc.start(now); osc.stop(now + 0.2);
+        } else if (type === 'start') {
+            osc.type = 'square'; osc.frequency.setValueAtTime(300, now); osc.frequency.setValueAtTime(400, now + 0.1); osc.frequency.setValueAtTime(500, now + 0.2);
+            gain.gain.setValueAtTime(0.1, now); gain.gain.linearRampToValueAtTime(0, now + 0.5);
+            osc.start(now); osc.stop(now + 0.5);
+        } else if (type === 'hit') {
+            osc.type = 'square'; osc.frequency.setValueAtTime(150, now);
+            gain.gain.setValueAtTime(0.1, now); gain.gain.exponentialRampToValueAtTime(0.01, now + 0.1);
+            osc.start(now); osc.stop(now + 0.1);
+        }
+    }
+}
+const audio = new AudioManager();
+
 class Effect {
     constructor(x, y, type, sizeScale = 1) { this.x = x; this.y = y; this.type = type; this.timer = type === 'SPAWN' ? 60 : 20; this.active = true; this.sizeScale = sizeScale; }
     update() { this.timer--; if (this.timer <= 0) this.active = false; }
@@ -195,6 +231,7 @@ class PowerUp {
         this.game.players.forEach(p => { if (p.alive && this.x < p.x + p.width && this.x + this.width > p.x && this.y < p.y + p.height && this.y + this.height > p.y) { this.applyEffect(p); this.active = false; } });
     }
     applyEffect(player) {
+        audio.play('powerup');
         this.game.effects.push(new Effect(this.x + 32, this.y + 32, 'EXPLOSION'));
         if (this.type === POWERUP_TYPES.BOMB) this.game.enemies.forEach(e => e.destroy());
         else if (this.type === POWERUP_TYPES.SHIELD) player.setShield(360);
@@ -353,6 +390,7 @@ class Bullet {
     triggerExplosion(ex, ey, small = false) {
         let radius = small ? 0.5 : (1 + this.level * 0.5);
         if (this.owner instanceof Player && !small) radius += 1.5;
+        audio.play('explosion');
         this.game.effects.push(new Effect(ex, ey, 'EXPLOSION', radius));
         if (small) return;
         const gridX = Math.floor(ex / TILE_SIZE); const gridY = Math.floor(ey / TILE_SIZE); const range = Math.ceil(radius);
@@ -420,6 +458,7 @@ class Tank {
         this.cooldown = this instanceof Player ? Math.max(25, 45 - this.level * 5) : Math.max(5, 20 - this.level * 5);
         let bx = this.x + 26; let by = this.y + 26;
         if (this.direction === 'UP') by = this.y - 10; else if (this.direction === 'DOWN') by = this.y + 60; else if (this.direction === 'LEFT') bx = this.x - 10; else if (this.direction === 'RIGHT') bx = this.x + 60;
+        if (this instanceof Player) audio.play('shoot');
         this.game.bullets.push(new Bullet(this.game, this, bx, by, this.direction, this.level));
     }
     destroy(killer, damage = 1) {
@@ -427,6 +466,7 @@ class Tank {
         if (this instanceof Player) {
             this.health = (this.health || 1) - damage;
             if (this.health > 0) {
+                audio.play('hit');
                 this.level = Math.max(0, Math.floor((this.health - 1) / 2));
                 this.speed = 4 + this.level;
                 this.shieldTimer = 30; // Brief invincibility after hit
@@ -895,6 +935,8 @@ class Game {
     showAnnouncement(text, color = '#fff') { this.announcements.push({ text, color, timer: 120, y: CANVAS_SIZE / 2 }); }
     showFloatingText(text, x, y, color = '#fff') { this.floatingTexts.push({ text, x, y, color, timer: 60, vy: -2 }); }
     startGame() {
+        audio.init();
+        audio.play('start');
         const levelInput = document.getElementById('start-level');
         const startLevel = Math.max(1, Math.min(1000, parseInt(levelInput.value) || 1)) - 1;
         this.currentStage = startLevel;
