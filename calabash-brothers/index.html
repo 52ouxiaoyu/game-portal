@@ -945,6 +945,17 @@ const events = {
 
   npc_dialogue_result: () => {
     const { npc, dialogue } = events._tempData;
+    
+    // 构建属性变化字符串
+    let effectStr = '';
+    if (dialogue.effect) {
+      if (dialogue.effect.hp) effectStr += `生命 ${dialogue.effect.hp > 0 ? '+' : ''}${dialogue.effect.hp} `;
+      if (dialogue.effect.power) effectStr += `战力 ${dialogue.effect.power > 0 ? '+' : ''}${dialogue.effect.power} `;
+      if (dialogue.effect.brave) effectStr += `勇气 ${dialogue.effect.brave > 0 ? '+' : ''}${dialogue.effect.brave} `;
+      if (dialogue.effect.karma) effectStr += `善恶 ${dialogue.effect.karma > 0 ? '+' : ''}${dialogue.effect.karma} `;
+    }
+    const finalResult = dialogue.result + (effectStr ? `\n\n(🎯 后果：${effectStr})` : '');
+
     // 10%概率触发搞笑意外反转
     const surprise = Math.random() < 0.10;
     if (surprise) {
@@ -960,10 +971,20 @@ const events = {
         { text: '💥 意外冲突！', result: `你和${npc.name}不小心撞到了一起！\n\n「砰！」你们俩都摔了个四脚朝天...\n\n但奇怪的是，你感觉力量增强了？也许是肾上腺素的作用！`, effect: { hp: -5, power: 6, brave: 8 } }
       ];
       const s = surprises[Math.floor(Math.random() * surprises.length)];
-      showText(s.text, s.result, [{ text: '继续探索', next: 'explore', effect: s.effect }]);
+      
+      let sEffectStr = '';
+      if (s.effect) {
+        if (s.effect.hp) sEffectStr += `生命 ${s.effect.hp > 0 ? '+' : ''}${s.effect.hp} `;
+        if (s.effect.power) sEffectStr += `战力 ${s.effect.power > 0 ? '+' : ''}${s.effect.power} `;
+        if (s.effect.brave) sEffectStr += `勇气 ${s.effect.brave > 0 ? '+' : ''}${s.effect.brave} `;
+        if (s.effect.karma) sEffectStr += `善恶 ${s.effect.karma > 0 ? '+' : ''}${s.effect.karma} `;
+      }
+      const finalSurpriseResult = s.result + (sEffectStr ? `\n\n(🎯 反转后果：${sEffectStr})` : '');
+      
+      showText(s.text, finalSurpriseResult, [{ text: '继续探索', next: 'explore', effect: s.effect }]);
     } else {
       // 正常结果
-      showText(`🎭 ${npc.name}`, dialogue.result, [{ text: '继续探索', next: 'explore' }]);
+      showText(`🎭 ${npc.name}`, finalResult, [{ text: '继续探索', next: 'explore' }]);
     }
   },
 
