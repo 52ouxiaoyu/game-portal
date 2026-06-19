@@ -525,7 +525,7 @@ let player = null, boss = null, turn = 1, logEntries = [];
 let winStreak = 0; // 连胜计数
 
 function initGame(charId) {
-  player = { char: characters[charId], hp: 80, maxHp: 80, power: 8 + charId, maxPower: 80, brave: 20, karma: 0, skills: [characters[charId].skill] };
+  player = { char: characters[charId], hp: 80, maxHp: 80, power: 8 + charId, maxPower: 80, brave: 20, karma: 0, skills: [characters[charId].skill], inventory: [] };
   boss = { hp: 200, maxHp: 200, power: 35, maxPower: 80, brave: 80, growRate: 1.1 };
   turn = 1; logEntries = []; window.isIdle = false;
   document.getElementById('start-screen').style.display = 'none';
@@ -916,8 +916,33 @@ const events = {
       [{ text: '🤝 加入队伍', next: 'explore', effect: { skill: brother.skill, power: 6 } }]);
   },
 
+  use_item: () => {
+    const { enemy } = events._tempData;
+    const item = player.inventory.pop();
+    const r = Math.random();
+    if (r < 0.5) {
+      showText('🎒 乱扔道具', `你掏出【${item.name}】砸向${enemy.name}！\n\n效果拔群！敌人被砸晕了！\n\n获得了大量战力加成！`, [{ text: '继续战斗', next: 'combat_result', effect: { power: item.power || 20, hp: item.hp || 10 }, data: { enemy, successRate: 1.5 } }]);
+    } else {
+      showText('🎒 乱扔道具', `你掏出【${item.name}】想对付${enemy.name}...\n\n结果不小心反弹砸到了自己！\n\n受到了伤害！`, [{ text: '继续战斗', next: 'combat_result', effect: { hp: -20, power: -5 }, data: { enemy, successRate: 0.3 } }]);
+    }
+  },
+
+  boss_harass: () => {
+    showText('⚠️ 蛇精的袭击', '蛇精觉得你太跳了，远程向你扔了一个【如意大泥石流】！', [
+      { text: '😤 硬抗', next: 'explore', effect: { hp: -25, brave: 5 } },
+      { text: '🏃 躲避', next: 'explore', effect: { hp: -5, brave: -2 } }
+    ]);
+  },
+
   npc_encounter: () => {
     const npc = npcs[Math.floor(Math.random() * npcs.length)];
+    if (player.karma <= -30 && Math.random() < 0.5) {
+      showText(npc.name, `${npc.desc}\n\n看到你满身邪气，${npc.name}觉得你比蛇精还像反派，决定直接对你动手！`, [
+        { text: '暴揍一顿', next: 'explore', effect: { hp: -15, power: 10, karma: -5 } },
+        { text: '仓皇逃窜', next: 'explore', effect: { hp: -5, brave: -5 } }
+      ]);
+      return;
+    }
     if (npc.dialogues && npc.dialogues.length > 0) {
       const choices = npc.dialogues.map(d => ({
         text: d.text,
@@ -1042,6 +1067,9 @@ const events = {
       { text: `⚔️ 正面迎战`, effect: { hp: -e.power * 0.3, power: 3, brave: 5 }, successRate: Math.min(0.95, powerRatio * 0.8) },
       { text: `🎯 偷袭弱点`, effect: { hp: -e.power * 0.2, power: 5 }, condition: player.skills.includes('隐身'), successRate: 0.9 },
       { text: `🔥 火焰攻击`, effect: { hp: -e.power * 0.15, power: 4 }, condition: player.skills.includes('喷火'), successRate: 0.85 },
+      { text: `❄️🔥 冰火两重天`, effect: { hp: -e.power * 0.05, power: 15 }, condition: player.skills.includes('喷火') && player.skills.includes('吸水'), successRate: 0.95, desc: '组合技！' },
+      { text: `👻💪 无形大逼兜`, effect: { hp: 0, power: 20 }, condition: player.skills.includes('隐身') && player.skills.includes('力大无穷'), successRate: 1, desc: '组合技！' },
+      { text: `🎒 乱扔道具`, effect: { hp: 0 }, condition: player.inventory && player.inventory.length > 0, next: 'use_item', data: { enemy: e }, successRate: 1 },
       { text: `💪 蛮力碾压`, effect: { hp: -e.power * 0.1, power: 6 }, condition: player.skills.includes('力大无穷'), successRate: Math.min(0.95, powerRatio * 1.2) },
       { text: `👀 侦查敌情`, effect: { power: 2 }, condition: player.skills.includes('千里眼'), successRate: 1 },
       { text: `🛡️ 铜墙铁壁`, effect: { hp: -e.power * 0.05, power: 4 }, condition: player.skills.includes('铜头铁臂'), successRate: 0.95 },
@@ -1052,7 +1080,7 @@ const events = {
     
     showText(e.name, `⚔️ ${e.desc}！\n\n${difficulty}\n敌人战力：${Math.round(e.power)} | 敌人生命：${Math.round(e.hp)}\n你的战力：${Math.round(player.power)}`, strategies.map(s => ({
       text: s.text,
-      next: 'combat_result',
+      next: s.next || 'combat_result',
       effect: s.effect,
       data: { enemy: e, successRate: s.successRate }
     })));
@@ -1257,8 +1285,9 @@ const events = {
         { name: '✨ 仙豆', hp: 100, desc: '卡林塔的神奇豆子，吃一颗满血复活！生命+100！' }
       ];
       const artifact = artifacts[Math.floor(Math.random() * artifacts.length)];
-      showText(artifact.name, `你发现了一个神秘宝箱！\n\n打开后里面是...${artifact.name}！\n\n${artifact.desc}`, 
-        [{ text: '🎉 收下', next: 'explore', effect: { power: artifact.power || 0, hp: artifact.hp || 0 } }]);
+      player.inventory.push(artifact);
+      showText(artifact.name, `你发现了一个神秘宝箱！\n\n打开后里面是...${artifact.name}！\n\n${artifact.desc}\n\n(已放入背包，可在战斗中使用)`, 
+        [{ text: '继续探索', next: 'explore' }]);
     } else if (r < 0.28) {
       // 🎭 遇到骗子
       showText('🎭 神秘人', '一个神秘人出现，声称要给你力量...\n\n但你感觉不太对劲...', [
@@ -1308,6 +1337,10 @@ const events = {
   },
 
   boss_entrance: () => {
+    if (player.karma <= -50) {
+      showText('😈 魔王降临', `蛇精看到满身邪气的你，瑟瑟发抖：\n\n「大哥，原来你才是反派，爷爷还给你，我给你当小弟行不行？」\n\n你收服了蛇精，成为了新的大魔王！`, [{ text: '达成：魔王结局', next: 'ending' }]);
+      return;
+    }
     document.getElementById('chapter').textContent = '终章：蛇精洞府';
     const ratio = player.power / boss.power;
     let difficulty = '';
@@ -1372,11 +1405,20 @@ const events = {
       let phaseEffect = '';
       let phaseChoices = [];
       
-      if (boss.hp <= boss.maxHp * 0.3 && boss.hp > 0) {
-        // Boss 低血量 - 狂暴阶段
+      if (boss.hp <= boss.maxHp * 0.1 && boss.hp > 0) {
+        // Phase 3: 拔网线魔法 (Glitch UI)
+        showText('💻 系统警告', '蛇精眼看打不过，使出了绝招：【拔网线魔法】！\n\n你的界面开始崩溃，按钮乱码了！\n\n「哈哈哈，找不到攻击按钮了吧！」', [
+          { text: '锟斤拷锟斤拷', next: 'boss_fight', effect: { hp: -20 } },
+          { text: '烫烫烫烫', next: 'boss_fight', effect: { hp: -20 } },
+          { text: '宝葫芦收妖', next: 'boss_fight', effect: { bossHp: -999 } },
+          { text: '0x000000', next: 'boss_fight', effect: { hp: -20 } }
+        ].sort(() => Math.random() - 0.5));
+        return; // Skip normal fight texts
+      } else if (boss.hp <= boss.maxHp * 0.3 && boss.hp > 0) {
+        // Phase 2: 狂暴 / 摇人阶段
         const狂暴 = Math.floor(Math.random() * 15) + 10;
         boss.power = Math.min(boss.maxPower, boss.power + 狂暴);
-        phaseEffect = `\n\n🔥 蛇精进入狂暴状态！战力+${狂暴}！\n蛇精释放出黑暗力量，准备同归于尽！`;
+        phaseEffect = `\n\n🔥 蛇精进入二阶段！开始摇人！战力+${狂暴}！\n「黑熊精、白骨精，给我上！」`;
         phaseChoices = [
           { text: '⚔️ 继续战斗', next: 'boss_fight' },
           { text: '🌀 使用联合技', next: 'combo_attack', effect: { power: 15 }, data: { pDmg, bDmg } },
@@ -1437,7 +1479,8 @@ function doAction(action) {
   if (action === 'explore') {
     growBoss(); turn++;
     const r = Math.random();
-    if (r < 0.12) { winStreak = 0; showEvent('find_ally'); }
+    if (r < 0.08) { showEvent('boss_harass'); }
+    else if (r < 0.18) { winStreak = 0; showEvent('find_ally'); }
     else if (r < 0.35) { winStreak = 0; showEvent('npc_encounter'); }
     else if (r < 0.55) showEvent('enemy_encounter');
     else if (r < 0.70) { winStreak = 0; showEvent('cave_explore'); }
