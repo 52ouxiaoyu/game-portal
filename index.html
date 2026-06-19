@@ -197,6 +197,31 @@
             letter-spacing: 0.3px;
         }
 
+        .coffee-btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            padding: 12px 24px;
+            background: #FFDD00;
+            color: #000000;
+            text-decoration: none;
+            border-radius: 12px;
+            font-size: 14px;
+            font-weight: 600;
+            transition: all 0.2s ease;
+            box-shadow: 0 4px 14px rgba(255, 221, 0, 0.4);
+        }
+
+        .coffee-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(255, 221, 0, 0.6);
+        }
+
+        .coffee-btn:active {
+            transform: translateY(0);
+        }
+
         @media (max-width: 768px) {
             .container { padding: 60px 16px 48px; }
             .stats { gap: 12px; }
@@ -226,6 +251,11 @@
                     <div class="stat-value" id="total-time">0</div>
                     <div class="stat-label">总时长</div>
                 </div>
+            </div>
+            <div style="margin-top: 32px;">
+                <a href="https://www.buymeacoffee.com/" target="_blank" class="coffee-btn" title="Buy me a coffee!">
+                    ☕ 请我喝杯咖啡 (Buy Me a Coffee)
+                </a>
             </div>
         </header>
 
