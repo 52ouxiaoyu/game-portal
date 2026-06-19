@@ -467,9 +467,11 @@ let winStreak = 0; // 连胜计数
 function initGame(charId) {
   player = { char: characters[charId], hp: 80, maxHp: 80, power: 8 + charId, maxPower: 80, brave: 20, karma: 0, skills: [characters[charId].skill] };
   boss = { hp: 200, maxHp: 200, power: 35, maxPower: 80, brave: 80, growRate: 1.1 };
-  turn = 1; logEntries = [];
+  turn = 1; logEntries = []; window.isIdle = false;
   document.getElementById('start-screen').style.display = 'none';
   document.getElementById('game-screen').style.display = 'block';
+  document.getElementById('actions').style.opacity = '0.5';
+  document.getElementById('actions').style.pointerEvents = 'none';
   updateUI(); showEvent('intro');
 }
 
@@ -685,16 +687,12 @@ const events = {
   intro: () => showText('旁白', `你选择了${player.char.name}！\n\n蛇精抓走了爷爷，你必须提升实力去救他。\n\n⚠️ 蛇精每回合都在变强！要在实力足够时尽快挑战！`, [{ text: '🔍 开始冒险', next: 'explore' }]),
 
   explore: () => {
-    growBoss(); turn++;
-    // 非战斗事件重置连胜
-    const r = Math.random();
-    if (r < 0.12) { winStreak = 0; showEvent('find_ally'); }
-    else if (r < 0.35) { winStreak = 0; showEvent('npc_encounter'); }
-    else if (r < 0.55) showEvent('enemy_encounter');
-    else if (r < 0.70) { winStreak = 0; showEvent('cave_explore'); }
-    else if (r < 0.80) { winStreak = 0; showEvent('trap'); }
-    else if (r < 0.90) { winStreak = 0; showEvent('lucky_event'); }
-    else { winStreak = 0; showEvent('rest_spot'); }
+    window.isIdle = true;
+    document.getElementById('speaker').textContent = '旁白';
+    document.getElementById('text').textContent = '这一回合结束了，接下来你想做什么？请点击下方的按钮。';
+    document.getElementById('choices').innerHTML = '';
+    document.getElementById('actions').style.opacity = '1';
+    document.getElementById('actions').style.pointerEvents = 'auto';
   },
 
   find_ally: () => {
@@ -1292,7 +1290,22 @@ const events = {
 function showEvent(id) { if (events[id]) events[id](); }
 
 function doAction(action) {
-  if (action === 'explore') showEvent('explore');
+  if (!window.isIdle) return;
+  window.isIdle = false;
+  document.getElementById('actions').style.opacity = '0.5';
+  document.getElementById('actions').style.pointerEvents = 'none';
+
+  if (action === 'explore') {
+    growBoss(); turn++;
+    const r = Math.random();
+    if (r < 0.12) { winStreak = 0; showEvent('find_ally'); }
+    else if (r < 0.35) { winStreak = 0; showEvent('npc_encounter'); }
+    else if (r < 0.55) showEvent('enemy_encounter');
+    else if (r < 0.70) { winStreak = 0; showEvent('cave_explore'); }
+    else if (r < 0.80) { winStreak = 0; showEvent('trap'); }
+    else if (r < 0.90) { winStreak = 0; showEvent('lucky_event'); }
+    else { winStreak = 0; showEvent('rest_spot'); }
+  }
   else if (action === 'search') {
     growBoss(); turn++;
     if (Math.random() < 0.4) showEvent('find_ally');
