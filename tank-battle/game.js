@@ -846,29 +846,63 @@ class Boss extends Enemy {
     constructor(game, x, y, stage = 0) {
         super(game, x, y, stage);
         const difficulty = Math.min(stage / 50, 1);
-        const scale = 1.5 + Math.random() * 0.5 + difficulty * 0.5;
+        
+        const variants = ['SPREAD', 'HEAVY', 'FAST'];
+        this.bossVariant = variants[Math.floor(Math.random() * variants.length)];
+        
+        let scaleMult = 1;
+        let hpMult = 1;
+        let speedMult = 1;
+        
+        if (this.bossVariant === 'HEAVY') {
+            scaleMult = 1.3; hpMult = 1.8; speedMult = 0.5;
+            this.title = ['JUGGERNAUT', 'DOOMSDAY', 'RED FURY'][Math.floor(Math.random()*3)];
+            this.color = `hsl(${0 + Math.random() * 20}, 70%, 40%)`;
+        } else if (this.bossVariant === 'FAST') {
+            scaleMult = 0.8; hpMult = 0.6; speedMult = 1.6;
+            this.title = ['VIPER', 'PHANTOM', 'GHOST'][Math.floor(Math.random()*3)];
+            this.color = `hsl(${100 + Math.random() * 40}, 80%, 40%)`;
+        } else {
+            this.title = ['IRON TITAN', 'WAR MACHINE', 'MECH OVERLORD'][Math.floor(Math.random()*3)];
+            this.color = `hsl(${200 + Math.random() * 40}, 60%, 35%)`;
+        }
+        
+        const scale = (1.5 + Math.random() * 0.5 + difficulty * 0.5) * scaleMult;
         this.width = TILE_SIZE * scale; this.height = TILE_SIZE * scale;
-        this.health = Math.floor((50 + stage * 8) * scale); 
+        this.health = Math.floor((50 + stage * 8) * scale * hpMult); 
         this.maxHealth = this.health;
-        this.speed = 1.0 + difficulty * 0.8; 
+        this.speed = (1.0 + difficulty * 0.8) * speedMult; 
         this.isBoss = true;
         this.turretAngle = 0; this.turretTargetAngle = 0;
         this.barrelLength = this.width * 0.6;
         this.level = 2 + Math.floor(difficulty * 2);
-        const titles = ['IRON TITAN', 'WAR MACHINE', 'STEEL FURY', 'DEATH DEALER', 'MECH OVERLORD'];
-        this.title = titles[Math.floor(Math.random() * titles.length)];
-        this.color = `hsl(${200 + Math.random() * 40}, 60%, 35%)`;
-        this.metalColor = `hsl(${200 + Math.random() * 40}, 50%, 50%)`;
+        this.metalColor = `hsl(0, 0%, ${40 + Math.random() * 20}%)`;
+        
         const weathers = ['RAIN', 'SNOW', 'WIND', 'LIGHTNING'];
         this.game.weather = weathers[Math.floor(Math.random() * weathers.length)];
     }
     shoot() {
         if (this.cooldown > 0) return; 
-        this.cooldown = Math.max(25, 45 - this.level * 4);
+        
+        let cdBase = 25;
+        let offsets = [-0.25, 0, 0.25];
+        
+        if (this.bossVariant === 'HEAVY') {
+            cdBase = 45;
+            offsets = [0];
+        } else if (this.bossVariant === 'FAST') {
+            cdBase = 15;
+            offsets = [-0.15, 0.15];
+        } else {
+            cdBase = 25;
+            offsets = [-0.25, 0, 0.25];
+        }
+        
+        this.cooldown = Math.max(cdBase, cdBase + 20 - this.level * 4);
         const cx = this.x + this.width / 2;
         const cy = this.y + this.height / 2;
         
-        for (let offset of [-0.25, 0, 0.25]) {
+        for (let offset of offsets) {
             const angle = this.turretAngle + offset;
             const bx = cx + Math.cos(angle) * (this.barrelLength + 10);
             const by = cy + Math.sin(angle) * (this.barrelLength + 10);
@@ -883,7 +917,9 @@ class Boss extends Enemy {
             if (gx >= 0 && gx < GRID_SIZE && gy >= 0 && gy < GRID_SIZE) {
                 const tile = this.game.map.grid[gy][gx];
                 if (tile !== TILE_TYPES.BRICK && tile !== TILE_TYPES.STEEL) {
-                    this.game.bullets.push(new Bullet(this.game, this, bx - 8, by - 8, dir, this.level));
+                    let blvl = this.level;
+                    if (this.bossVariant === 'HEAVY') blvl += 2; // Heavy bullets explode larger
+                    this.game.bullets.push(new Bullet(this.game, this, bx - 8, by - 8, dir, blvl));
                 }
             }
         }
@@ -939,54 +975,55 @@ class Boss extends Enemy {
         const px = this.x; const py = this.y; const w = this.width; const h = this.height;
         const cx = px + w / 2; const cy = py + h / 2;
         ctx.save();
-        ctx.fillStyle = '#1a1a2e'; ctx.fillRect(px, py, w, h);
-        ctx.fillStyle = '#2d2d44'; ctx.fillRect(px + 4, py + 4, w - 8, h - 8);
-        ctx.strokeStyle = '#4a4a6a'; ctx.lineWidth = 2;
+        
+        const cBase = this.color;
+        const cHighlight = this.metalColor;
+        
+        ctx.fillStyle = cBase; ctx.fillRect(px, py, w, h);
+        ctx.fillStyle = cHighlight; ctx.fillRect(px + 4, py + 4, w - 8, h - 8);
+        ctx.strokeStyle = '#222'; ctx.lineWidth = 2;
         for (let i = 0; i < 4; i++) {
             const offset = 8 + i * 6;
             ctx.strokeRect(px + offset, py + offset, w - offset * 2, h - offset * 2);
         }
-        ctx.fillStyle = '#3a3a5a';
+        
+        ctx.fillStyle = '#222';
         ctx.fillRect(px - 6, py + 4, 8, h - 8);
         ctx.fillRect(px + w - 2, py + 4, 8, h - 8);
-        ctx.fillStyle = '#2a2a3a';
+        ctx.fillStyle = '#111';
         for (let i = 0; i < h; i += 10) {
             ctx.fillRect(px - 6, py + i, 8, 5);
             ctx.fillRect(px + w - 2, py + i, 8, 5);
         }
-        ctx.fillStyle = '#555';
-        for (let i = 0; i < 6; i++) {
-            ctx.beginPath(); ctx.arc(px + 15, py + 15 + i * (h - 30) / 5, 3, 0, Math.PI * 2); ctx.fill();
-            ctx.beginPath(); ctx.arc(px + w - 15, py + 15 + i * (h - 30) / 5, 3, 0, Math.PI * 2); ctx.fill();
-        }
-        ctx.fillStyle = '#3a3a4a'; ctx.fillRect(px + 8, py + 8, w - 16, 12);
-        ctx.fillStyle = '#2a2a3a';
-        for (let i = 0; i < 4; i++) ctx.fillRect(px + 12 + i * (w - 24) / 3, py + 10, (w - 36) / 6, 8);
+        
         ctx.fillStyle = '#444'; ctx.fillRect(px + w/2 - 20, py + h/2 - 20, 40, 40);
         ctx.fillStyle = '#555'; ctx.beginPath(); ctx.arc(cx, cy, 16, 0, Math.PI * 2); ctx.fill();
         ctx.fillStyle = '#333'; ctx.beginPath(); ctx.arc(cx, cy, 10, 0, Math.PI * 2); ctx.fill();
+        
         ctx.save(); ctx.translate(cx, cy); ctx.rotate(this.turretAngle);
-        ctx.fillStyle = '#4a4a5a'; ctx.fillRect(0, -5, this.barrelLength, 10);
+        ctx.fillStyle = this.bossVariant === 'HEAVY' ? '#a44' : (this.bossVariant === 'FAST' ? '#4a4' : '#44a'); 
+        ctx.fillRect(0, -5, this.barrelLength, 10);
+        
+        if (this.bossVariant === 'SPREAD') {
+            ctx.fillStyle = '#4a4a5a'; 
+            ctx.rotate(-0.25); ctx.fillRect(0, -3, this.barrelLength - 10, 6); ctx.rotate(0.5);
+            ctx.fillRect(0, -3, this.barrelLength - 10, 6); ctx.rotate(-0.25);
+        } else if (this.bossVariant === 'FAST') {
+            ctx.fillStyle = '#4a4a5a';
+            ctx.fillRect(0, -12, this.barrelLength, 6);
+            ctx.fillRect(0, 6, this.barrelLength, 6);
+        }
+        
         ctx.fillStyle = '#5a5a6a'; ctx.fillRect(this.barrelLength - 15, -7, 15, 14);
         ctx.fillStyle = '#6a6a7a'; ctx.fillRect(this.barrelLength - 8, -4, 8, 8);
         ctx.fillStyle = '#7a7a8a'; ctx.fillRect(this.barrelLength - 3, -2, 6, 4);
+        
         ctx.fillStyle = '#3a3a4a'; ctx.fillRect(-8, -8, 16, 16);
         ctx.strokeStyle = '#5a5a6a'; ctx.lineWidth = 1; ctx.strokeRect(-8, -8, 16, 16);
         ctx.restore();
-        if (this.armorLevel >= 1) {
-            ctx.fillStyle = '#3a3a5a';
-            ctx.fillRect(px + 5, py + h - 20, 25, 15);
-            ctx.fillRect(px + w - 30, py + h - 20, 25, 15);
-            ctx.fillStyle = '#4a4a6a';
-            ctx.beginPath(); ctx.arc(px + 17, py + h - 12, 5, 0, Math.PI * 2); ctx.fill();
-            ctx.beginPath(); ctx.arc(px + w - 17, py + h - 12, 5, 0, Math.PI * 2); ctx.fill();
-        }
-        if (this.armorLevel >= 2) {
-            ctx.fillStyle = '#4a4a6a';
-            ctx.fillRect(px + 10, py + 5, 20, 8);
-            ctx.fillRect(px + w - 30, py + 5, 20, 8);
-        }
-        ctx.fillStyle = '#fff'; ctx.font = 'bold 16px Arial'; ctx.textAlign = 'center';
+        
+        ctx.fillStyle = this.color === '#ffffff' ? '#ffffff' : (this.bossVariant === 'HEAVY' ? '#ff4444' : (this.bossVariant === 'FAST' ? '#44ff44' : '#44aaff')); 
+        ctx.font = 'bold 16px Arial'; ctx.textAlign = 'center';
         ctx.fillText(this.title, cx, py - 25);
         const barW = w * 0.8; const barH = 8;
         const barX = cx - barW / 2; const barY = py - 18;
