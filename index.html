@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🎮 游戏中心 - My Games</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body {
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            background: linear-gradient(135deg, #0f0c29, #302b63, #24243e);
+            min-height: 100vh;
+            color: #fff;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 40px 20px;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 60px;
+        }
+
+        h1 {
+            font-size: 3rem;
+            background: linear-gradient(90deg, #00d2ff, #3a7bd5, #00d2ff);
+            background-size: 200% auto;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            animation: shimmer 3s linear infinite;
+            margin-bottom: 10px;
+        }
+
+        @keyframes shimmer {
+            to { background-position: 200% center; }
+        }
+
+        .subtitle {
+            color: #888;
+            font-size: 1.2rem;
+        }
+
+        .games-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 30px;
+            margin-top: 40px;
+        }
+
+        .game-card {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 20px;
+            padding: 30px;
+            transition: all 0.3s ease;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .game-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: var(--accent-color);
+            transform: scaleX(0);
+            transition: transform 0.3s ease;
+        }
+
+        .game-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+            border-color: var(--accent-color);
+        }
+
+        .game-card:hover::before {
+            transform: scaleX(1);
+        }
+
+        .game-icon {
+            font-size: 4rem;
+            margin-bottom: 20px;
+            display: block;
+        }
+
+        .game-title {
+            font-size: 1.5rem;
+            font-weight: bold;
+            margin-bottom: 10px;
+            color: #fff;
+        }
+
+        .game-desc {
+            color: #aaa;
+            line-height: 1.6;
+            margin-bottom: 20px;
+            font-size: 0.95rem;
+        }
+
+        .game-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-bottom: 20px;
+        }
+
+        .tag {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            color: #ccc;
+        }
+
+        .play-btn {
+            display: inline-block;
+            padding: 12px 30px;
+            background: var(--accent-color);
+            color: #fff;
+            text-decoration: none;
+            border-radius: 25px;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .play-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 5px 20px var(--accent-color);
+        }
+
+        footer {
+            text-align: center;
+            margin-top: 60px;
+            padding: 30px;
+            color: #666;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .stats {
+            display: flex;
+            justify-content: center;
+            gap: 40px;
+            margin-top: 40px;
+            flex-wrap: wrap;
+        }
+
+        .stat-item {
+            text-align: center;
+        }
+
+        .stat-number {
+            font-size: 2.5rem;
+            font-weight: bold;
+            color: #00d2ff;
+        }
+
+        .stat-label {
+            color: #888;
+            font-size: 0.9rem;
+        }
+
+        @media (max-width: 768px) {
+            h1 { font-size: 2rem; }
+            .games-grid { grid-template-columns: 1fr; }
+            .stats { gap: 20px; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🎮 游戏中心</h1>
+            <p class="subtitle">My Personal Game Collection</p>
+        </header>
+
+        <div class="stats">
+            <div class="stat-item">
+                <div class="stat-number">4</div>
+                <div class="stat-label">款游戏</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-number">100%</div>
+                <div class="stat-label">免费游玩</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-number">∞</div>
+                <div class="stat-label">乐趣</div>
+            </div>
+        </div>
+
+        <div class="games-grid">
+            <div class="game-card" style="--accent-color: #E7E721;">
+                <span class="game-icon">🔫</span>
+                <h3 class="game-title">坦克大战</h3>
+                <p class="game-desc">经典坦克大战网页版，支持双人对战。1000关随机生成，AI自动托管，Boss战+天气特效！</p>
+                <div class="game-tags">
+                    <span class="tag">双人</span>
+                    <span class="tag">射击</span>
+                    <span class="tag">1000关</span>
+                    <span class="tag">AI托管</span>
+                </div>
+                <a href="https://52ouxiaoyu.github.io/tank-battle/" class="play-btn" target="_blank">开始游戏</a>
+            </div>
+
+            <div class="game-card" style="--accent-color: #4CAF50;">
+                <span class="game-icon">🐍</span>
+                <h3 class="game-title">贪吃蛇</h3>
+                <p class="game-desc">经典贪吃蛇游戏，流畅的操作体验，多种玩法模式，挑战你的极限长度！</p>
+                <div class="game-tags">
+                    <span class="tag">经典</span>
+                    <span class="tag">休闲</span>
+                    <span class="tag">高分挑战</span>
+                </div>
+                <a href="https://52ouxiaoyu.github.io/snake/" class="play-btn" target="_blank">开始游戏</a>
+            </div>
+
+            <div class="game-card" style="--accent-color: #FF5722;">
+                <span class="game-icon">🏰</span>
+                <h3 class="game-title">王国保卫战</h3>
+                <p class="game-desc">策略塔防游戏，建造防御塔抵御敌人入侵，策略与反应的完美结合！</p>
+                <div class="game-tags">
+                    <span class="tag">塔防</span>
+                    <span class="tag">策略</span>
+                    <span class="tag">经典</span>
+                </div>
+                <a href="https://52ouxiaoyu.github.io/Kingdom-Rush/" class="play-btn" target="_blank">开始游戏</a>
+            </div>
+
+            <div class="game-card" style="--accent-color: #2196F3;">
+                <span class="game-icon">🏮</span>
+                <h3 class="game-title">葫芦兄弟</h3>
+                <p class="game-desc">致敬经典动画！七兄弟各有神通，拯救爷爷的冒险之旅！</p>
+                <div class="game-tags">
+                    <span class="tag">冒险</span>
+                    <span class="tag">经典</span>
+                    <span class="tag">国产动画</span>
+                </div>
+                <a href="https://52ouxiaoyu.github.io/Calabash-Brothers/" class="play-btn" target="_blank">开始游戏</a>
+            </div>
+        </div>
+
+        <footer>
+            <p>🚀 All games built with HTML/CSS/JS | No dependencies required</p>
+            <p style="margin-top: 10px;">© 2026 My Game Collection</p>
+        </footer>
+    </div>
+</body>
+</html>
