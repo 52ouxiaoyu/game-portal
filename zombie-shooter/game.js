@@ -109,9 +109,7 @@ window.addEventListener('keydown', e => {
                 screenShake = 30;
                 addFloatingText(p.x, p.y - 50, "⚡ 万剑归宗 ⚡", "#00ffff");
                 for(let angle=0; angle<Math.PI*2; angle+=Math.PI/16) {
-                    let b = new Bullet(p.x, p.y, {x: Math.cos(angle), y: Math.sin(angle)}, p.weapon);
-                    b.damage = 100;
-                    b.pierce = true;
+                    let b = new Bullet(p.x, p.y, Math.cos(angle), Math.sin(angle), 20, 150, '#00ffff', true);
                     b.size = 10;
                     bullets.push(b);
                 }
@@ -726,10 +724,10 @@ class LootBox {
                     addFloatingText(p.x, p.y - 30, "⚡ 攻速提升!", "#00ffff");
                     audio.levelUp();
                 } else if(this.type === 'weapon_box') {
-                    const idx = Math.floor(Math.random() * p.weapons.length);
-                    p.weapon = p.weapons[idx];
+                    if(p.weaponLevel < 29) p.weaponLevel++;
+                    p.weapon = p.weapons[p.weaponLevel];
                     document.getElementById('current-weapon').textContent = p.weapon.name;
-                    addFloatingText(p.x, p.y - 30, `🔫 武器: ${p.weapon.name}`, "#aa00ff");
+                    addFloatingText(p.x, p.y - 30, `🔫 火力升级! ${p.weapon.name}`, "#aa00ff");
                     audio.levelUp();
                 } else if(this.type === 'mech') {
                     p.mechTime = 600;
