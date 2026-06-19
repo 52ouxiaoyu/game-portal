@@ -939,6 +939,14 @@ function gameOver() {
 function update() {
     if(gameState !== 'PLAYING') return;
     frameCount++;
+    
+    // Gradually fade out blood stains from the background canvas
+    if (frameCount % 2 === 0) {
+        bgCtx.globalCompositeOperation = 'destination-out';
+        bgCtx.fillStyle = 'rgba(0, 0, 0, 0.01)';
+        bgCtx.fillRect(0, 0, bgCanvas.width, bgCanvas.height);
+        bgCtx.globalCompositeOperation = 'source-over';
+    }
 
     // Random Events every 40 seconds
     if(frameCount > 0 && frameCount % 2400 === 0) {
