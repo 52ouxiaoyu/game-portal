@@ -844,6 +844,7 @@ class Game {
         this.floatingTexts = [];
         this.pausePressed = false;
         this.bossWarning = 0;
+        this.lastEnemyCount = 0;
         for(let i=0; i<100; i++) this.weatherParticles.push({x: Math.random()*CANVAS_SIZE, y: Math.random()*CANVAS_SIZE, s: 2 + Math.random()*5});
         document.getElementById('start-btn').onclick = () => this.startGame();
         document.getElementById('restart-btn').onclick = () => this.startGame();
@@ -899,6 +900,7 @@ class Game {
         document.getElementById('p1-score').innerText = String(this.players[0].score).padStart(5, '0');
         document.getElementById('p2-score').innerText = String(this.players[1].score).padStart(5, '0');
         document.getElementById('lives-info').innerText = `LIVES: ❤️x${this.lives}`;
+        document.getElementById('enemies-info').innerText = `ENEMIES: ${this.enemiesRemaining + this.enemies.length}`;
     }
     handlePlayerDeath(player) {
         if (this.lives > 0) {
@@ -973,7 +975,7 @@ class Game {
                     spawnPos = spawnPositions.find(p => !this.map.isBlocked(p.x, p.y, bossSize, bossSize) && !this.players.some(pl => pl.alive && Math.hypot(pl.x - p.x, pl.y - p.y) < TILE_SIZE * 5)) || spawnPositions[0];
                 }
                 this.effects.push(new Effect(spawnPos.x + bossSize/2, spawnPos.y + bossSize/2, 'SPAWN', 5));
-                setTimeout(() => { if (this.gameState === 'PLAYING') this.enemies.push(new Boss(this, spawnPos.x, spawnPos.y, this.currentStage)); }, 1000);
+                setTimeout(() => { if (this.gameState === 'PLAYING') { this.enemies.push(new Boss(this, spawnPos.x, spawnPos.y, this.currentStage)); this.updateHUD(); } }, 1000);
             }
         }
 
@@ -982,7 +984,7 @@ class Game {
             this.spawnTimer--;
             if (this.spawnTimer <= 0) {
                 const sx = [TILE_SIZE * 2, TILE_SIZE * 12, TILE_SIZE * 22][Math.floor(Math.random() * 3)]; const sy = TILE_SIZE * 2; this.effects.push(new Effect(sx + TILE_SIZE, sy + TILE_SIZE, 'SPAWN'));
-                setTimeout(() => { if (this.gameState === 'PLAYING') { this.enemies.push(new Enemy(this, sx, sy, this.currentStage)); this.enemiesRemaining--; } }, 1000); this.spawnTimer = 180;
+                setTimeout(() => { if (this.gameState === 'PLAYING') { this.enemies.push(new Enemy(this, sx, sy, this.currentStage)); this.enemiesRemaining--; this.updateHUD(); } }, 1000); this.spawnTimer = 180;
             }
         } else if (this.enemiesRemaining === 0 && this.enemies.length === 0) { this.gameState = 'STAGE_CLEAR'; setTimeout(() => this.nextLevel(), 2000); }
         
@@ -994,6 +996,7 @@ class Game {
         this.effects = this.effects.filter(e => e.active);
         this.powerUps = this.powerUps.filter(p => p.active);
         this.enemies = this.enemies.filter(e => e.alive);
+        if (this.enemies.length !== this.lastEnemyCount) { this.updateHUD(); this.lastEnemyCount = this.enemies.length; }
         if (this.players.every(p => !p.alive) && this.lives === 0) this.gameOver();
     }
     draw() {
