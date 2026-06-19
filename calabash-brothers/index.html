@@ -7,15 +7,15 @@
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;700;900&display=swap');
 * { margin: 0; padding: 0; box-sizing: border-box; }
-body { background: linear-gradient(135deg, #0f0c29 0%, #302b63 50%, #24243e 100%); display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; font-family: 'Noto Sans SC', sans-serif; color: #eee; }
-#game { width: 1000px; min-height: 700px; background: #1a1a2e; border-radius: 16px; border: 3px solid #ffd700; box-shadow: 0 0 40px rgba(255,215,0,0.3); overflow: hidden; }
+body { background: #1a1a2e; margin: 0; padding: 0; width: 100vw; height: 100vh; overflow: hidden; font-family: 'Noto Sans SC', sans-serif; color: #eee; }
+#game { width: 100vw; height: 100vh; background: #1a1a2e; overflow: hidden; }
 #top-bar { display: flex; justify-content: space-between; padding: 10px 20px; background: rgba(0,0,0,0.3); border-bottom: 2px solid #333; }
 #chapter { font-size: 16px; color: #ffd700; font-weight: bold; }
 #turn { font-size: 14px; color: #888; }
 #boss-warning { color: #ff6b6b; font-size: 12px; animation: pulse 1s infinite; }
 @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.5; } }
-#main-area { display: flex; height: 320px; }
-#left-panel, #right-panel { flex: 1; padding: 12px; }
+#main-area { display: flex; flex: 1; min-height: 0; }
+#left-panel, #right-panel { flex: 1; padding: 12px; overflow-y: auto; }
 #left-panel { border-right: 2px solid #333; }
 .panel-title { font-size: 14px; font-weight: bold; margin-bottom: 8px; padding-bottom: 4px; border-bottom: 2px solid; }
 .player-title { color: #4ecdc4; border-color: #4ecdc4; }
@@ -733,7 +733,26 @@ const events = {
 
   npc_dialogue_result: () => {
     const { npc, dialogue } = events._tempData;
-    showText(`🎭 ${npc.name}`, dialogue.result, [{ text: '继续探索', next: 'explore' }]);
+    // 10%概率触发搞笑意外反转
+    const surprise = Math.random() < 0.10;
+    if (surprise) {
+      // 意外反转 - 随机选择一个搞笑结果
+      const surprises = [
+        { text: '🎭 意外！', result: `你刚选完，突然发现${npc.name}其实是蛇精变的！\n\n「哈哈哈，你上当了！」\n\n${npc.name}现出原形，对你喷出一团毒雾！`, effect: { hp: -15, brave: 5 } },
+        { text: '🎪 搞笑！', result: `你以为${npc.name}会给你宝物...\n\n结果他掏出一个遥控器，「啪」一声，你被弹飞了！\n\n「不好意思，拿错了...这是我的玩具」`, effect: { hp: -10, power: 3 } },
+        { text: '🤯 反转！', result: `${npc.name}突然变成了一只蝴蝶飞走了！\n\n你愣在原地...「我刚才在跟谁说话？」\n\n不过地上掉了一颗神秘的种子...`, effect: { hp: 15, power: 5 } },
+        { text: '😂 意外惊喜！', result: `你拒绝了${npc.name}的好意...\n\n结果${npc.name}说「你是我见过最诚实的孩子！」\n\n送了你双倍的礼物！`, effect: { hp: 30, karma: 10 } },
+        { text: '🎭 真假难辨！', result: `${npc.name}突然摘下面具，露出另一张脸！\n\n「我其实是他的双胞胎兄弟，刚才是测试你的！」\n\n你通过了考验，获得额外奖励！`, effect: { hp: 25, power: 8, karma: 5 } },
+        { text: '🃏 恶作剧！', result: `${npc.name}突然开始表演魔术...\n\n「变！」你手里的武器变成了一朵花！\n\n「哈哈别担心，开个玩笑而已」\n\n不过你发现这朵花能治愈伤口！`, effect: { hp: 20 } },
+        { text: '🤡 尴尬时刻！', result: `你自信满满地说了一段话...\n\n结果${npc.name}一脸懵：「你说的是外语吗？我听不懂...」\n\n全场沉默...但${npc.name}觉得你很有趣，送了你一个小礼物`, effect: { power: 8, karma: 3 } },
+        { text: '💥 意外冲突！', result: `你和${npc.name}不小心撞到了一起！\n\n「砰！」你们俩都摔了个四脚朝天...\n\n但奇怪的是，你感觉力量增强了？也许是肾上腺素的作用！`, effect: { hp: -5, power: 6, brave: 8 } }
+      ];
+      const s = surprises[Math.floor(Math.random() * surprises.length)];
+      showText(s.text, s.result, [{ text: '继续探索', next: 'explore', effect: s.effect }]);
+    } else {
+      // 正常结果
+      showText(`🎭 ${npc.name}`, dialogue.result, [{ text: '继续探索', next: 'explore' }]);
+    }
   },
 
   npc_result: () => {
@@ -797,9 +816,13 @@ const events = {
 
   combat_result: () => {
     const { enemy, successRate } = events._tempData;
-    const success = Math.random() < successRate;
+    let success = Math.random() < successRate;
     
-    if (success) {
+    // 10%概率战斗意外反转
+    const combatSurprise = Math.random() < 0.10;
+    
+    if (success && !combatSurprise) {
+      // 正常胜利
       winStreak++;
       let streakBonus = '';
       let bonusEffect = {};
@@ -824,7 +847,8 @@ const events = {
       
       showText('✅ 胜利', winTexts[Math.floor(Math.random() * winTexts.length)] + streakBonus, 
         [{ text: '继续探索', next: 'explore', effect: bonusEffect }]);
-    } else {
+    } else if (!success && !combatSurprise) {
+      // 正常失败
       winStreak = 0;
       const failTexts = [
         `${enemy.name}的实力超出了你的预期！你被打败了...`,
@@ -834,6 +858,28 @@ const events = {
       const damage = Math.floor(enemy.power * 0.5);
       showText('❌ 失败', failTexts[Math.floor(Math.random() * failTexts.length)] + `\n\n受到 ${damage} 点伤害！`, 
         [{ text: '狼狈逃走', next: 'explore', effect: { hp: -damage, brave: -5 } }]);
+    } else if (success && combatSurprise) {
+      // 胜利但有意外
+      const winSurprises = [
+        { text: '🎉 胜利！但...', result: `你打败了${enemy.name}，正要庆祝...\n\n突然从它身上掉出一封信！原来它是${enemy.name}的双胞胎兄弟假扮的！\n\n「我哥哥会来找你算账的...」\n\n你获得了胜利，但也惹上了麻烦...`, effect: { power: 5, brave: 5 } },
+        { text: '💪 胜利！但...', result: `你打败了${enemy.name}！正得意时...\n\n「啪！」它的尸体突然爆炸了！\n\n你被炸飞了一段距离，好在只是受了点轻伤。`, effect: { hp: -10, power: 3 } },
+        { text: '🏆 胜利！但...', result: `你打败了${enemy.name}！正要离开...\n\n它的手下突然冲出来围攻你！\n\n你不得不边打边退...`, effect: { hp: -15, power: 2, brave: 3 } },
+        { text: '🎉 胜利！但...', result: `你打败了${enemy.name}！正要庆祝...\n\n结果它其实是${enemy.name}的全息投影！真正的${enemy.name}在背后偷袭了你！\n\n「哈哈哈，你以为打败我了？」`, effect: { hp: -20, brave: 5 } }
+      ];
+      const s = winSurprises[Math.floor(Math.random() * winSurprises.length)];
+      winStreak++;
+      showText(s.text, s.result, [{ text: '继续探索', next: 'explore', effect: s.effect }]);
+    } else {
+      // 失败但有意外（好结果）
+      const failSurprises = [
+        { text: '😅 失败！但...', result: `你被${enemy.name}打败了！正要认输...\n\n${enemy.name}突然说：「等等，你是葫芦娃？我认识你爷爷！」\n\n「他是我的老朋友，我不能伤害你」\n\n${enemy.name}不但放过了你，还送了你一些补给！`, effect: { hp: 30, karma: 5 } },
+        { text: '💥 失败！但...', result: `你被${enemy.name}打倒在地！\n\n「哈哈哈...等等，你身上的葫芦好眼熟...」\n\n${enemy.name}认出了你是葫芦娃的兄弟，决定放你一马，还给了你一些情报！`, effect: { power: 8, hp: 15 } },
+        { text: '😵 失败！但...', result: `你被${enemy.name}打败了！正要放弃...\n\n突然葫芦发光，你体内的力量觉醒了！\n\n虽然受了伤，但你感觉变强了！`, effect: { hp: -5, power: 10, brave: 8 } },
+        { text: '😅 失败！但...', result: `你被${enemy.name}打趴下了！\n\n「小子，你太弱了...不过我欣赏你的勇气」\n\n${enemy.name}居然给了你一本秘籍，让你回去好好修炼！`, effect: { power: 6, hp: 10 } }
+      ];
+      const s = failSurprises[Math.floor(Math.random() * failSurprises.length)];
+      winStreak = 0;
+      showText(s.text, s.result, [{ text: '继续探索', next: 'explore', effect: s.effect }]);
     }
   },
 
@@ -867,34 +913,66 @@ const events = {
 
   cave_explore: () => {
     const r = Math.random();
+    // 10%概率触发搞笑意外
+    const caveSurprise = Math.random() < 0.10;
+    
     if (r < 0.4) {
-      const items = [
-        { name: '💰 古老宝箱', desc: '一个布满灰尘的宝箱，看起来很久没人打开过了', effect: { power: 5, hp: 10 } },
-        { name: '📜 神秘书籍', desc: '一本泛黄的古籍，上面记载着失传的武学', effect: { power: 8 } },
-        { name: '💊 千年仙丹', desc: '散发着金色光芒的丹药', effect: { hp: 25 } },
-        { name: '🔮 魔法水晶', desc: '蕴含神秘力量的水晶', effect: { power: 6, hp: 8 } },
-        { name: '⚔️ 古代兵器', desc: '一把锋利的古剑，寒光闪闪', effect: { power: 10 } },
-        { name: '🛡️ 神秘护符', desc: '一个古老的护符，散发着温暖的光芒', effect: { hp: 30 } }
-      ];
-      const item = items[Math.floor(Math.random() * items.length)];
-      showText(item.name, `你走进了一个神秘的洞穴...\n\n${item.desc}\n\n你决定...`, [
-        { text: '🔍 仔细检查', next: 'explore', effect: item.effect },
-        { text: '👀 保持警惕', next: 'explore', effect: { hp: 5, brave: 3 } }
-      ]);
+      if (caveSurprise) {
+        // 宝箱意外
+        const surpriseItems = [
+          { name: '📦 神秘盒子', desc: '一个闪闪发光的盒子，看起来很珍贵...', result: '你打开盒子...「砰！」一只弹簧小丑跳出来吓了你一跳！\n\n不过盒子里还有一颗糖果，吃掉后恢复了体力！', effect: { hp: 15, brave: 5 } },
+          { name: '💎 钻石宝箱', desc: '一个镶满钻石的宝箱，太诱人了...', result: '你打开宝箱...里面是一面镜子！\n\n你看到了自己的脸...「原来我这么帅！」\n\n自信心大增！', effect: { power: 8, brave: 8 } },
+          { name: '🎁 礼物盒', desc: '一个包装精美的礼物盒', result: '你拆开礼物...是一条围巾！\n\n「冬天用得上的...」等等，现在是夏天...\n\n不过围巾很暖和，你感觉身体舒服多了', effect: { hp: 20 } },
+          { name: '🔮 水晶球', desc: '一个神秘的水晶球，散发着诡异的光芒', result: '你触碰水晶球...突然看到了自己的未来！\n\n「你会...变成一只鸡？」\n\n水晶球碎了，但碎片似乎有神奇的力量...', effect: { power: 10, hp: -5 } }
+        ];
+        const s = surpriseItems[Math.floor(Math.random() * surpriseItems.length)];
+        showText(s.name, `你走进了一个神秘的洞穴...\n\n${s.desc}\n\n你决定...`, [
+          { text: '🔍 打开看看', next: 'explore', effect: s.effect, resultMsg: s.result },
+          { text: '👀 保持警惕', next: 'explore', effect: { hp: 5, brave: 3 }, resultMsg: '你谨慎地观察了一会儿，发现没什么异常...' }
+        ]);
+      } else {
+        const items = [
+          { name: '💰 古老宝箱', desc: '一个布满灰尘的宝箱，看起来很久没人打开过了', effect: { power: 5, hp: 10 } },
+          { name: '📜 神秘书籍', desc: '一本泛黄的古籍，上面记载着失传的武学', effect: { power: 8 } },
+          { name: '💊 千年仙丹', desc: '散发着金色光芒的丹药', effect: { hp: 25 } },
+          { name: '🔮 魔法水晶', desc: '蕴含神秘力量的水晶', effect: { power: 6, hp: 8 } },
+          { name: '⚔️ 古代兵器', desc: '一把锋利的古剑，寒光闪闪', effect: { power: 10 } },
+          { name: '🛡️ 神秘护符', desc: '一个古老的护符，散发着温暖的光芒', effect: { hp: 30 } }
+        ];
+        const item = items[Math.floor(Math.random() * items.length)];
+        showText(item.name, `你走进了一个神秘的洞穴...\n\n${item.desc}\n\n你决定...`, [
+          { text: '🔍 仔细检查', next: 'explore', effect: item.effect },
+          { text: '👀 保持警惕', next: 'explore', effect: { hp: 5, brave: 3 } }
+        ]);
+      }
     } else if (r < 0.7) {
-      const dangers = [
-        { name: '💣 古老炸弹', desc: '你踩到了一个生锈的陷阱！轰隆一声！', effect: { hp: -20 } },
-        { name: '☠️ 毒气弥漫', desc: '洞穴里弥漫着紫色的毒雾，你吸入了一些...', effect: { hp: -15, power: -2 } },
-        { name: '🪤 精密陷阱', desc: '一个精心设计的机关突然触发！', effect: { hp: -18 } },
-        { name: '👻 远古亡灵', desc: '洞穴深处传来诡异的声音...', effect: { hp: -12, brave: -8 } },
-        { name: '💀 骷髅守卫', desc: '一个骷髅战士从阴影中冲出！', effect: { hp: -25 } }
-      ];
-      const d = dangers[Math.floor(Math.random() * dangers.length)];
-      showText(d.name, `你走进了一个阴暗的洞穴...\n\n${d.desc}\n\n你如何应对？`, [
-        { text: '😤 硬抗', next: 'explore', effect: d.effect },
-        { text: '🏃 快速躲避', next: 'explore', effect: { hp: Math.floor(d.effect.hp * 0.5), brave: 2 } },
-        { text: '🧠 用智慧化解', next: 'explore', effect: { hp: Math.floor(d.effect.hp * 0.3), power: 2 } }
-      ]);
+      if (caveSurprise) {
+        // 陷阱意外
+        const surpriseTraps = [
+          { name: '🎈 气球陷阱', desc: '一个巨大的气球挡住了去路', result: '你戳破气球...「嘭！」里面掉出一堆糖果！\n\n原来这是某个妖怪的糖果罐...', effect: { hp: 20, power: 3 } },
+          { name: '🎭 面具陷阱', desc: '地上有一个奇怪的面具', result: '你捡起面具戴上...「哇，我变成了一只猪！」\n\n原来这是猪八戒的面具！不过戴上后力量竟然增强了！', effect: { power: 8, brave: 5 } },
+          { name: '🎵 音乐陷阱', desc: '洞穴里传来奇怪的音乐...', result: '你不由自主地开始跳舞...\n\n跳着跳着，你发现自己的身体变得灵活了！\n\n「这音乐有毒...但好像挺有用的」', effect: { hp: 10, power: 5 } }
+        ];
+        const s = surpriseTraps[Math.floor(Math.random() * surpriseTraps.length)];
+        showText(s.name, `你走进了一个阴暗的洞穴...\n\n${s.desc}\n\n你如何应对？`, [
+          { text: '😤 硬抗', next: 'explore', effect: s.effect, resultMsg: s.result },
+          { text: '🏃 快速躲避', next: 'explore', effect: { hp: 10, brave: 3 }, resultMsg: '你机智地避开了陷阱...' }
+        ]);
+      } else {
+        const dangers = [
+          { name: '💣 古老炸弹', desc: '你踩到了一个生锈的陷阱！轰隆一声！', effect: { hp: -20 } },
+          { name: '☠️ 毒气弥漫', desc: '洞穴里弥漫着紫色的毒雾，你吸入了一些...', effect: { hp: -15, power: -2 } },
+          { name: '🪤 精密陷阱', desc: '一个精心设计的机关突然触发！', effect: { hp: -18 } },
+          { name: '👻 远古亡灵', desc: '洞穴深处传来诡异的声音...', effect: { hp: -12, brave: -8 } },
+          { name: '💀 骷髅守卫', desc: '一个骷髅战士从阴影中冲出！', effect: { hp: -25 } }
+        ];
+        const d = dangers[Math.floor(Math.random() * dangers.length)];
+        showText(d.name, `你走进了一个阴暗的洞穴...\n\n${d.desc}\n\n你如何应对？`, [
+          { text: '😤 硬抗', next: 'explore', effect: d.effect },
+          { text: '🏃 快速躲避', next: 'explore', effect: { hp: Math.floor(d.effect.hp * 0.5), brave: 2 } },
+          { text: '🧠 用智慧化解', next: 'explore', effect: { hp: Math.floor(d.effect.hp * 0.3), power: 2 } }
+        ]);
+      }
     } else {
       // 发现隐藏区域
       const discoveries = [
