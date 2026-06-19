@@ -40,6 +40,7 @@ body { background: linear-gradient(135deg, #0f0c29 0%, #302b63 50%, #24243e 100%
 .choice-btn:hover { background: linear-gradient(135deg, #5a5a8a, #4a4a7a); border-color: #ffd700; transform: translateY(-2px); }
 #actions { display: flex; justify-content: center; gap: 10px; padding: 12px; background: rgba(0,0,0,0.3); border-top: 2px solid #333; }
 .action-btn { padding: 10px 18px; border-radius: 8px; font-size: 13px; font-weight: bold; cursor: pointer; border: 2px solid; transition: all 0.2s; }
+.btn-search { background: linear-gradient(135deg, #9b59b6, #8e44ad); border-color: #bb77dd; color: #fff; }
 .btn-fight { background: linear-gradient(135deg, #ff6b6b, #cc4444); border-color: #ff8888; color: #fff; }
 .btn-explore { background: linear-gradient(135deg, #4ecdc4, #2a9d8f); border-color: #6ee8e0; color: #fff; }
 .btn-rest { background: linear-gradient(135deg, #ffd700, #cc9900); border-color: #ffed4a; color: #333; }
@@ -91,6 +92,7 @@ body { background: linear-gradient(135deg, #0f0c29 0%, #302b63 50%, #24243e 100%
     </div>
     <div id="actions">
       <button class="action-btn btn-explore" onclick="doAction('explore')">🔍 探索</button>
+      <button class="action-btn btn-search" onclick="doAction('search')">👥 寻找兄弟</button>
       <button class="action-btn btn-rest" onclick="doAction('rest')">💤 休息</button>
       <button class="action-btn btn-fight" onclick="doAction('fight')">⚔️ 挑战蛇精</button>
     </div>
@@ -99,69 +101,288 @@ body { background: linear-gradient(135deg, #0f0c29 0%, #302b63 50%, #24243e 100%
 
 <script>
 const characters = [
-  { id: 0, name: '大娃', color: '#ff0000', skill: '力大无穷', icon: '🔴' },
-  { id: 1, name: '二娃', color: '#ff8c00', skill: '千里眼', icon: '🟠' },
-  { id: 2, name: '三娃', color: '#ffd700', skill: '铜头铁臂', icon: '🟡' },
-  { id: 3, name: '四娃', color: '#00cc00', skill: '喷火', icon: '🟢' },
-  { id: 4, name: '五娃', color: '#00cccc', skill: '吸水', icon: '🔵' },
-  { id: 5, name: '六娃', color: '#0066ff', skill: '隐身', icon: '🔷' },
-  { id: 6, name: '七娃', color: '#9933ff', skill: '宝葫芦', icon: '🟣' }
+  { id: 0, name: '大娃', color: '#ff0000', skill: '力大无穷', icon: '🔴', desc: '力大无穷，能举起巨石', personality: '勇敢冲动', motto: '没有什么是一拳解决不了的！' },
+  { id: 1, name: '二娃', color: '#ff8c00', skill: '千里眼', icon: '🟠', desc: '千里眼顺风耳，洞察一切', personality: '聪明机智', motto: '我什么都看得到！' },
+  { id: 2, name: '三娃', color: '#ffd700', skill: '铜头铁臂', icon: '🟡', desc: '铜头铁臂，刀枪不入', personality: '坚强不屈', motto: '我的身体就是最好的盾牌！' },
+  { id: 3, name: '四娃', color: '#00cc00', skill: '喷火', icon: '🟢', desc: '能喷出烈焰', personality: '热情似火', motto: '让火焰燃烧一切！' },
+  { id: 4, name: '五娃', color: '#00cccc', skill: '吸水', icon: '🔵', desc: '能吸干江河', personality: '冷静沉着', motto: '水能载舟，亦能覆舟。' },
+  { id: 5, name: '六娃', color: '#0066ff', skill: '隐身', icon: '🔷', desc: '来无影去无踪', personality: '神秘莫测', motto: '你看不到我～' },
+  { id: 6, name: '七娃', color: '#9933ff', skill: '宝葫芦', icon: '🟣', desc: '宝葫芦能收万物', personality: '天真善良', motto: '宝葫芦，收！' }
 ];
 const allSkills = ['力大无穷', '千里眼', '铜头铁臂', '喷火', '吸水', '隐身', '宝葫芦'];
 
-// 50种NPC
+// 50种NPC - 每个都有独特的对话选项
 const npcs = [
-  { name: '👴 山中老爷爷', desc: '一位白胡子老爷爷出现了', good: '给了你草药', bad: '给了你毒药试试', effectGood: { hp: 20 }, effectBad: { hp: -15 } },
-  { name: '🐰 白兔精', desc: '一只可爱的白兔变成了人形', good: '帮你疗伤', bad: '其实是蛇精的眼线', effectGood: { hp: 25 }, effectBad: { power: -5 } },
-  { name: '🐒 孙悟空', desc: '齐天大圣出现了！', good: '传授你七十二变', bad: '打赌输了要表演', effectGood: { power: 12 }, effectBad: { hp: -10 } },
-  { name: '🧙 太上老君', desc: '太上老君路过此地', good: '给了你仙丹', bad: '丹药过期了', effectGood: { hp: 30, power: 3 }, effectBad: { hp: -20 } },
-  { name: '🐉 龙王', desc: '东海龙王出现了', good: '送你龙鳞护甲', bad: '要你帮忙抓虾', effectGood: { hp: 15, power: 5 }, effectBad: { hp: -8 } },
-  { name: '👸 女娲', desc: '女娲娘娘显灵', good: '补天石碎片给你', bad: '只是路过', effectGood: { power: 10 }, effectBad: {} },
-  { name: '🐺 二郎神', desc: '二郎神杨戬出现了', good: '教你变化之术', bad: '和你比武', effectGood: { power: 8, brave: 5 }, effectBad: { hp: -12 } },
-  { name: '🧚 七仙女', desc: '七仙女下凡', good: '送你仙桃', bad: '只是看看', effectGood: { hp: 35 }, effectBad: {} },
-  { name: '👹 哪吒', desc: '哪吒三太子来了', good: '借你风火轮', bad: '要和你比赛', effectGood: { power: 7, brave: 8 }, effectBad: { hp: -8 } },
-  { name: '🦢 观音菩萨', desc: '观音菩萨慈悲降临', good: '净瓶水治愈你', bad: '点化你修行', effectGood: { hp: 40, karma: 10 }, effectBad: { brave: 5 } },
-  { name: '📚 文曲星', desc: '文曲星君出现了', good: '教你智慧', bad: '考你问题', effectGood: { power: 5, karma: 5 }, effectBad: { brave: -5 } },
-  { name: '⚔️ 武曲星', desc: '武曲星君来了', good: '传授武艺', bad: '和你切磋', effectGood: { power: 10 }, effectBad: { hp: -10 } },
-  { name: '🌸 花仙子', desc: '花仙子翩翩起舞', good: '撒下花瓣治愈你', bad: '花粉过敏', effectGood: { hp: 18 }, effectBad: { hp: -8 } },
-  { name: '🌙 嫦娥', desc: '嫦娥从月亮上下来', good: '送你月光精华', bad: '玉兔捣乱', effectGood: { hp: 22, power: 3 }, effectBad: { hp: -5 } },
-  { name: '🦊 九尾狐', desc: '一只九尾狐出现了', good: '愿意帮助你', bad: '想迷惑你', effectGood: { power: 6, hp: 10 }, effectBad: { brave: -10 } },
-  { name: '🐯 山大王', desc: '老虎精拦路', good: '被你打败臣服', bad: '你被打败了', effectGood: { power: 8, hp: 5 }, effectBad: { hp: -25 } },
-  { name: '🐢 神龟', desc: '一只巨大的神龟', good: '传授长寿秘诀', bad: '太慢了等不及', effectGood: { hp: 30 }, effectBad: {} },
-  { name: '🦅 大鹏鸟', desc: '大鹏展翅飞来', good: '带你飞一段', bad: '把你扔下来', effectGood: { hp: 10, power: 4 }, effectBad: { hp: -15 } },
-  { name: '🐟 鲤鱼精', desc: '鲤鱼跳龙门', good: '送你鳞片护身', bad: '泼你一身水', effectGood: { hp: 12 }, effectBad: { hp: -5 } },
-  { name: '🦋 蝴蝶精', desc: '美丽的蝴蝶精', good: '帮你疗伤', bad: '其实是间谍', effectGood: { hp: 15 }, effectBad: { power: -3 } },
-  { name: '🌲 树精', desc: '千年古树成精', good: '给你树果', bad: '用树枝打你', effectGood: { hp: 20, power: 2 }, effectBad: { hp: -12 } },
-  { name: '💎 石头精', desc: '一块石头变成了人', good: '送你宝石', bad: '砸你一下', effectGood: { power: 6 }, effectBad: { hp: -10 } },
-  { name: '🔥 火神', desc: '火神祝融出现了', good: '传授火焰之力', bad: '火烧眉毛', effectGood: { power: 10 }, effectBad: { hp: -18 } },
-  { name: '💧 水神', desc: '水神共工来了', good: '教你水之术', bad: '洪水来袭', effectGood: { power: 8, hp: 10 }, effectBad: { hp: -15 } },
-  { name: '🌍 土地公', desc: '土地公公出现了', good: '告诉你秘密通道', bad: '迷路了', effectGood: { power: 4, hp: 8 }, effectBad: { brave: -8 } },
-  { name: '☁️ 云中君', desc: '云中君驾云而来', good: '送你云朵坐骑', bad: '云散了', effectGood: { hp: 12, power: 3 }, effectBad: {} },
-  { name: '⭐ 星君', desc: '北斗七星君下凡', good: '指引你方向', bad: '让你眼花', effectGood: { power: 5, karma: 5 }, effectBad: { brave: -5 } },
-  { name: '🎭 戏班主', desc: '一个戏班主出现了', good: '表演给你看', bad: '要你付钱', effectGood: { hp: 10, brave: 5 }, effectBad: { hp: -5 } },
-  { name: '🍜 面摊老板', desc: '路边有个面摊', good: '请你吃面', bad: '面里有虫', effectGood: { hp: 20 }, effectBad: { hp: -10 } },
-  { name: '🎪 杂耍艺人', desc: '杂耍艺人在表演', good: '教你杂耍', bad: '表演失误砸到你', effectGood: { brave: 8, hp: 5 }, effectBad: { hp: -8 } },
-  { name: '🧙‍♂️ 神秘巫师', desc: '一个神秘的巫师', good: '给你魔法药水', bad: '药水有毒', effectGood: { power: 8, hp: 15 }, effectBad: { hp: -20, power: -3 } },
-  { name: '🗡️ 流浪剑客', desc: '一个流浪的剑客', good: '教你剑法', bad: '和你比剑', effectGood: { power: 10 }, effectBad: { hp: -12 } },
-  { name: '🏹 猎人', desc: '一个老猎人', good: '分享狩猎技巧', bad: '把你当猎物', effectGood: { power: 6, brave: 5 }, effectBad: { hp: -15 } },
-  { name: '👨‍🌾 农夫', desc: '一个善良的农夫', good: '给你食物', bad: '农田里有蛇', effectGood: { hp: 25 }, effectBad: { hp: -10 } },
-  { name: '👩‍🍳 厨师', desc: '一个厨师出现了', good: '做美食给你', bad: '黑暗料理', effectGood: { hp: 20, power: 2 }, effectBad: { hp: -12 } },
-  { name: '📖 说书人', desc: '一个说书人在讲故事', good: '讲英雄故事鼓舞你', bad: '讲鬼故事吓你', effectGood: { brave: 12 }, effectBad: { brave: -10 } },
-  { name: '🎵 歌姬', desc: '一个美丽的歌姬', good: '唱歌治愈你', bad: '歌声太难听', effectGood: { hp: 15, karma: 5 }, effectBad: { hp: -5 } },
-  { name: '🤸 杂技演员', desc: '杂技演员在表演', good: '教你平衡术', bad: '表演砸了', effectGood: { brave: 8 }, effectBad: { hp: -8 } },
-  { name: '🧩 谜语人', desc: '一个喜欢出谜语的人', good: '答对有奖', bad: '答错受罚', effectGood: { power: 6, karma: 3 }, effectBad: { hp: -8 } },
-  { name: '🎲 赌徒', desc: '一个赌徒想和你赌', good: '你赢了', bad: '你输了', effectGood: { power: 8, hp: 10 }, effectBad: { hp: -15 } },
-  { name: '🎪 马戏团长', desc: '马戏团来了', good: '送你礼物', bad: '狮子跑出来了', effectGood: { hp: 18 }, effectBad: { hp: -12 } },
-  { name: '🧙‍♀️ 女巫', desc: '一个女巫出现了', good: '给你魔法', bad: '给你诅咒', effectGood: { power: 10, hp: 10 }, effectBad: { hp: -20, power: -5 } },
-  { name: '🧚 小精灵', desc: '一个小精灵飞过来', good: '帮你疗伤', bad: '恶作剧', effectGood: { hp: 15 }, effectBad: { hp: -5, brave: -3 } },
-  { name: '🐺 狼王', desc: '狼王出现了', good: '臣服于你', bad: '攻击你', effectGood: { power: 8, brave: 10 }, effectBad: { hp: -20 } },
-  { name: '🦁 狮子王', desc: '狮子王拦路', good: '被你驯服', bad: '把你打飞', effectGood: { power: 12 }, effectBad: { hp: -25 } },
-  { name: '🐻 熊大力', desc: '一个大力熊精', good: '和你结拜', bad: '和你摔跤', effectGood: { power: 10, hp: 10 }, effectBad: { hp: -15 } },
-  { name: '🐵 猴将军', desc: '花果山的猴将军', good: '帮你训练', bad: '偷你东西', effectGood: { power: 7, brave: 5 }, effectBad: { hp: -8 } },
-  { name: '🐘 象大圣', desc: '大象精出现了', good: '用鼻子帮你', bad: '踩你一脚', effectGood: { hp: 20, power: 3 }, effectBad: { hp: -18 } },
-  { name: '🦅 鹰眼', desc: '一只老鹰在天上飞', good: '帮你侦察', bad: '啄你', effectGood: { power: 4, brave: 8 }, effectBad: { hp: -8 } },
-  { name: '🐍 蛇仙', desc: '一个好蛇仙', good: '帮你解读蛇精弱点', bad: '其实是蛇精的人', effectGood: { power: 6, karma: 8 }, effectBad: { hp: -15 } },
-  { name: '🐲 应龙', desc: '上古神龙出现了', good: '赐予你龙之力', bad: '只是路过', effectGood: { power: 15, hp: 20 }, effectBad: {} }
+  { 
+    name: '👴 山中老爷爷', 
+    desc: '一位白胡子老爷爷出现了，手里拿着一个药葫芦',
+    dialogues: [
+      { text: '🤝 恭敬地接受', effect: { hp: 20, karma: 5 }, result: '老爷爷欣慰地笑了，把草药送给了你' },
+      { text: '❓ 询问来历', effect: { hp: 10, power: 3 }, result: '老爷爷讲述了山中的秘密，你学到新知识' },
+      { text: '👋 礼貌告别', effect: { karma: 3 }, result: '老爷爷点头称赞你的礼貌' },
+      { text: '😤 不理睬', effect: { brave: 5 }, result: '老爷爷摇摇头走了，你觉得自己太粗鲁了' }
+    ]
+  },
+  { 
+    name: '🐒 孙悟空', 
+    desc: '齐天大圣出现了！金箍棒闪闪发光',
+    dialogues: [
+      { text: '🙏 请教武艺', effect: { power: 12, brave: 5 }, result: '大圣传你七十二变基础！战力大增！' },
+      { text: '🎮 比试比试', effect: { power: 8, brave: 10 }, result: '虽然输了，但学到了实战经验' },
+      { text: '🍺 请喝酒', effect: { hp: 15, karma: 8 }, result: '大圣很开心，送你一根猴毛护身' },
+      { text: '😈 偷金箍棒', effect: { power: -10, hp: -20 }, result: '大圣发现后把你打飞了！贪心的下场！' }
+    ]
+  },
+  { 
+    name: '🧚 七仙女', 
+    desc: '七仙女下凡，仙气飘飘',
+    dialogues: [
+      { text: '🌺 赞美她们', effect: { hp: 25, karma: 10 }, result: '仙女们开心地用花瓣治愈了你' },
+      { text: '🎵 一起跳舞', effect: { hp: 15, brave: 8, karma: 5 }, result: '欢快的舞蹈让你身心舒畅' },
+      { text: '🍑 偷仙桃', effect: { hp: 30, karma: -10 }, result: '你成功偷到了仙桃！但仙女们很生气...' },
+      { text: '👀 偷看洗澡', effect: { hp: -30, brave: -15 }, result: '被仙女们发现，用水袖把你打飞了！流氓！' }
+    ]
+  },
+  { 
+    name: '👹 哪吒', 
+    desc: '哪吒三太子踩着风火轮来了',
+    dialogues: [
+      { text: '⚔️ 挑战哪吒', effect: { power: 10, brave: 12 }, result: '虽然被打败，但学到了三头六臂的技巧' },
+      { text: '🤝 结为兄弟', effect: { power: 8, hp: 10, karma: 5 }, result: '哪吒认你做小弟，送你乾坤圈碎片' },
+      { text: '🔥 比喷火', effect: { power: 6 }, result: '四娃的喷火技能得到提升！' },
+      { text: '🚫 不服气', effect: { brave: 15 }, result: '你勇敢地表示不服，哪吒欣赏你的勇气' }
+    ]
+  },
+  { 
+    name: '🦢 观音菩萨', 
+    desc: '观音菩萨慈悲降临，手持净瓶',
+    dialogues: [
+      { text: '🙏 虔诚祈祷', effect: { hp: 40, karma: 15 }, result: '观音用净瓶水治愈了你的伤势' },
+      { text: '📖 请教佛法', effect: { karma: 20, power: 5 }, result: '你领悟了佛法，内心变得更加平静' },
+      { text: '😶 沉默不语', effect: { karma: 5, brave: 5 }, result: '观音欣赏你的沉稳' },
+      { text: '🙅 转身就走', effect: { brave: 10, karma: -5 }, result: '观音叹了口气，觉得你太傲慢了' }
+    ]
+  },
+  { 
+    name: '🐺 二郎神', 
+    desc: '二郎神杨戬带着哮天犬出现了',
+    dialogues: [
+      { text: '⚔️ 正面交锋', effect: { power: 15, hp: -15 }, result: '激战三百回合，你虽败犹荣！' },
+      { text: '🤝 切磋武艺', effect: { power: 10, brave: 8 }, result: '二郎神欣赏你的实力，教你一招' },
+      { text: '🐕 喂哮天犬', effect: { hp: 10, karma: 8 }, result: '哮天犬很喜欢你，二郎神对你印象不错' },
+      { text: '😴 打瞌睡', effect: { hp: 15, brave: -10 }, result: '二郎神看你在打瞌睡，无语地走了' }
+    ]
+  },
+  { 
+    name: '👸 女娲', 
+    desc: '女娲娘娘显灵，补天石散发光芒',
+    dialogues: [
+      { text: '💎 请求补天石', effect: { power: 15, hp: 20 }, result: '女娲赐予你补天石碎片，力量大增！' },
+      { text: '🌍 请教造人术', effect: { power: 8, karma: 10 }, result: '女娲教你用泥土造小兵的技巧' },
+      { text: '🧘 静坐悟道', effect: { karma: 15, power: 5 }, result: '你领悟了天地之道' },
+      { text: '🤷 表示不信', effect: { brave: 10, karma: -10 }, result: '女娲无奈地消失了，你错过了机缘' }
+    ]
+  },
+  { 
+    name: '🐉 龙王', 
+    desc: '东海龙王驾着水浪而来',
+    dialogues: [
+      { text: '🧜 求取龙鳞', effect: { hp: 20, power: 8 }, result: '龙王赐予你龙鳞护甲！' },
+      { text: '⚔️ 比试游泳', effect: { power: 6, brave: 8 }, result: '你在水中表现不错，龙王赏识你' },
+      { text: '🦐 帮抓海鲜', effect: { hp: 25 }, result: '龙王请你吃了一顿海鲜大餐' },
+      { text: '🙅 拒绝臣服', effect: { brave: 15 }, result: '龙王欣赏你的骨气，暗中帮你' }
+    ]
+  },
+  { 
+    name: '🔥 火神祝融', 
+    desc: '火神祝融从天而降，烈焰环绕',
+    dialogues: [
+      { text: '🔥 学习火术', effect: { power: 12 }, result: '你的火焰之力大幅提升！' },
+      { text: '⚔️ 挑战火神', effect: { power: 8, hp: -20, brave: 12 }, result: '虽然被烧伤，但学到了真火精髓' },
+      { text: '🧊 用冰对抗', effect: { power: 10 }, result: '五娃的吸水技能进化了！' },
+      { text: '🏃 快速逃跑', effect: { hp: -5, brave: -5 }, result: '被火焰擦伤，但保住了小命' }
+    ]
+  },
+  { 
+    name: '📖 说书人', 
+    desc: '一个说书人在树下讲故事',
+    dialogues: [
+      { text: '👂 认真听讲', effect: { brave: 12, power: 3 }, result: '英雄故事让你热血沸腾！勇气大增！' },
+      { text: '🎭 一起表演', effect: { hp: 10, brave: 8 }, result: '说书人很开心，送你一本武功秘籍' },
+      { text: '😴 听睡着了', effect: { hp: 15 }, result: '你睡了个好觉，体力恢复了' },
+      { text: '🗣️ 打断他', effect: { brave: 5, karma: -3 }, result: '说书人生气了，讲了个鬼故事吓你' }
+    ]
+  },
+  { 
+    name: '🎲 赌徒', 
+    desc: '一个赌徒想和你赌一把',
+    dialogues: [
+      { text: '💰 赌大的', effect: { power: 12, hp: -10 }, result: '你赢了！获得战利品！' },
+      { text: '🎲 小赌怡情', effect: { hp: 8, power: 5 }, result: '小赢一把，心情不错' },
+      { text: '🚫 拒绝赌博', effect: { karma: 8 }, result: '赌徒失望地走了，你避免了风险' },
+      { text: '😈 出老千', effect: { power: 15, karma: -15 }, result: '你赢了但被发现了，赌徒很生气！' }
+    ]
+  },
+  { 
+    name: '🍜 面摊老板', 
+    desc: '路边有个热气腾腾的面摊',
+    dialogues: [
+      { text: '🍜 大碗宽面', effect: { hp: 30 }, result: '面很好吃！体力大增！' },
+      { text: '🍜 小碗细面', effect: { hp: 15, power: 3 }, result: '面很精致，回味无穷' },
+      { text: '🚫 不饿', effect: {}, result: '老板有点失望' },
+      { text: '💰 多给钱', effect: { hp: 20, karma: 10 }, result: '老板感动，多送了你一碗！' }
+    ]
+  },
+  { 
+    name: '🗡️ 流浪剑客', 
+    desc: '一个背着长剑的流浪者',
+    dialogues: [
+      { text: '⚔️ 请求指教', effect: { power: 10, brave: 5 }, result: '剑客教你一招剑法！' },
+      { text: '🍺 请喝酒', effect: { hp: 10, karma: 5 }, result: '剑客很开心，讲述了他的冒险故事' },
+      { text: '🤝 结伴同行', effect: { power: 8, brave: 8 }, result: '剑客和你成为朋友，传授经验' },
+      { text: '😠 挑衅他', effect: { hp: -25, brave: 5 }, result: '你被剑客教训了一顿...' }
+    ]
+  },
+  { 
+    name: '🧚 小精灵', 
+    desc: '一个小精灵在花丛中飞舞',
+    dialogues: [
+      { text: '🌺 追逐玩耍', effect: { hp: 15, brave: 5 }, result: '欢快的玩耍让你心情愉快' },
+      { text: '🔮 请教魔法', effect: { power: 8 }, result: '小精灵教你一些基础魔法' },
+      { text: '🍎 分享食物', effect: { hp: 10, karma: 8 }, result: '小精灵送你一个魔法苹果' },
+      { text: '🤲 想抓住它', effect: { hp: -5, brave: -3 }, result: '小精灵调皮地飞走了' }
+    ]
+  },
+  { 
+    name: '🐯 山大王', 
+    desc: '一只巨大的老虎精拦住了去路',
+    dialogues: [
+      { text: '⚔️ 正面迎战', effect: { power: 10, hp: -15, brave: 12 }, result: '你勇敢地战斗，虽然受伤但赢得尊重' },
+      { text: '🤝 谈判', effect: { hp: 5, power: 5 }, result: '你和老虎精达成协议，互不侵犯' },
+      { text: '🏃 战术撤退', effect: { hp: 5, brave: -5 }, result: '你明智地避开了战斗' },
+      { text: '🗣️ 大吼一声', effect: { brave: 15 }, result: '你的勇气震慑住了老虎精！' }
+    ]
+  },
+  { 
+    name: '🎭 戏班主', 
+    desc: '一个戏班主带着一群演员',
+    dialogues: [
+      { text: '🎪 一起表演', effect: { hp: 15, brave: 8, karma: 5 }, result: '精彩的表演让你心情大好' },
+      { text: '🎭 学习变脸', effect: { power: 6, brave: 5 }, result: '你学会了变脸技巧！' },
+      { text: '💰 给赏钱', effect: { hp: 10, karma: 10 }, result: '戏班主很感激，表演了一段精彩节目' },
+      { text: '😶 在旁边看', effect: { hp: 8 }, result: '你安静地看完了表演' }
+    ]
+  },
+  { 
+    name: '🧩 谜语人', 
+    desc: '一个喜欢出谜语的怪人',
+    dialogues: [
+      { text: '🧠 答题', effect: { power: 8, karma: 5 }, result: '你答对了！获得智慧奖励！' },
+      { text: '🤔 想一想', effect: { power: 5 }, result: '你认真思考，领悟了一些道理' },
+      { text: '🚫 不猜了', effect: {}, result: '谜语人觉得你没意思' },
+      { text: '😤 反问一个', effect: { brave: 10 }, result: '谜语人被你问住了，对你刮目相看' }
+    ]
+  },
+  { 
+    name: '🧚 七仙女', 
+    desc: '七仙女在湖边嬉戏',
+    dialogues: [
+      { text: '🎵 唱歌助兴', effect: { hp: 20, karma: 8 }, result: '仙女们很开心，用花瓣治愈你' },
+      { text: '💃 一起跳舞', effect: { hp: 15, brave: 5, karma: 5 }, result: '欢快的舞蹈让你身心舒畅' },
+      { text: '👀 远远看着', effect: { hp: 5 }, result: '你安静地欣赏美景' },
+      { text: '🏃 不好意思走了', effect: { brave: -5 }, result: '你害羞地离开了' }
+    ]
+  },
+  { 
+    name: '🐺 狼王', 
+    desc: '狼王带领狼群出现',
+    dialogues: [
+      { text: '⚔️ 挑战狼王', effect: { power: 12, hp: -10, brave: 15 }, result: '你与狼王激战，赢得尊重！' },
+      { text: '🐺 学习狼嚎', effect: { power: 8, brave: 10 }, result: '你学会了狼嚎，士气大增！' },
+      { text: '🤝 和平共处', effect: { hp: 10, karma: 5 }, result: '狼群接受了你的友好' },
+      { text: '😨 装死', effect: { hp: 5, brave: -10 }, result: '狼群觉得你无聊，走了' }
+    ]
+  },
+  { 
+    name: '🦅 鹰眼', 
+    desc: '一只巨大的老鹰在天空盘旋',
+    dialogues: [
+      { text: '🦅 请它侦察', effect: { power: 6, brave: 8 }, result: '鹰眼帮你发现了敌人的弱点！' },
+      { text: '🏆 比飞行', effect: { brave: 12 }, result: '虽然输了，但你体验了飞翔的感觉' },
+      { text: '🍖 喂食', effect: { hp: 15, karma: 8 }, result: '鹰眼很感激，送你一根羽毛' },
+      { text: '🏹 想射它', effect: { hp: -15, brave: -5 }, result: '鹰眼生气地俯冲攻击你！' }
+    ]
+  },
+  { 
+    name: '💎 石头精', 
+    desc: '一块巨大的石头变成了人形',
+    dialogues: [
+      { text: '💎 请求宝石', effect: { power: 8 }, result: '石头精送你一块魔法宝石！' },
+      { text: '⛏️ 挖矿', effect: { power: 5, hp: 5 }, result: '你挖到了一些矿石' },
+      { text: '🧘 静坐', effect: { karma: 10, hp: 10 }, result: '你和石头精一起静坐冥想' },
+      { text: '🔨 敲它', effect: { hp: -10 }, result: '石头精很痛，用石头砸你！' }
+    ]
+  },
+  { 
+    name: '🌸 花仙子', 
+    desc: '花仙子在花丛中翩翩起舞',
+    dialogues: [
+      { text: '🌺 赞美花朵', effect: { hp: 20, karma: 8 }, result: '花仙子用花瓣治愈了你' },
+      { text: '💃 一起跳舞', effect: { hp: 15, brave: 5 }, result: '优美的舞蹈让你身心愉悦' },
+      { text: '🌱 帮忙浇水', effect: { hp: 10, karma: 10 }, result: '花仙子很感激，送你花环' },
+      { text: '💐 摘花', effect: { hp: -5, karma: -5 }, result: '花仙子生气了，花粉让你打喷嚏' }
+    ]
+  },
+  { 
+    name: '🌙 嫦娥', 
+    desc: '嫦娥从月亮上飘然而下',
+    dialogues: [
+      { text: '🌙 请教仙术', effect: { power: 10, hp: 15 }, result: '嫦娥教你月光仙术！' },
+      { text: '🥮 分享月饼', effect: { hp: 25, karma: 8 }, result: '嫦娥很开心，送你月光精华' },
+      { text: '💃 月下共舞', effect: { hp: 15, brave: 8, karma: 5 }, result: '美好的月下时光' },
+      { text: '😢 诉说思念', effect: { karma: 10, hp: 10 }, result: '嫦娥被你的真诚打动' }
+    ]
+  },
+  { 
+    name: '🎭 脸谱怪', 
+    desc: '一个戴着各种脸谱的怪人',
+    dialogues: [
+      { text: '🎭 学习变脸', effect: { power: 8, brave: 5 }, result: '你学会了川剧变脸！' },
+      { text: '😱 被吓到', effect: { hp: -5, brave: -5 }, result: '脸谱怪觉得你胆子太小' },
+      { text: '🤣 笑他', effect: { brave: 10 }, result: '脸谱怪表演得更卖力了' },
+      { text: '🤔 猜他是谁', effect: { power: 5 }, result: '你猜对了！他是退休的戏神' }
+    ]
+  },
+  { 
+    name: '🎪 马戏团长', 
+    desc: '马戏团带着各种动物来了',
+    dialogues: [
+      { text: '🎪 看表演', effect: { hp: 15, brave: 5 }, result: '精彩的表演让你大开眼界' },
+      { text: '🦁 驯兽', effect: { power: 8, brave: 10 }, result: '你成功驯服了一只狮子！' },
+      { text: '🎁 收礼物', effect: { hp: 10, power: 5 }, result: '团长送你一个魔术道具' },
+      { text: '🤡 扮小丑', effect: { hp: 10, karma: 8 }, result: '你的表演逗笑了所有人' }
+    ]
+  },
+  { 
+    name: '🧙‍♂️ 神秘巫师', 
+    desc: '一个戴着尖帽子的巫师',
+    dialogues: [
+      { text: '🧪 喝药水', effect: { power: 10, hp: 15 }, result: '药水效果很好！力量提升！' },
+      { text: '📖 学魔法', effect: { power: 8, karma: 5 }, result: '你学会了一个新魔法' },
+      { text: '🔮 看水晶球', effect: { power: 5, hp: 5 }, result: '你看到了未来的景象' },
+      { text: '🚫 怀疑是骗子', effect: { brave: 8 }, result: '巫师证明了自己是真的，但你不信' }
+    ]
+  },
+  { 
+    name: '🐲 应龙', 
+    desc: '上古神龙从云中降下',
+    dialogues: [
+      { text: '🐲 请求龙力', effect: { power: 15, hp: 20 }, result: '应龙赐予你龙之力量！' },
+      { text: '🐉 骑龙飞行', effect: { brave: 15, hp: 10 }, result: '你体验了翱翔天际的感觉！' },
+      { text: '📖 听龙族历史', effect: { power: 8, karma: 8 }, result: '你学到了龙族的智慧' },
+      { text: '⚔️ 挑战神龙', effect: { hp: -30, brave: 10 }, result: '你被神龙轻轻一尾巴扇飞了...' }
+    ]
+  }
 ];
 
 // 50种敌人
@@ -218,6 +439,7 @@ const enemies = [
 ];
 
 let player = null, boss = null, turn = 1, logEntries = [];
+events._tempData = {};
 
 function initGame(charId) {
   player = { char: characters[charId], hp: 100, maxHp: 100, power: 15 + charId * 2, maxPower: 60, brave: 30, karma: 0, skills: [characters[charId].skill] };
@@ -254,9 +476,16 @@ function updateUI() {
   else if (ratio >= 0.7) { analysis.textContent = '❌ 实力不足'; analysis.style.color = '#ff8844'; }
   else { analysis.textContent = '💀 几乎不可能赢'; analysis.style.color = '#ff6b6b'; }
 
-  let sh = '<div style="color:#666; font-size:10px;">技能：</div>';
-  player.skills.forEach(s => { sh += `<span class="skill-tag skill-active">${s}</span>`; });
-  allSkills.forEach(s => { if (!player.skills.includes(s)) sh += `<span class="skill-tag">???</span>`; });
+  let sh = '<div style="color:#666; font-size:10px;">已找到的兄弟 (' + player.skills.length + '/7)：</div>';
+  player.skills.forEach(s => { 
+    const brother = characters.find(c => c.skill === s);
+    sh += `<span class="skill-tag skill-active" style="background:${brother.color}33; border-color:${brother.color}">${brother.icon} ${brother.name}</span>`; 
+  });
+  const missing = allSkills.filter(s => !player.skills.includes(s));
+  if (missing.length > 0) {
+    sh += '<div style="color:#666; font-size:10px; margin-top:4px;">未找到：</div>';
+    missing.forEach(s => { sh += `<span class="skill-tag">???</span>`; });
+  }
   document.getElementById('skills').innerHTML = sh;
   document.getElementById('log').innerHTML = logEntries.slice(-4).map(e => `<div style="font-size:9px;color:${e.color};padding:2px 0;">${e.text}</div>`).join('');
 }
@@ -277,7 +506,12 @@ function showText(speaker, text, choices) {
       choices.forEach(c => {
         const btn = document.createElement('button');
         btn.className = 'choice-btn'; btn.textContent = c.text;
-        btn.onclick = () => { if (c.effect) applyEffect(c.effect); if (c.next) showEvent(c.next); updateUI(); };
+        btn.onclick = () => { 
+          if (c.data) events._tempData = c.data;
+          if (c.effect) applyEffect(c.effect); 
+          if (c.next) showEvent(c.next); 
+          updateUI(); 
+        };
         div.appendChild(btn);
       });
     }
@@ -318,10 +552,94 @@ const events = {
 
   find_ally: () => {
     const missing = allSkills.filter(s => !player.skills.includes(s));
-    if (missing.length === 0) { showText('旁白', '你已集齐所有技能！', [{ text: '继续', next: 'explore' }]); return; }
+    if (missing.length === 0) { 
+      showText('旁白', `你已集齐所有七兄弟！\n\n已获得的技能：${player.skills.join('、')}\n\n现在可以去挑战蛇精了！`, [{ text: '继续', next: 'explore' }]); 
+      return; 
+    }
     const skill = missing[Math.floor(Math.random() * missing.length)];
-    const names = { '力大无穷': '大娃', '千里眼': '二娃', '铜头铁臂': '三娃', '喷火': '四娃', '吸水': '五娃', '隐身': '六娃', '宝葫芦': '七娃' };
-    showText(`🌟 ${names[skill]}`, `终于找到你了！我的技能是${skill}！`, [{ text: `学习 ${skill}`, next: 'explore', effect: { skill, power: 8 } }]);
+    const brother = characters.find(c => c.skill === skill);
+    const foundCount = player.skills.length;
+    
+    // 随机决定是友方还是被蛊惑的兄弟
+    const isCorrupted = Math.random() < 0.3 && foundCount >= 2;
+    
+    if (isCorrupted) {
+      showText(`😈 ${brother.name}（被蛊惑）`, 
+        `${brother.name}被蛇精的妖术蛊惑了！\n\n他眼神空洞，似乎认不出你...\n\n「你是谁？蛇精才是我的主人！」`, 
+        [
+          { text: '🗣️ 呼唤他的名字', next: 'convince_brother', effect: { brave: 5 }, data: { brother, skill } },
+          { text: '⚔️ 用武力唤醒', next: 'force_brother', effect: { brave: 10 }, data: { brother, skill } },
+          { text: '😢 诉说亲情', next: 'emotion_brother', effect: { karma: 10 }, data: { brother, skill } }
+        ]);
+    } else {
+      showText(`🌟 ${brother.name}`, 
+        `终于找到你了！${brother.name}！\n\n「${brother.motto}」\n\n我的技能是「${brother.skill}」！\n\n兄弟，我们一起救爷爷！`, 
+        [
+          { text: `🤝 携手同行（获得 ${brother.skill}）`, next: 'explore', effect: { skill, power: 8 + foundCount * 2 } },
+          { text: '💬 聊聊天', next: 'talk_brother', data: { brother } }
+        ]);
+    }
+  },
+
+  convince_brother: () => {
+    const brother = events._tempData?.brother;
+    const skill = events._tempData?.skill;
+    const success = player.brave >= 40 || player.karma >= 10;
+    
+    if (success) {
+      showText(`🌟 ${brother.name}`, 
+        `你的呼唤唤醒了${brother.name}！\n\n「哥哥...我想起来了...蛇精骗了我...」\n\n${brother.name}加入队伍！`, 
+        [{ text: `获得 ${skill}！`, next: 'explore', effect: { skill, power: 12 } }]);
+    } else {
+      showText(`😈 ${brother.name}`, 
+        `${brother.name}摇了摇头...\n\n「不...蛇精说得对...你们都是坏人...」\n\n你的勇气或善恶值不够，需要更多历练。`, 
+        [{ text: '继续', next: 'explore', effect: { hp: -10 } }]);
+    }
+  },
+
+  force_brother: () => {
+    const brother = events._tempData?.brother;
+    const skill = events._tempData?.skill;
+    const success = player.power >= 25;
+    
+    if (success) {
+      showText(`⚔️ 战斗`, 
+        `你与${brother.name}展开激战！\n\n经过一番搏斗，你用强大的力量震醒了他！\n\n「我...我怎么了...」`, 
+        [{ text: `${brother.name}恢复清醒！`, next: 'explore', effect: { skill, power: 10, hp: -15 } }]);
+    } else {
+      showText(`😤 失败`, 
+        `${brother.name}的力量太强了！\n\n你被击退了...`, 
+        [{ text: '撤退', next: 'explore', effect: { hp: -20 } }]);
+    }
+  },
+
+  emotion_brother: () => {
+    const brother = events._tempData?.brother;
+    const skill = events._tempData?.skill;
+    const success = player.karma >= 5;
+    
+    if (success) {
+      showText(`😢 ${brother.name}`, 
+        `你含泪讲述了爷爷被抓的故事...\n\n${brother.name}的眼眶湿润了...\n\n「爷爷...我想起来了...蛇精是坏人！」`, 
+        [{ text: `${brother.name}清醒了！`, next: 'explore', effect: { skill, power: 8, karma: 5 } }]);
+    } else {
+      showText(`😠 ${brother.name}`, 
+        `${brother.name}不为所动...\n\n「废话少说！」`, 
+        [{ text: '无奈离开', next: 'explore' }]);
+    }
+  },
+
+  talk_brother: () => {
+    const brother = events._tempData?.brother;
+    const dialogues = [
+      `${brother.name}说：「${brother.desc}」`,
+      `${brother.name}说：「我的性格是${brother.personality}。」`,
+      `${brother.name}说：「${brother.motto}」`,
+      `${brother.name}说：「我们七兄弟各有本领，团结起来力量更大！」`
+    ];
+    showText(`💬 ${brother.name}`, 
+      dialogues[Math.floor(Math.random() * dialogues.length)], 
+      [{ text: '🤝 加入队伍', next: 'explore', effect: { skill: brother.skill, power: 6 } }]);
   },
 
   npc_encounter: () => {
@@ -435,6 +753,11 @@ function showEvent(id) { if (events[id]) events[id](); }
 
 function doAction(action) {
   if (action === 'explore') showEvent('explore');
+  else if (action === 'search') {
+    growBoss(); turn++;
+    if (Math.random() < 0.4) showEvent('find_ally');
+    else showText('🔍 寻找', '你仔细搜寻兄弟的踪迹...\n\n但这次没有找到...', [{ text: '继续', next: 'explore' }]);
+  }
   else if (action === 'rest') { growBoss(); turn++; applyEffect({ hp: 22 }); showText('💤 休息', '恢复了体力。', [{ text: '继续', next: 'explore' }]); }
   else if (action === 'fight') { if (player.power >= boss.power * 0.85) showEvent('boss_entrance'); else showText('旁白', '现在还不是时候...', [{ text: '继续', next: 'explore' }]); }
 }
