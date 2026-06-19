@@ -992,8 +992,8 @@ class Boss extends Enemy {
                 killer.speed = 4 + killer.level * 0.5;
                 killer.setShield(600);
                 this.game.showFloatingText('+20000', this.x + this.width/2, this.y - 20, '#ff0');
-                this.game.showAnnouncement('BOSS DESTROYED!', '#ff0');
-                this.game.showAnnouncement('BASE RESTORED!', '#0f0');
+                this.game.showAnnouncement('BOSS 陨落! BOSS DESTROYED!', '#ff0');
+                this.game.showAnnouncement('基地防御加强! BASE FORTIFIED!', '#0f0');
                 this.game.updateHUD(); 
             }
         }
@@ -1113,7 +1113,7 @@ class Game {
     startLevel() {
         this.gameState = 'STAGE_START'; this.stageStartTimer = 120;
         document.getElementById('start-screen').classList.add('hidden'); document.getElementById('game-over-screen').classList.add('hidden');
-        document.getElementById('stage-info').innerText = `STAGE ${this.currentStage + 1}`;
+        document.getElementById('stage-info').innerText = `关卡 Stage ${this.currentStage + 1}`;
         this.map.reset(this.currentStage); this.bullets = []; this.enemies = []; this.effects = []; this.powerUps = []; this.fortifyTimer = 0; this.enemyFrozenTimer = 0;
         this.stageClearTimer = 0;
         this.currentLevel = this.map.currentLevel;
@@ -1136,8 +1136,8 @@ class Game {
     updateHUD() {
         document.getElementById('p1-score').innerText = String(this.players[0].score).padStart(5, '0');
         document.getElementById('p2-score').innerText = String(this.players[1].score).padStart(5, '0');
-        document.getElementById('lives-info').innerText = `LIVES: ❤️x${this.lives}`;
-        document.getElementById('enemies-info').innerText = `ENEMIES: ${this.enemiesRemaining + this.enemies.length}`;
+        document.getElementById('lives-info').innerText = `生命 Lives: ❤️x${this.lives}`;
+        document.getElementById('enemies-info').innerText = `敌人 Enemies: ${this.enemiesRemaining + this.enemies.length}`;
     }
     handlePlayerDeath(player) {
         if (this.lives > 0) {
@@ -1196,7 +1196,7 @@ class Game {
         const bossChance = this.currentStage < 5 ? 0 : (this.currentStage < 20 ? 0.0002 : 0.0005);
         if (Math.random() < bossChance && !this.enemies.some(e => e.isBoss) && !this.bossWarning) {
             this.bossWarning = 180;
-            this.showAnnouncement('WARNING! BOSS INCOMING!', '#f00');
+            this.showAnnouncement('警告! BOSS降临! BOSS INCOMING!', '#f00');
         }
         if (this.bossWarning > 0) {
             this.bossWarning--;
@@ -1227,7 +1227,7 @@ class Game {
         } else if (this.enemiesRemaining === 0 && this.enemies.length === 0) {
             if (this.stageClearTimer === 0) {
                 this.stageClearTimer = 300;
-                this.showAnnouncement('BONUS TIME: 5 SECONDS!', '#0f0');
+                this.showAnnouncement('奖励时间 BONUS TIME: 5s!', '#0f0');
             } else {
                 this.stageClearTimer--;
                 if (this.stageClearTimer <= 0) {
@@ -1255,9 +1255,9 @@ class Game {
             this.ctx.fillStyle = '#000'; this.ctx.fillRect(0, 0, CANVAS_SIZE, CANVAS_SIZE);
             this.ctx.fillStyle = '#aaa'; this.ctx.font = '60px "Courier New"'; this.ctx.textAlign = 'center';
             this.ctx.globalAlpha = progress < 0.1 ? progress * 10 : (progress > 0.8 ? (1 - progress) * 5 : 1);
-            this.ctx.fillText(`STAGE ${this.currentStage + 1}`, CANVAS_SIZE/2, CANVAS_SIZE/2 - 20);
-            this.ctx.font = '24px "Courier New"';
-            this.ctx.fillText(`Enemies: ${this.enemiesRemaining}`, CANVAS_SIZE/2, CANVAS_SIZE/2 + 30);
+            this.ctx.fillText(`关卡 Stage ${this.currentStage + 1}`, CANVAS_SIZE/2, CANVAS_SIZE/2 - 20);
+            this.ctx.font = '30px "Courier New"';
+            this.ctx.fillText(`敌人 Enemies: ${this.enemiesRemaining}`, CANVAS_SIZE/2, CANVAS_SIZE/2 + 30);
             this.ctx.globalAlpha = 1;
             return;
         }
@@ -1278,8 +1278,8 @@ class Game {
             this.ctx.restore();
             this.floatingTexts.forEach(t => { this.ctx.save(); this.ctx.fillStyle = t.color; this.ctx.font = 'bold 16px Arial'; this.ctx.textAlign = 'center'; this.ctx.globalAlpha = t.timer / 60; this.ctx.fillText(t.text, t.x, t.y); this.ctx.restore(); });
             this.announcements.forEach(a => { this.ctx.save(); const scale = 1 + Math.sin(a.timer / 10) * 0.1; this.ctx.translate(CANVAS_SIZE / 2, a.y); this.ctx.scale(scale, scale); this.ctx.fillStyle = '#000'; this.ctx.font = 'bold 48px Arial'; this.ctx.textAlign = 'center'; this.ctx.fillText(a.text, 2, 2); this.ctx.fillStyle = a.color; this.ctx.fillText(a.text, 0, 0); this.ctx.restore(); });
-            if (this.gameState === 'STAGE_CLEAR') { this.ctx.fillStyle = 'rgba(0,0,0,0.5)'; this.ctx.fillRect(0, 0, CANVAS_SIZE, CANVAS_SIZE); this.ctx.fillStyle = '#fff'; this.ctx.font = '80px "Courier New"'; this.ctx.textAlign = 'center'; this.ctx.fillText("STAGE CLEAR!", CANVAS_SIZE/2, CANVAS_SIZE/2); }
-            if (this.paused) { this.ctx.fillStyle = 'rgba(0,0,0,0.7)'; this.ctx.fillRect(0, 0, CANVAS_SIZE, CANVAS_SIZE); this.ctx.fillStyle = '#fff'; this.ctx.font = '60px "Courier New"'; this.ctx.textAlign = 'center'; this.ctx.fillText("PAUSED", CANVAS_SIZE/2, CANVAS_SIZE/2 - 20); this.ctx.font = '24px "Courier New"'; this.ctx.fillText("Press P to resume", CANVAS_SIZE/2, CANVAS_SIZE/2 + 30); }
+            if (this.gameState === 'STAGE_CLEAR') { this.ctx.fillStyle = 'rgba(0,0,0,0.5)'; this.ctx.fillRect(0, 0, CANVAS_SIZE, CANVAS_SIZE); this.ctx.fillStyle = '#fff'; this.ctx.font = '60px "Courier New"'; this.ctx.textAlign = 'center'; this.ctx.fillText("过关 STAGE CLEAR!", CANVAS_SIZE/2, CANVAS_SIZE/2); }
+            if (this.paused) { this.ctx.fillStyle = 'rgba(0,0,0,0.7)'; this.ctx.fillRect(0, 0, CANVAS_SIZE, CANVAS_SIZE); this.ctx.fillStyle = '#fff'; this.ctx.font = '60px "Courier New"'; this.ctx.textAlign = 'center'; this.ctx.fillText("暂停 PAUSED", CANVAS_SIZE/2, CANVAS_SIZE/2 - 20); this.ctx.font = '24px "Courier New"'; this.ctx.fillText("按P键继续 Press P to resume", CANVAS_SIZE/2, CANVAS_SIZE/2 + 30); }
         }
         if (this.highScore > 0) { this.ctx.fillStyle = '#ff0'; this.ctx.font = '16px Arial'; this.ctx.textAlign = 'right'; this.ctx.fillText(`HIGH SCORE: ${this.highScore}`, CANVAS_SIZE - 10, CANVAS_SIZE - 10); }
     }

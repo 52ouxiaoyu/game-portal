@@ -826,13 +826,13 @@ function startGame() {
     // 显示模式提示
     const modeHint = document.getElementById('mode-hint');
     if (gameMode === 'walls') {
-        modeHint.textContent = '收集墙壁旁的能量球获得加分';
+        modeHint.textContent = '收集墙壁旁的能量球获得加分 Collect energy balls near walls';
         modeHint.classList.remove('hidden');
     } else if (gameMode === 'maze') {
-        modeHint.textContent = '寻找迷宫中的宝藏获得奖励';
+        modeHint.textContent = '寻找迷宫中的宝藏获得奖励 Find treasures in the maze';
         modeHint.classList.remove('hidden');
     } else if (gameMode === 'battle') {
-        modeHint.textContent = '引诱AI撞墙可获得额外分数';
+        modeHint.textContent = '引诱AI撞墙可获得额外分数 Lure AI into walls for bonus points';
         modeHint.classList.remove('hidden');
     } else {
         modeHint.classList.add('hidden');
@@ -864,7 +864,7 @@ function showStats() {
     document.getElementById('stats-games').textContent = stats.gamesPlayed;
     document.getElementById('stats-score').textContent = stats.totalScore;
     document.getElementById('stats-food').textContent = stats.totalFood;
-    document.getElementById('stats-time').textContent = Math.floor(stats.totalTime) + '秒';
+    document.getElementById('stats-time').textContent = Math.floor(stats.totalTime) + 's';
     document.getElementById('stats-combo').textContent = stats.bestCombo;
     document.getElementById('stats-enemies').textContent = stats.enemiesKilled;
 
@@ -931,7 +931,7 @@ function gameOver() {
         document.getElementById('new-high').classList.add('hidden');
     }
 
-    document.getElementById('final-score').textContent = `得分: ${score}`;
+    document.getElementById('final-score').textContent = `得分 Score: ${score}`;
     document.getElementById('survival-time').textContent = Math.floor(survivalTime);
     document.getElementById('max-combo').textContent = maxCombo;
     document.getElementById('high-score').textContent = String(highScore).padStart(5, '0');
@@ -1571,7 +1571,7 @@ function addFloatingText(x, y, text, color, size = 16) {
 function updateHUD() {
     document.getElementById('score').textContent = String(score).padStart(5, '0');
     document.getElementById('high-score').textContent = String(highScore).padStart(5, '0');
-    document.getElementById('level-info').textContent = `STAGE ${level}`;
+    document.getElementById('level-info').textContent = `第 ${level} 关 Stage ${level}`;
     document.getElementById('lives').textContent = lives;
 }
 

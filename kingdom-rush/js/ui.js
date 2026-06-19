@@ -46,7 +46,7 @@ class UI {
         
         this.renderer.drawPanel(panel.x, panel.y, panel.width, panel.height);
         
-        this.renderer.drawText('防御塔', panel.x + 10, panel.y + 10, 14, '#FFD700');
+        this.renderer.drawText('防御塔 Towers', panel.x + 10, panel.y + 10, 14, '#FFD700');
         
         for (let i = 0; i < this.towerTypes.length; i++) {
             const type = this.towerTypes[i];
@@ -158,9 +158,9 @@ class UI {
         buttons.push({ x: startX, y: 370, width: buttonWidth, height: buttonHeight, action: 'how' });
         buttons.push({ x: startX, y: 440, width: buttonWidth, height: buttonHeight, action: 'quit' });
         
-        this.renderer.drawButton(startX, 300, buttonWidth, buttonHeight, '开始游戏');
-        this.renderer.drawButton(startX, 370, buttonWidth, buttonHeight, '游戏说明');
-        this.renderer.drawButton(startX, 440, buttonWidth, buttonHeight, '退出游戏');
+        this.renderer.drawButton(startX, 300, buttonWidth, buttonHeight, '开始游戏 START');
+        this.renderer.drawButton(startX, 370, buttonWidth, buttonHeight, '游戏说明 HOW TO');
+        this.renderer.drawButton(startX, 440, buttonWidth, buttonHeight, '退出游戏 QUIT');
         
         return buttons;
     }
@@ -169,7 +169,7 @@ class UI {
         this.ctx.fillStyle = '#1a1a2e';
         this.ctx.fillRect(0, 0, CONFIG.CANVAS_WIDTH, CONFIG.CANVAS_HEIGHT);
         
-        this.renderer.drawText('游戏说明', CONFIG.CANVAS_WIDTH / 2, 50, 32, '#FFD700', 'center');
+        this.renderer.drawText('游戏说明 HOW TO', CONFIG.CANVAS_WIDTH / 2, 50, 32, '#FFD700', 'center');
         
         const instructions = [
             '1. 选择右侧防御塔类型',
@@ -196,7 +196,7 @@ class UI {
         const startX = CONFIG.CANVAS_WIDTH / 2 - buttonWidth / 2;
         
         buttons.push({ x: startX, y: 550, width: buttonWidth, height: buttonHeight, action: 'back' });
-        this.renderer.drawButton(startX, 550, buttonWidth, buttonHeight, '返回');
+        this.renderer.drawButton(startX, 550, buttonWidth, buttonHeight, '返回 BACK');
         
         return buttons;
     }
@@ -205,7 +205,7 @@ class UI {
         this.ctx.fillStyle = '#1a1a2e';
         this.ctx.fillRect(0, 0, CONFIG.CANVAS_WIDTH, CONFIG.CANVAS_HEIGHT);
         
-        this.renderer.drawText('选择关卡', CONFIG.CANVAS_WIDTH / 2, 80, 32, '#FFD700', 'center');
+        this.renderer.drawText('选择关卡 SELECT LEVEL', CONFIG.CANVAS_WIDTH / 2, 80, 32, '#FFD700', 'center');
         
         const buttons = [];
         const buttonWidth = 250;
@@ -220,7 +220,7 @@ class UI {
         
         const backY = 180 + CONFIG.MAPS.length * 100 + 20;
         buttons.push({ x: startX, y: backY, width: buttonWidth, height: buttonHeight, action: 'back' });
-        this.renderer.drawButton(startX, backY, buttonWidth, buttonHeight, '返回');
+        this.renderer.drawButton(startX, backY, buttonWidth, buttonHeight, '返回 BACK');
         
         return buttons;
     }
@@ -229,8 +229,8 @@ class UI {
         this.ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
         this.ctx.fillRect(0, 0, CONFIG.CANVAS_WIDTH, CONFIG.CANVAS_HEIGHT);
         
-        this.renderer.drawText('游戏结束', CONFIG.CANVAS_WIDTH / 2, 250, 48, '#FF4444', 'center');
-        this.renderer.drawText(`坚持到第 ${wave} 波`, CONFIG.CANVAS_WIDTH / 2, 320, 24, '#FFFFFF', 'center');
+        this.renderer.drawText('游戏结束 GAME OVER', CONFIG.CANVAS_WIDTH / 2, 250, 48, '#FF4444', 'center');
+        this.renderer.drawText(`坚持到第 ${wave} 波 Survived ${wave} waves`, CONFIG.CANVAS_WIDTH / 2, 320, 24, '#FFFFFF', 'center');
         
         const buttons = [];
         const buttonWidth = 150;
@@ -240,8 +240,8 @@ class UI {
         buttons.push({ x: startX, y: 400, width: buttonWidth, height: buttonHeight, action: 'retry' });
         buttons.push({ x: startX + buttonWidth + 20, y: 400, width: buttonWidth, height: buttonHeight, action: 'menu' });
         
-        this.renderer.drawButton(startX, 400, buttonWidth, buttonHeight, '重新开始');
-        this.renderer.drawButton(startX + buttonWidth + 20, 400, buttonWidth, buttonHeight, '返回菜单');
+        this.renderer.drawButton(startX, 400, buttonWidth, buttonHeight, '重新开始 RESTART');
+        this.renderer.drawButton(startX + buttonWidth + 20, 400, buttonWidth, buttonHeight, '返回菜单 MENU');
         
         return buttons;
     }
@@ -250,8 +250,8 @@ class UI {
         this.ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
         this.ctx.fillRect(0, 0, CONFIG.CANVAS_WIDTH, CONFIG.CANVAS_HEIGHT);
         
-        this.renderer.drawText('胜利!', CONFIG.CANVAS_WIDTH / 2, 250, 48, '#FFD700', 'center');
-        this.renderer.drawText(`成功防守 ${wave} 波攻击`, CONFIG.CANVAS_WIDTH / 2, 320, 24, '#FFFFFF', 'center');
+        this.renderer.drawText('胜利! VICTORY!', CONFIG.CANVAS_WIDTH / 2, 250, 48, '#FFD700', 'center');
+        this.renderer.drawText(`成功防守 ${wave} 波攻击 Defended ${wave} waves`, CONFIG.CANVAS_WIDTH / 2, 320, 24, '#FFFFFF', 'center');
         
         const buttons = [];
         const buttonWidth = 150;
@@ -261,8 +261,8 @@ class UI {
         buttons.push({ x: startX, y: 400, width: buttonWidth, height: buttonHeight, action: 'next' });
         buttons.push({ x: startX + buttonWidth + 20, y: 400, width: buttonWidth, height: buttonHeight, action: 'menu' });
         
-        this.renderer.drawButton(startX, 400, buttonWidth, buttonHeight, '下一关');
-        this.renderer.drawButton(startX + buttonWidth + 20, 400, buttonWidth, buttonHeight, '返回菜单');
+        this.renderer.drawButton(startX, 400, buttonWidth, buttonHeight, '下一关 NEXT');
+        this.renderer.drawButton(startX + buttonWidth + 20, 400, buttonWidth, buttonHeight, '返回菜单 MENU');
         
         return buttons;
     }
@@ -271,7 +271,7 @@ class UI {
         this.ctx.fillStyle = 'rgba(0, 0, 0, 0.6)';
         this.ctx.fillRect(0, 0, CONFIG.CANVAS_WIDTH, CONFIG.CANVAS_HEIGHT);
         
-        this.renderer.drawText('暂停', CONFIG.CANVAS_WIDTH / 2, 300, 48, '#FFFFFF', 'center');
+        this.renderer.drawText('暂停 PAUSED', CONFIG.CANVAS_WIDTH / 2, 300, 48, '#FFFFFF', 'center');
         
         const buttons = [];
         const buttonWidth = 150;
@@ -281,8 +281,8 @@ class UI {
         buttons.push({ x: startX, y: 400, width: buttonWidth, height: buttonHeight, action: 'resume' });
         buttons.push({ x: startX, y: 470, width: buttonWidth, height: buttonHeight, action: 'menu' });
         
-        this.renderer.drawButton(startX, 400, buttonWidth, buttonHeight, '继续');
-        this.renderer.drawButton(startX, 470, buttonWidth, buttonHeight, '返回菜单');
+        this.renderer.drawButton(startX, 400, buttonWidth, buttonHeight, '继续 RESUME');
+        this.renderer.drawButton(startX, 470, buttonWidth, buttonHeight, '返回菜单 MENU');
         
         return buttons;
     }

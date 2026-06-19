@@ -96,10 +96,10 @@ class Player {
         this.cooldown = 0;
         
         this.weapons = [
-            { name: "双持手枪", cd: 20, type: "pistol", req: 0 },
-            { name: "重型霰弹枪", cd: 35, type: "shotgun", req: 20 },
-            { name: "突击步枪", cd: 8, type: "machinegun", req: 60 },
-            { name: "等离子激光", cd: 2, type: "laser", req: 150 }
+            { name: "双持手枪 Pistols", cd: 20, type: "pistol", req: 0 },
+            { name: "重型霰弹枪 Shotgun", cd: 35, type: "shotgun", req: 20 },
+            { name: "突击步枪 Rifle", cd: 8, type: "machinegun", req: 60 },
+            { name: "等离子激光 Laser", cd: 2, type: "laser", req: 150 }
         ];
     }
 
@@ -133,7 +133,7 @@ class Player {
             this.weaponLevel = nextWep;
             audio.levelUp();
             document.getElementById('current-weapon').textContent = this.weapons[this.weaponLevel].name;
-            addFloatingText(this.x, this.y - 30, "武器升级!", "#00ff66");
+            addFloatingText(this.x, this.y - 30, "武器升级! UPGRADE!", "#00ff66");
             createParticles(this.x, this.y, '#00ff66', 30);
         }
         

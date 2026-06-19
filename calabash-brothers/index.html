@@ -81,9 +81,9 @@ body { background: #0a0a1a; font-family: 'Noto Sans SC', 'Microsoft YaHei', 'Sim
 <body>
 <div id="game">
   <div id="start-screen">
-    <h1>🎮 葫芦兄弟：拯救爷爷</h1>
-    <p style="color:#aaa; margin-bottom:8px;">选择你的葫芦娃，踏上拯救爷爷的冒险之旅！</p>
-    <p style="color:#ff6b6b; font-size:16px; margin-top: 10px;">⚠️ 蛇精每回合都在变强！拖太久就打不过了！</p>
+    <h1>🎮 葫芦兄弟：拯救爷爷 <span style="font-size:24px;">Calabash Bros</span></h1>
+    <p style="color:#aaa; margin-bottom:8px;">选择你的葫芦娃，踏上拯救爷爷的冒险之旅！ Choose your hero!</p>
+    <p style="color:#ff6b6b; font-size:16px; margin-top: 10px;">⚠️ 蛇精每回合都在变强！拖太久就打不过了！ Boss grows stronger every turn!</p>
     <div class="char-select" id="charSelect"></div>
   </div>
   <div id="game-screen" style="display:none;">
@@ -94,15 +94,15 @@ body { background: #0a0a1a; font-family: 'Noto Sans SC', 'Microsoft YaHei', 'Sim
     </div>
     <div id="main-area">
       <div id="left-panel">
-        <div class="panel-title player-title">🧑 我方</div>
+        <div class="panel-title player-title">🧑 我方 Player</div>
         <div id="playerStats"></div>
         <div id="skills"></div>
       </div>
       <div id="right-panel">
-        <div class="panel-title boss-title">🐍 蛇精</div>
+        <div class="panel-title boss-title">🐍 蛇精 Boss</div>
         <div id="bossStats"></div>
         <div style="margin-top:8px; padding:8px; background:rgba(255,107,107,0.1); border-radius:4px;">
-          <div style="color:#ff6b6b; font-size:14px; font-weight:bold;">⚠️ 实力分析</div>
+          <div style="color:#ff6b6b; font-size:14px; font-weight:bold;">⚠️ 实力分析 Analysis</div>
           <div id="bossAnalysis" style="color:#aaa; font-size:14px; margin-top:4px;"></div>
         </div>
         <div id="log"></div>
@@ -114,10 +114,10 @@ body { background: #0a0a1a; font-family: 'Noto Sans SC', 'Microsoft YaHei', 'Sim
       <div id="choices"></div>
     </div>
     <div id="actions">
-      <button class="action-btn btn-explore" onclick="doAction('explore')">🔍 探索</button>
-      <button class="action-btn btn-search" onclick="doAction('search')">👥 寻找兄弟</button>
-      <button class="action-btn btn-rest" onclick="doAction('rest')">💤 休息</button>
-      <button class="action-btn btn-fight" onclick="doAction('fight')">⚔️ 挑战蛇精</button>
+      <button class="action-btn btn-explore" onclick="doAction('explore')">🔍 探索 Explore</button>
+      <button class="action-btn btn-search" onclick="doAction('search')">👥 寻找兄弟 Find Bros</button>
+      <button class="action-btn btn-rest" onclick="doAction('rest')">💤 休息 Rest</button>
+      <button class="action-btn btn-fight" onclick="doAction('fight')">⚔️ 挑战蛇精 Fight Boss</button>
     </div>
   </div>
 </div>

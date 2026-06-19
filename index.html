@@ -291,15 +291,15 @@
             <div class="stats">
                 <div class="stat">
                     <div class="stat-value">5</div>
-                    <div class="stat-label">款游戏</div>
+                    <div class="stat-label">款游戏 (Games)</div>
                 </div>
                 <div class="stat">
                     <div class="stat-value" id="total-plays">0</div>
-                    <div class="stat-label">总游玩</div>
+                    <div class="stat-label">总游玩 (Plays)</div>
                 </div>
                 <div class="stat">
                     <div class="stat-value" id="total-time">0</div>
-                    <div class="stat-label">总时长</div>
+                    <div class="stat-label">总时长 (Time)</div>
                 </div>
             </div>
             <div style="margin-top: 32px;">
@@ -343,34 +343,34 @@
     <script>
         const games = [
             {
-                id: 'zombie', title: '末日枪手', emoji: '🔫', color: '#ff4500',
+                id: 'zombie', title: '末日枪手<br><span style="font-size:12px;color:#888;">Zombie Shooter</span>', emoji: '🔫', color: '#ff4500',
                 url: 'zombie-shooter/index.html',
-                tags: ['射击', '生存'],
-                desc: '抵御源源不断的僵尸，坚持下去！'
+                tags: ['射击', '生存', 'Shooter'],
+                desc: '抵御源源不断的僵尸，坚持下去！<br>Survive the endless zombie hordes!'
             },
             {
-                id: 'tank', title: '坦克大战', emoji: '🪖', color: '#E7E721',
+                id: 'tank', title: '坦克大战<br><span style="font-size:12px;color:#888;">Tank Battle</span>', emoji: '🪖', color: '#E7E721',
                 url: 'tank-battle/index.html',
-                tags: ['双人', '射击', '1000关'],
-                desc: '经典坦克大战，支持双人对战'
+                tags: ['双人', '射击', 'Co-op'],
+                desc: '经典坦克大战，支持双人对战<br>Classic tank battle, co-op supported'
             },
             {
-                id: 'snake', title: '贪吃蛇', emoji: '🐍', color: '#34C759',
+                id: 'snake', title: '贪吃蛇<br><span style="font-size:12px;color:#888;">Snake</span>', emoji: '🐍', color: '#34C759',
                 url: 'snake/index.html',
-                tags: ['经典', '休闲'],
-                desc: '流畅操作，多种玩法'
+                tags: ['经典', '休闲', 'Casual'],
+                desc: '流畅操作，经典贪吃蛇<br>Classic snake game'
             },
             {
-                id: 'kingdom', title: '王国保卫战', emoji: '🏰', color: '#FF9500',
+                id: 'kingdom', title: '王国保卫战<br><span style="font-size:12px;color:#888;">Kingdom Rush</span>', emoji: '🏰', color: '#FF9500',
                 url: 'kingdom-rush/index.html',
-                tags: ['塔防', '策略'],
-                desc: '建造防御塔抵御敌人'
+                tags: ['塔防', '策略', 'Tower Defense'],
+                desc: '建造防御塔抵御敌人<br>Build towers to defend'
             },
             {
-                id: 'calabash', title: '葫芦兄弟', emoji: '🎃', color: '#007AFF',
+                id: 'calabash', title: '葫芦兄弟<br><span style="font-size:12px;color:#888;">Calabash Bros</span>', emoji: '🎃', color: '#007AFF',
                 url: 'calabash-brothers/index.html',
-                tags: ['冒险', '经典'],
-                desc: '七兄弟拯救爷爷'
+                tags: ['冒险', '经典', 'Adventure'],
+                desc: '七兄弟拯救爷爷<br>Rescue grandpa'
             }
         ];
 
@@ -429,7 +429,7 @@
                             <div>
                                 <div class="game-title">${game.title}</div>
                                 <div class="game-stats">
-                                    <span>${gameStats.plays} 次</span>
+                                    <span>${gameStats.plays} 次(plays)</span>
                                     <span>${formatTime(gameStats.time)}</span>
                                 </div>
                             </div>
@@ -439,7 +439,7 @@
                             ${game.tags.map(tag => `<span class="tag">${tag}</span>`).join('')}
                         </div>
                         <a href="${game.url}" class="play-btn" target="_blank" onclick="event.stopPropagation(); trackGame('${game.id}')">
-                            开始游戏
+                            开始游戏 / PLAY
                             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                 <path d="M5 12h14M12 5l7 7-7 7"/>
                             </svg>

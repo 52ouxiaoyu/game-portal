@@ -10,18 +10,18 @@
     <div id="game-container">
         <div id="hud" class="hidden">
             <div class="score-box">
-                <span class="label">分数</span>
+                <span class="label">分数 SCORE</span>
                 <span id="score">00000</span>
             </div>
             <div id="mid-info">
-                <div id="combo-info" class="hidden">连击 <span id="combo">x1</span></div>
-                <div id="level-info">第 1 关</div>
-                <div id="lives-info" class="hidden">生命: <span id="lives">3</span></div>
+                <div id="combo-info" class="hidden">连击 Combo <span id="combo">x1</span></div>
+                <div id="level-info">第 1 关 Level 1</div>
+                <div id="lives-info" class="hidden">生命 Lives: <span id="lives">3</span></div>
                 <div id="time-attack" class="hidden">⏱️ <span id="time-attack-timer">60</span></div>
                 <div id="mode-hint" class="hidden"></div>
             </div>
             <div class="score-box right-box">
-                <span class="label">最高分</span>
+                <span class="label">最高分 BEST</span>
                 <span id="high-score">00000</span>
                 <div class="hud-buttons">
                     <button id="pause-btn" title="暂停 (P)">⏸</button>
@@ -45,43 +45,43 @@
                     <div class="snake-art">~~~~</div>
                 </div>
                 <h1>SERPENT</h1>
-                <p class="subtitle">霓虹街机</p>
+                <p class="subtitle">霓虹街机 NEON ARCADE</p>
                 <div class="controls-info">
-                    <p>WASD / 方向键 - 移动</p>
-                    <p>空格 - 加速冲刺</p>
-                    <p>P / ESC - 暂停</p>
+                    <p>WASD / 方向键(Arrows) - 移动 Move</p>
+                    <p>空格(Space) - 加速冲刺 Boost</p>
+                    <p>P / ESC - 暂停 Pause</p>
                 </div>
                 <div class="settings">
-                    <label>起始关卡: <input type="number" id="start-level" min="1" max="100" value="1"></label>
+                    <label>起始关卡 Level: <input type="number" id="start-level" min="1" max="100" value="1"></label>
                     <div class="difficulty">
-                        <button class="diff-btn active" data-diff="easy">简单</button>
-                        <button class="diff-btn" data-diff="normal">普通</button>
-                        <button class="diff-btn" data-diff="hard">困难</button>
+                        <button class="diff-btn active" data-diff="easy">简单 Easy</button>
+                        <button class="diff-btn" data-diff="normal">普通 Normal</button>
+                        <button class="diff-btn" data-diff="hard">困难 Hard</button>
                     </div>
                     <div class="mode-select">
-                        <button class="mode-btn active" data-mode="classic">经典</button>
-                        <button class="mode-btn" data-mode="walls">墙壁</button>
-                        <button class="mode-btn" data-mode="maze">迷宫</button>
-                        <button class="mode-btn" data-mode="battle">战斗</button>
-                        <button class="mode-btn" data-mode="timeattack">计时</button>
+                        <button class="mode-btn active" data-mode="classic">经典 Classic</button>
+                        <button class="mode-btn" data-mode="walls">墙壁 Walls</button>
+                        <button class="mode-btn" data-mode="maze">迷宫 Maze</button>
+                        <button class="mode-btn" data-mode="battle">战斗 Battle</button>
+                        <button class="mode-btn" data-mode="timeattack">计时 Time</button>
                     </div>
                 </div>
-                <button id="start-btn">开始游戏</button>
+                <button id="start-btn">开始游戏 / START</button>
             </div>
             <div id="game-over-screen" class="screen hidden">
-                <h1>游戏结束</h1>
+                <h1>游戏结束<br><span style="font-size:24px;">GAME OVER</span></h1>
                 <div id="final-score"></div>
-                <div id="new-high" class="hidden">新纪录!</div>
+                <div id="new-high" class="hidden">新纪录! NEW RECORD!</div>
                 <div id="game-stats">
-                    <p>存活时间: <span id="survival-time">0</span>秒</p>
-                    <p>最高连击: <span id="max-combo">0</span></p>
+                    <p>存活时间 Time: <span id="survival-time">0</span>s</p>
+                    <p>最高连击 Max Combo: <span id="max-combo">0</span></p>
                 </div>
-                <button id="restart-btn">再来一局</button>
-                <button id="menu-btn">返回菜单</button>
+                <button id="restart-btn">再来一局 / RESTART</button>
+                <button id="menu-btn">返回菜单 / MENU</button>
             </div>
             <div id="pause-screen" class="screen hidden">
-                <h1>暂停</h1>
-                <button id="resume-btn">继续游戏</button>
+                <h1>暂停<br><span style="font-size:24px;">PAUSED</span></h1>
+                <button id="resume-btn">继续游戏 / RESUME</button>
             </div>
             <div id="stats-screen" class="screen hidden">
                 <h1>统计数据</h1>
