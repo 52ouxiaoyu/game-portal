@@ -396,7 +396,7 @@ class InputHandler {
 class Bullet {
     constructor(game, owner, x, y, dir, level = 0) { 
         this.game = game; this.owner = owner; this.x = x; this.y = y; this.dir = dir; 
-        this.level = level; this.speed = 12 + (level * 2); this.size = 8 + (level * 2); this.active = true; 
+        this.level = level; this.speed = 8; this.size = 8 + (level * 2); this.active = true; 
         this.damage = (this.owner instanceof Player) ? 5 + level * 2 : 1;
     }
     update() {
