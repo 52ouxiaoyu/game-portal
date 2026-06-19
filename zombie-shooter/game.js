@@ -50,6 +50,10 @@ let zombies = [];
 let bullets = [];
 let particles = [];
 let floatingTexts = [];
+    lootBoxes = [];
+    lootTimer = 0;
+let lootBoxes = [];
+let lootTimer = 0;
 
 let spawnTimer = 0;
 let spawnRate = 100; // frames
@@ -95,6 +99,8 @@ class Player {
         this.maxHp = 100;
         this.weaponLevel = 0;
         this.cooldown = 0;
+        this.buffTime = 0;
+        this.shieldTime = 0;
         
         this.weapons = [
             { name: "双持手枪 Pistols", cd: 20, type: "pistol", req: 0 },
@@ -174,8 +180,10 @@ class Zombie {
                 this.y += (dy / minDist) * this.speed;
             }
             if(minDist < this.size + target.size) {
-                target.hp -= this.damage;
-                audio.playerHit();
+                if(target.shieldTime <= 0) {
+                    target.hp -= this.damage;
+                    audio.playerHit();
+                }
                 this.active = false;
                 createParticles(this.x, this.y, '#ff0000', 10);
                 if(players.every(p => p.hp <= 0)) {
@@ -203,6 +211,86 @@ class Zombie {
             ctx.fillStyle = '#0f0';
             ctx.fillRect(this.x - this.size, this.y - this.size - 8, this.size*2 * (this.hp/this.maxHp), 4);
         }
+    }
+}
+
+
+class LootBox {
+    constructor() {
+        this.x = 50 + Math.random() * (CANVAS_W - 100);
+        this.y = 50 + Math.random() * (CANVAS_H - 100);
+        this.size = 15;
+        this.active = true;
+        this.color = '#ffd700'; // gold
+        // Determine type
+        const r = Math.random();
+        if(r < 0.3) this.type = 'medkit';      // 30% HP
+        else if(r < 0.5) this.type = 'potion'; // 20% Max HP
+        else if(r < 0.65) this.type = 'nuke';  // 15% Screen clear
+        else if(r < 0.8) this.type = 'stim';   // 15% Speed/Rapid fire
+        else if(r < 0.95) this.type = 'shield';// 15% Invincible
+        else this.type = 'trap';               // 5% Fake/Trap
+    }
+    update() {
+        // Check collision with players
+        players.forEach(p => {
+            if(!this.active || p.hp <= 0) return;
+            const dist = Math.hypot(p.x - this.x, p.y - this.y);
+            if(dist < this.size + p.size) {
+                this.collect(p);
+            }
+        });
+    }
+    collect(p) {
+        this.active = false;
+        audio.levelUp(); // use level up sound
+        createParticles(this.x, this.y, this.color, 20);
+        
+        switch(this.type) {
+            case 'medkit':
+                p.hp = Math.min(p.maxHp, p.hp + 50);
+                addFloatingText(this.x, this.y, "急救包! HP +50", "#00ff00");
+                break;
+            case 'potion':
+                p.maxHp += 20;
+                p.hp = p.maxHp;
+                addFloatingText(this.x, this.y, "神秘药剂! MAX HP 上升", "#ff00ff");
+                break;
+            case 'nuke':
+                zombies.forEach(z => { z.active = false; createParticles(z.x, z.y, '#ffaa00', 10); score += z.scoreVal; killCount++; });
+                addFloatingText(this.x, this.y, "核弹轰炸! 全屏秒杀", "#ffaa00");
+                break;
+            case 'stim':
+                p.buffTime = 300; // 5 seconds
+                addFloatingText(this.x, this.y, "兴奋剂! 极速射击", "#00ffff");
+                break;
+            case 'shield':
+                p.shieldTime = 600; // 10 seconds
+                addFloatingText(this.x, this.y, "无敌护盾!", "#ffff00");
+                break;
+            case 'trap':
+                p.hp -= 30;
+                audio.playerHit();
+                addFloatingText(this.x, this.y, "陷阱箱! -30 HP", "#ff0000");
+                if(p.hp <= 0 && players.every(pl => pl.hp <= 0)) gameOver();
+                break;
+        }
+    }
+    draw(ctx) {
+        if(!this.active) return;
+        ctx.fillStyle = this.color;
+        ctx.fillRect(this.x - this.size, this.y - this.size, this.size*2, this.size*2);
+        ctx.strokeStyle = '#fff';
+        ctx.strokeRect(this.x - this.size, this.y - this.size, this.size*2, this.size*2);
+        // lock icon
+        ctx.fillStyle = '#000';
+        ctx.fillRect(this.x - 3, this.y - 2, 6, 6);
+        
+        // bounce animation
+        const offset = Math.sin(frameCount * 0.1) * 3;
+        ctx.fillStyle = '#ff0000';
+        ctx.font = '20px Arial';
+        ctx.fillText('?', this.x - 5, this.y - 15 + offset);
     }
 }
 
@@ -251,6 +339,8 @@ function startGame() {
     bullets = [];
     particles = [];
     floatingTexts = [];
+    lootBoxes = [];
+    lootTimer = 0;
     spawnRate = 100;
     frameCount = 0;
 
@@ -320,6 +410,7 @@ function update() {
     bullets.forEach(b => b.update());
     zombies.forEach(z => z.update());
     particles.forEach(p => p.update());
+    lootBoxes.forEach(lb => lb.draw(ctx));
     floatingTexts.forEach(ft => { ft.y -= 1; ft.life -= 0.02; });
 
     // Collisions
@@ -379,6 +470,7 @@ function draw() {
     zombies.forEach(z => z.draw(ctx));
     if(players) players.forEach(p => p.draw(ctx));
 
+    lootBoxes.forEach(lb => lb.draw(ctx));
     floatingTexts.forEach(ft => {
         ctx.globalAlpha = Math.max(0, ft.life);
         ctx.fillStyle = ft.color;
