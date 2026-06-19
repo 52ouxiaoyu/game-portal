@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test Canvas</title>
+</head>
+<body>
+    <canvas id="testCanvas" width="400" height="400" style="border:2px solid red;"></canvas>
+    <script>
+        const canvas = document.getElementById('testCanvas');
+        const ctx = canvas.getContext('2d');
+        ctx.fillStyle = 'red';
+        ctx.fillRect(10, 10, 100, 100);
+        ctx.fillStyle = 'blue';
+        ctx.font = '20px Arial';
+        ctx.fillText('Canvas Works!', 50, 200);
+        console.log('Test canvas drawn');
+    </script>
+</body>
+</html>

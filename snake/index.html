@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SERPENT - 霓虹街机贪吃蛇</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div id="game-container">
+        <div id="hud" class="hidden">
+            <div class="score-box">
+                <span class="label">分数</span>
+                <span id="score">00000</span>
+            </div>
+            <div id="mid-info">
+                <div id="combo-info" class="hidden">连击 <span id="combo">x1</span></div>
+                <div id="level-info">第 1 关</div>
+                <div id="lives-info">生命: <span id="lives">3</span></div>
+                <div id="time-attack" class="hidden">⏱️ <span id="time-attack-timer">60</span></div>
+                <div id="mode-hint" class="hidden"></div>
+            </div>
+            <div class="score-box right-box">
+                <span class="label">最高分</span>
+                <span id="high-score">00000</span>
+                <div class="hud-buttons">
+                    <button id="pause-btn" title="暂停 (P)">⏸</button>
+                    <button id="stats-btn" title="统计">📊</button>
+                    <button id="sound-btn" title="音效">🔊</button>
+                    <button id="music-btn" title="音乐">🎵</button>
+                </div>
+            </div>
+        </div>
+        <div id="effect-indicators"></div>
+        <div id="achievement-popup" class="hidden">
+            <div class="achievement-icon">🏆</div>
+            <div class="achievement-info">
+                <div class="achievement-name">成就名称</div>
+                <div class="achievement-desc">成就描述</div>
+            </div>
+        </div>
+        <div id="ui-layer">
+            <div id="start-screen" class="screen">
+                <div id="title-art">
+                    <div class="snake-art">~~~~</div>
+                </div>
+                <h1>SERPENT</h1>
+                <p class="subtitle">霓虹街机</p>
+                <div class="controls-info">
+                    <p>WASD / 方向键 - 移动</p>
+                    <p>空格 - 加速冲刺</p>
+                    <p>P / ESC - 暂停</p>
+                </div>
+                <div class="settings">
+                    <label>起始关卡: <input type="number" id="start-level" min="1" max="100" value="1"></label>
+                    <div class="difficulty">
+                        <button class="diff-btn active" data-diff="easy">简单</button>
+                        <button class="diff-btn" data-diff="normal">普通</button>
+                        <button class="diff-btn" data-diff="hard">困难</button>
+                    </div>
+                    <div class="mode-select">
+                        <button class="mode-btn active" data-mode="classic">经典</button>
+                        <button class="mode-btn" data-mode="walls">墙壁</button>
+                        <button class="mode-btn" data-mode="maze">迷宫</button>
+                        <button class="mode-btn" data-mode="battle">战斗</button>
+                        <button class="mode-btn" data-mode="timeattack">计时</button>
+                    </div>
+                </div>
+                <button id="start-btn">开始游戏</button>
+            </div>
+            <div id="game-over-screen" class="screen hidden">
+                <h1>游戏结束</h1>
+                <div id="final-score"></div>
+                <div id="new-high" class="hidden">新纪录!</div>
+                <div id="game-stats">
+                    <p>存活时间: <span id="survival-time">0</span>秒</p>
+                    <p>最高连击: <span id="max-combo">0</span></p>
+                </div>
+                <button id="restart-btn">再来一局</button>
+                <button id="menu-btn">返回菜单</button>
+            </div>
+            <div id="pause-screen" class="screen hidden">
+                <h1>暂停</h1>
+                <button id="resume-btn">继续游戏</button>
+            </div>
+            <div id="stats-screen" class="screen hidden">
+                <h1>统计数据</h1>
+                <div class="stats-grid">
+                    <div class="stat-item"><span class="stat-label">总游戏次数</span><span id="stats-games" class="stat-value">0</span></div>
+                    <div class="stat-item"><span class="stat-label">总得分</span><span id="stats-score" class="stat-value">0</span></div>
+                    <div class="stat-item"><span class="stat-label">总吃食物</span><span id="stats-food" class="stat-value">0</span></div>
+                    <div class="stat-item"><span class="stat-label">总游戏时间</span><span id="stats-time" class="stat-value">0秒</span></div>
+                    <div class="stat-item"><span class="stat-label">最高连击</span><span id="stats-combo" class="stat-value">0</span></div>
+                    <div class="stat-item"><span class="stat-label">消灭敌人</span><span id="stats-enemies" class="stat-value">0</span></div>
+                </div>
+                <div class="leaderboard">
+                    <h2>排行榜 TOP 10</h2>
+                    <ol id="leaderboard-list"></ol>
+                </div>
+                <button id="close-stats-btn">关闭</button>
+            </div>
+        </div>
+        <canvas id="game-canvas"></canvas>
+        <div id="touch-controls" class="hidden">
+            <div id="touch-dpad">
+                <button class="dpad-btn" data-dir="up">▲</button>
+                <button class="dpad-btn" data-dir="left">◄</button>
+                <button class="dpad-btn" data-dir="right">►</button>
+                <button class="dpad-btn" data-dir="down">▼</button>
+            </div>
+            <button id="touch-boost">加速</button>
+        </div>
+    </div>
+    <script src="game.js"></script>
+</body>
+</html>

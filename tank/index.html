@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tank Battle - NES Clone</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div id="game-container">
+        <div id="hud" class="hidden">
+            <div class="score-box">
+                <span class="p1-color">P1 SCORE</span>
+                <span id="p1-score">00000</span>
+            </div>
+            <div id="mid-info">
+                <div id="stage-info">STAGE 1</div>
+                <div id="lives-info">LIVES: ❤️x3</div>
+            </div>
+            <div class="score-box">
+                <span class="p2-color">P2 SCORE</span>
+                <span id="p2-score">00000</span>
+            </div>
+        </div>
+        <div id="ui-layer">
+            <div id="start-screen" class="screen">
+                <h1>TANK BATTLE</h1>
+                <p>Player 1: WASD + SPACE</p>
+                <p>Player 2: Arrows + ENTER</p>
+                <div class="settings">
+                    <label>Start Level: <input type="number" id="start-level" min="1" max="1000" value="1"></label>
+                    <div class="difficulty">
+                        <button class="diff-btn active" data-diff="easy">Easy</button>
+                        <button class="diff-btn" data-diff="normal">Normal</button>
+                        <button class="diff-btn" data-diff="hard">Hard</button>
+                    </div>
+                </div>
+                <button id="start-btn">START GAME</button>
+            </div>
+            <div id="game-over-screen" class="screen hidden">
+                <h1>GAME OVER</h1>
+                <button id="restart-btn">RESTART</button>
+            </div>
+        </div>
+        <canvas id="game-canvas"></canvas>
+        <div id="touch-controls" class="hidden">
+            <div id="touch-dpad">
+                <button class="dpad-btn" data-dir="up">▲</button>
+                <button class="dpad-btn" data-dir="left">◄</button>
+                <button class="dpad-btn" data-dir="right">►</button>
+                <button class="dpad-btn" data-dir="down">▼</button>
+            </div>
+            <button id="touch-shoot">FIRE</button>
+        </div>
+    </div>
+    <script src="game.js"></script>
+</body>
+</html>
