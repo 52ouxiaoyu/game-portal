@@ -355,7 +355,7 @@ this.weapons = [];
                     this.weaponLevel = i;
                     audio.levelUp();
                     addFloatingText(this.x, this.y - 30, "🔫 火力升级!", "#ffff00");
-                    if(this.id === 1) document.getElementById('current-weapon').textContent = this.weapons[i].name;
+                    if(this.id === 1) document.getElementById('p1-weapon').textContent = this.weapons[i].name;
                 }
                 break;
             }
@@ -901,7 +901,8 @@ function startGame() {
     document.getElementById('pause-screen').classList.add('hidden');
     document.getElementById('hud').classList.remove('hidden');
     document.getElementById('score').textContent = '0';
-    document.getElementById('current-weapon').textContent = players[0].weapons[0].name;
+    document.getElementById('p1-weapon').textContent = players[0].weapons[0].name;
+    document.getElementById('p2-weapon').textContent = players[1].weapons[0].name;
     document.getElementById('new-high').classList.add('hidden');
 
     requestAnimationFrame(gameLoop);
