@@ -331,6 +331,7 @@ class Bullet {
     constructor(game, owner, x, y, dir, level = 0) { 
         this.game = game; this.owner = owner; this.x = x; this.y = y; this.dir = dir; 
         this.level = level; this.speed = 12 + (level * 2); this.size = 8 + (level * 2); this.active = true; 
+        this.damage = (this.owner instanceof Player) ? 5 + level * 2 : 1;
     }
     update() {
         if (this.dir === 'UP') this.y -= this.speed; else if (this.dir === 'DOWN') this.y += this.speed; else if (this.dir === 'LEFT') this.x -= this.speed; else if (this.dir === 'RIGHT') this.x += this.speed;
@@ -346,11 +347,12 @@ class Bullet {
         const tanks = isEnemyBullet ? this.game.players : this.game.enemies;
         for (const tank of tanks) {
             if (!tank.alive) continue;
-            if (this.x < tank.x + tank.width && this.x + this.size > tank.x && this.y < tank.y + tank.height && this.y + this.size > tank.y) { this.triggerExplosion(this.x + this.size/2, this.y + this.size/2); tank.destroy(this.owner); this.active = false; break; }
+            if (this.x < tank.x + tank.width && this.x + this.size > tank.x && this.y < tank.y + tank.height && this.y + this.size > tank.y) { this.triggerExplosion(this.x + this.size/2, this.y + this.size/2); tank.destroy(this.owner, this.damage); this.active = false; break; }
         }
     }
     triggerExplosion(ex, ey, small = false) {
-        const radius = small ? 0.5 : (1 + this.level * 0.5);
+        let radius = small ? 0.5 : (1 + this.level * 0.5);
+        if (this.owner instanceof Player && !small) radius += 1.5;
         this.game.effects.push(new Effect(ex, ey, 'EXPLOSION', radius));
         if (small) return;
         const gridX = Math.floor(ex / TILE_SIZE); const gridY = Math.floor(ey / TILE_SIZE); const range = Math.ceil(radius);
@@ -359,8 +361,9 @@ class Bullet {
             for (let ix = gridX - range; ix <= gridX + range; ix++) {
                 if (iy < 0 || iy >= GRID_SIZE || ix < 0 || ix >= GRID_SIZE) continue;
                 const tile = this.game.map.grid[iy][ix];
+                if (iy === 0 || iy === GRID_SIZE - 1 || ix === 0 || ix === GRID_SIZE - 1) continue;
                 if (tile === TILE_TYPES.BRICK) this.game.map.grid[iy][ix] = TILE_TYPES.EMPTY;
-                else if (tile === TILE_TYPES.STEEL && this.level >= 3) this.game.map.grid[iy][ix] = TILE_TYPES.EMPTY;
+                else if (tile === TILE_TYPES.STEEL && (this.level >= 3 || this.owner instanceof Player)) this.game.map.grid[iy][ix] = TILE_TYPES.EMPTY;
                 else if (tile === TILE_TYPES.BASE && isPlayerBullet) {
                     this.game.baseHealth--;
                     if (this.game.baseHealth <= 0) { this.game.map.grid[iy][ix] = TILE_TYPES.BASE_DESTROYED; this.game.gameOver(); }
@@ -375,7 +378,14 @@ class Bullet {
 class Tank {
     constructor(game, x, y, color) { this.game = game; this.x = x; this.y = y; this.width = 60; this.height = 60; this.color = color; this.direction = 'UP'; this.speed = 4; this.cooldown = 0; this.alive = true; this.shieldTimer = 0; this.level = 0; this.score = 0; }
     setShield(d) { this.shieldTimer = d; }
-    upgrade() { this.level = Math.min(this.level + 1, 3); this.speed = 4 + this.level; }
+    upgrade() { 
+        this.level = Math.min(this.level + 1, 3); 
+        this.speed = 4 + this.level; 
+        if (this instanceof Player) {
+            this.maxHealth = 1 + this.level * 2;
+            this.health = this.maxHealth;
+        }
+    }
     update() { if (this.cooldown > 0) this.cooldown--; if (this.shieldTimer > 0) this.shieldTimer--; }
     move(dir) {
         this.direction = dir; let nx = this.x; let ny = this.y;
@@ -404,16 +414,25 @@ class Tank {
         if (this.cooldown > 0) return;
         let bulletCount = 0;
         for (const b of this.game.bullets) { if (b.owner === this && b.active) bulletCount++; }
-        const maxBullets = this instanceof Player ? 3 : 2;
+        const maxBullets = this instanceof Player ? 1 : 2;
         if (bulletCount >= maxBullets) return;
         if (this.game.bullets.length >= 50) return;
-        this.cooldown = Math.max(5, 20 - this.level * 5);
+        this.cooldown = this instanceof Player ? Math.max(25, 45 - this.level * 5) : Math.max(5, 20 - this.level * 5);
         let bx = this.x + 26; let by = this.y + 26;
         if (this.direction === 'UP') by = this.y - 10; else if (this.direction === 'DOWN') by = this.y + 60; else if (this.direction === 'LEFT') bx = this.x - 10; else if (this.direction === 'RIGHT') bx = this.x + 60;
         this.game.bullets.push(new Bullet(this.game, this, bx, by, this.direction, this.level));
     }
-    destroy(killer) {
-        if (this.shieldTimer > 0) return; this.alive = false; this.game.effects.push(new Effect(this.x + 30, this.y + 30, 'EXPLOSION', this.isBoss ? 3 : 1));
+    destroy(killer, damage = 1) {
+        if (this.shieldTimer > 0) return; 
+        if (this instanceof Player) {
+            this.health = (this.health || 1) - damage;
+            if (this.health > 0) {
+                this.shieldTimer = 30; // Brief invincibility after hit
+                this.game.effects.push(new Effect(this.x + 30, this.y + 30, 'EXPLOSION', 1));
+                return;
+            }
+        }
+        this.alive = false; this.game.effects.push(new Effect(this.x + 30, this.y + 30, 'EXPLOSION', this.isBoss ? 3 : 1));
         this.game.shakeScreen(this.isBoss ? 15 : 5);
         if (killer instanceof Player) {
             const points = this.isBoss ? 500 : 100;
@@ -485,6 +504,8 @@ class Player extends Tank {
         super(game, x, y, color);
         this.controls = controls;
         this.id = id;
+        this.health = 1;
+        this.maxHealth = 1;
         this.aiActive = false;
         this.lastInputTime = Date.now();
         this.aiDodgeDir = null;
@@ -755,8 +776,8 @@ class Boss extends Enemy {
         while (diff < -Math.PI) diff += Math.PI * 2;
         this.turretAngle += diff * 0.08;
     }
-    destroy(killer) {
-        this.health--; this.game.effects.push(new Effect(this.x + Math.random()*this.width, this.y + Math.random()*this.height, 'EXPLOSION', 2.5));
+    destroy(killer, damage = 1) {
+        this.health -= damage; this.game.effects.push(new Effect(this.x + Math.random()*this.width, this.y + Math.random()*this.height, 'EXPLOSION', 2.5));
         if (this.health <= 0) {
             this.alive = false; this.game.weather = 'NONE';
             for (let i = 0; i < 6; i++) {
