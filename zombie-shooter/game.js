@@ -58,6 +58,7 @@ let bullets = [];
 let particles = [];
 let floatingTexts = [];
 let lootBoxes = [];
+let boars = [];
 let lootTimer = 0;
 
 let spawnTimer = 0;
@@ -120,6 +121,9 @@ class Player {
         this.cooldown = 0;
         this.buffTime = 0;
         this.shieldTime = 0;
+        this.mechTime = 0;
+        this.mechHp = 0;
+        this.vehicleTime = 0;
         this.lastInputTime = Date.now();
         this.isAI = false;
         
@@ -136,8 +140,30 @@ class Player {
         if(this.buffTime > 0) this.buffTime--;
         if(this.shieldTime > 0) this.shieldTime--;
 
+        
+        if(this.mechTime > 0) this.mechTime--;
+        if(this.vehicleTime > 0) {
+            this.vehicleTime--;
+            // Vehicle ramming
+            zombies.forEach(z => {
+                if(!z.active) return;
+                let d = Math.hypot(z.x - this.x, z.y - this.y);
+                if(d < this.size + z.size + 10) {
+                    z.active = false;
+                    score += z.scoreVal;
+                    killCount++;
+                    createParticles(z.x, z.y, '#ff0000', 15);
+                    audio.zombieDie();
+                    addFloatingText(z.x, z.y, "车祸现场!", "#ffcc00");
+                }
+            });
+        }
         let dx = 0; let dy = 0;
-        let currentSpeed = this.buffTime > 0 ? this.speed * 1.5 : this.speed;
+        let currentSpeed = this.speed;
+        if(this.buffTime > 0) currentSpeed *= 1.5;
+        if(this.mechTime > 0) currentSpeed *= 0.6; // Mech is slow
+        if(this.vehicleTime > 0) currentSpeed *= 3.0; // Vehicle is fast
+
         
         if(Date.now() - this.lastInputTime > 5000) {
             this.isAI = true;
@@ -237,8 +263,19 @@ class Player {
         let fx = this.facing.x;
         let fy = this.facing.y;
         
-        audio.shoot();
         
+        if(this.vehicleTime > 0) return; // Cannot shoot while driving
+        
+        audio.shoot();
+        if(this.mechTime > 0) {
+            // Mech shoots 360 degree lasers and huge missiles
+            for(let i=0; i<8; i++) {
+                let angle = Math.PI/4 * i + (frameCount*0.1);
+                bullets.push(new Bullet(this.x, this.y, Math.cos(angle), Math.sin(angle), 15, 50, '#ff0000', true));
+            }
+            return;
+        }
+
         if(w.type === "pistol") {
             bullets.push(new Bullet(this.x, this.y, fx, fy, 10, 20, '#fff'));
             bullets.push(new Bullet(this.x, this.y, -fx, -fy, 10, 20, '#fff'));
@@ -257,27 +294,51 @@ class Player {
 
     draw(ctx) {
         if(this.hp <= 0) return;
-        ctx.fillStyle = this.color;
-        ctx.beginPath();
-        ctx.arc(this.x, this.y, this.size, 0, Math.PI*2);
-        ctx.fill();
-        ctx.strokeStyle = '#fff';
-        ctx.lineWidth = 2;
-        ctx.stroke();
+        
+        if(this.mechTime > 0) {
+            // Draw Mech
+            ctx.fillStyle = '#444';
+            ctx.fillRect(this.x - 30, this.y - 30, 60, 60);
+            ctx.fillStyle = '#ff0000';
+            ctx.fillRect(this.x + this.facing.x*20 - 5, this.y + this.facing.y*20 - 5, 10, 10);
+            ctx.strokeStyle = '#222';
+            ctx.lineWidth = 10;
+            ctx.beginPath(); ctx.moveTo(this.x, this.y); ctx.lineTo(this.x + this.facing.x*40, this.y + this.facing.y*40); ctx.stroke();
+        } else if(this.vehicleTime > 0) {
+            // Draw Motorcycle
+            ctx.fillStyle = '#ff3300';
+            ctx.save();
+            ctx.translate(this.x, this.y);
+            ctx.rotate(Math.atan2(this.facing.y, this.facing.x));
+            ctx.fillRect(-20, -10, 40, 20);
+            ctx.fillStyle = '#222'; // wheels
+            ctx.fillRect(-15, -15, 10, 5); ctx.fillRect(-15, 10, 10, 5);
+            ctx.fillRect(15, -15, 10, 5); ctx.fillRect(15, 10, 10, 5);
+            ctx.restore();
+        } else {
+            ctx.fillStyle = this.color;
+            ctx.beginPath();
+            ctx.arc(this.x, this.y, this.size, 0, Math.PI*2);
+            ctx.fill();
+            ctx.strokeStyle = '#fff';
+            ctx.lineWidth = 2;
+            ctx.stroke();
 
-        // Visor
-        ctx.fillStyle = '#111';
-        ctx.beginPath();
-        ctx.arc(this.x + this.facing.x * 10, this.y + this.facing.y * 10, 8, 0, Math.PI*2);
-        ctx.fill();
+            // Visor
+            ctx.fillStyle = '#111';
+            ctx.beginPath();
+            ctx.arc(this.x + this.facing.x * 10, this.y + this.facing.y * 10, 8, 0, Math.PI*2);
+            ctx.fill();
 
-        // Gun
-        ctx.strokeStyle = '#555';
-        ctx.lineWidth = 6;
-        ctx.beginPath();
-        ctx.moveTo(this.x, this.y);
-        ctx.lineTo(this.x + this.facing.x * 25, this.y + this.facing.y * 25);
-        ctx.stroke();
+            // Gun
+            ctx.strokeStyle = '#555';
+            ctx.lineWidth = 6;
+            ctx.beginPath();
+            ctx.moveTo(this.x, this.y);
+            ctx.lineTo(this.x + this.facing.x * 25, this.y + this.facing.y * 25);
+            ctx.stroke();
+        }
+
 
         // Player ID
         ctx.fillStyle = '#fff';
@@ -394,8 +455,14 @@ class Zombie {
             }
             if(minDist < this.size + target.size) {
                 if(target.shieldTime <= 0) {
-                    target.hp -= this.damage;
-                    audio.playerHit();
+                    if(target.mechTime > 0) {
+                        target.mechHp -= this.damage;
+                        if(target.mechHp <= 0) target.mechTime = 0; // mech destroyed
+                        audio.playerHit();
+                    } else if(target.vehicleTime <= 0) {
+                        target.hp -= this.damage;
+                        audio.playerHit();
+                    }
                 }
                 this.active = false;
                 createParticles(this.x, this.y, '#ff0000', 10);
@@ -428,24 +495,85 @@ class Zombie {
 }
 
 
-class LootBox {
-    constructor() {
-        this.x = 50 + Math.random() * (CANVAS_W - 100);
-        this.y = 50 + Math.random() * (CANVAS_H - 100);
-        this.size = 15;
+
+class WildBoar {
+    constructor(x, y) {
+        this.x = x; this.y = y;
+        this.size = 25;
+        this.dx = (Math.random() - 0.5) * 20;
+        this.dy = (Math.random() - 0.5) * 20;
         this.active = true;
-        this.color = '#ffd700'; // gold
-        // Determine type
-        const r = Math.random();
-        if(r < 0.3) this.type = 'medkit';      // 30% HP
-        else if(r < 0.5) this.type = 'potion'; // 20% Max HP
-        else if(r < 0.65) this.type = 'nuke';  // 15% Screen clear
-        else if(r < 0.8) this.type = 'stim';   // 15% Speed/Rapid fire
-        else if(r < 0.95) this.type = 'shield';// 15% Invincible
-        else this.type = 'trap';               // 5% Fake/Trap
+        this.life = 600; // 10 seconds
     }
     update() {
-        // Check collision with players
+        this.life--;
+        if(this.life <= 0) this.active = false;
+        this.x += this.dx;
+        this.y += this.dy;
+        if(this.x < 0 || this.x > CANVAS_W) this.dx *= -1;
+        if(this.y < 0 || this.y > CANVAS_H) this.dy *= -1;
+        
+        // Kill zombies
+        zombies.forEach(z => {
+            if(!z.active) return;
+            if(Math.hypot(z.x - this.x, z.y - this.y) < this.size + z.size) {
+                z.active = false; score += z.scoreVal; killCount++;
+                createParticles(z.x, z.y, '#ff0000', 10);
+                addFloatingText(z.x, z.y, "野猪冲撞!", "#ff9900");
+            }
+        });
+    }
+    draw(ctx) {
+        ctx.fillStyle = '#8B4513';
+        ctx.save();
+        ctx.translate(this.x, this.y);
+        ctx.rotate(Math.atan2(this.dy, this.dx));
+        // Boar body
+        ctx.fillRect(-15, -10, 30, 20);
+        // Tusks
+        ctx.fillStyle = '#fff';
+        ctx.beginPath(); ctx.moveTo(15, -8); ctx.lineTo(25, -12); ctx.lineTo(15, -4); ctx.fill();
+        ctx.beginPath(); ctx.moveTo(15, 8); ctx.lineTo(25, 12); ctx.lineTo(15, 4); ctx.fill();
+        ctx.restore();
+    }
+}
+
+class LootBox {
+    constructor() {
+        this.x = 100 + Math.random() * (CANVAS_W - 200);
+        this.y = 100 + Math.random() * (CANVAS_H - 200);
+        this.z = 500; // Height for airdrop
+        this.size = 20;
+        this.active = true;
+        this.color = '#ffd700'; // gold
+        
+        const r = Math.random();
+        if(r < 0.1) this.type = 'mech';       // 10% Mech
+        else if(r < 0.2) this.type = 'vehicle';// 10% Motorcycle
+        else if(r < 0.3) this.type = 'boar';   // 10% Wild Boar
+        else if(r < 0.4) this.type = 'nuke';   // 10% Nuke
+        else if(r < 0.6) this.type = 'medkit'; // 20% Medkit
+        else if(r < 0.8) this.type = 'stim';   // 20% Stimpack
+        else this.type = 'trap';               // 20% Trap
+    }
+    update() {
+        if(this.z > 0) {
+            this.z -= 3; // Fall speed
+            if(this.z <= 0) {
+                this.z = 0;
+                createParticles(this.x, this.y, '#fff', 20); // Landing dust
+                audio.levelUp();
+                
+                // If it's a boar, it spawns immediately upon landing
+                if(this.type === 'boar') {
+                    this.active = false;
+                    boars.push(new WildBoar(this.x, this.y));
+                    addFloatingText(this.x, this.y, "🐗 疯狂野猪出笼!!", "#ff5500");
+                }
+            }
+            return; // Can't collect while falling
+        }
+
         players.forEach(p => {
             if(!this.active || p.hp <= 0) return;
             const dist = Math.hypot(p.x - this.x, p.y - this.y);
@@ -456,57 +584,79 @@ class LootBox {
     }
     collect(p) {
         this.active = false;
-        audio.levelUp(); // use level up sound
-        createParticles(this.x, this.y, this.color, 20);
+        audio.levelUp();
+        createParticles(this.x, this.y, this.color, 30);
         
         switch(this.type) {
+            case 'mech':
+                p.mechTime = 900; // 15 seconds
+                p.mechHp = 500;
+                addFloatingText(this.x, this.y, "🤖 终极机甲降临!!", "#ff00ff");
+                break;
+            case 'vehicle':
+                p.vehicleTime = 600; // 10 seconds
+                addFloatingText(this.x, this.y, "🏍️ 暴走摩托!!", "#ff3300");
+                break;
             case 'medkit':
                 p.hp = Math.min(p.maxHp, p.hp + 50);
                 addFloatingText(this.x, this.y, "急救包! HP +50", "#00ff00");
                 break;
-            case 'potion':
-                p.maxHp += 20;
-                p.hp = p.maxHp;
-                addFloatingText(this.x, this.y, "神秘药剂! MAX HP 上升", "#ff00ff");
-                break;
             case 'nuke':
                 zombies.forEach(z => { z.active = false; createParticles(z.x, z.y, '#ffaa00', 10); score += z.scoreVal; killCount++; });
-                addFloatingText(this.x, this.y, "核弹轰炸! 全屏秒杀", "#ffaa00");
+                addFloatingText(this.x, this.y, "☢️ 核弹轰炸! 全屏秒杀", "#ffaa00");
                 break;
             case 'stim':
-                p.buffTime = 300; // 5 seconds
-                addFloatingText(this.x, this.y, "兴奋剂! 极速射击", "#00ffff");
-                break;
-            case 'shield':
-                p.shieldTime = 600; // 10 seconds
-                addFloatingText(this.x, this.y, "无敌护盾!", "#ffff00");
+                p.buffTime = 300;
+                addFloatingText(this.x, this.y, "⚡ 兴奋剂! 极速射击", "#00ffff");
                 break;
             case 'trap':
                 p.hp -= 30;
                 audio.playerHit();
-                addFloatingText(this.x, this.y, "陷阱箱! -30 HP", "#ff0000");
+                addFloatingText(this.x, this.y, "💣 炸弹陷阱! -30 HP", "#ff0000");
                 if(p.hp <= 0 && players.every(pl => pl.hp <= 0)) gameOver();
                 break;
         }
     }
     draw(ctx) {
         if(!this.active) return;
-        ctx.fillStyle = this.color;
-        ctx.fillRect(this.x - this.size, this.y - this.size, this.size*2, this.size*2);
-        ctx.strokeStyle = '#fff';
-        ctx.strokeRect(this.x - this.size, this.y - this.size, this.size*2, this.size*2);
-        // lock icon
-        ctx.fillStyle = '#000';
-        ctx.fillRect(this.x - 3, this.y - 2, 6, 6);
         
-        // bounce animation
-        const offset = Math.sin(frameCount * 0.1) * 3;
-        ctx.fillStyle = '#ff0000';
-        ctx.font = '20px Arial';
-        ctx.fillText('?', this.x - 5, this.y - 15 + offset);
+        if(this.z > 0) {
+            // Draw shadow
+            ctx.fillStyle = 'rgba(0,0,0,0.5)';
+            ctx.beginPath();
+            ctx.arc(this.x, this.y, this.size * (1 - this.z/500), 0, Math.PI*2);
+            ctx.fill();
+            
+            // Draw parachute
+            let py = this.y - this.z;
+            ctx.fillStyle = '#ff0000';
+            ctx.beginPath();
+            ctx.arc(this.x, py - 30, 40, Math.PI, 0);
+            ctx.fill();
+            // Strings
+            ctx.strokeStyle = '#fff';
+            ctx.lineWidth = 1;
+            ctx.beginPath(); ctx.moveTo(this.x - 40, py - 30); ctx.lineTo(this.x - 10, py); ctx.stroke();
+            ctx.beginPath(); ctx.moveTo(this.x + 40, py - 30); ctx.lineTo(this.x + 10, py); ctx.stroke();
+            
+            // Draw Box
+            ctx.fillStyle = this.color;
+            ctx.fillRect(this.x - 15, py - 15, 30, 30);
+            ctx.fillStyle = '#000'; ctx.font = '20px Arial'; ctx.fillText('🎁', this.x, py + 5);
+        } else {
+            // Landed box
+            ctx.fillStyle = this.color;
+            ctx.fillRect(this.x - this.size, this.y - this.size, this.size*2, this.size*2);
+            ctx.strokeStyle = '#fff';
+            ctx.strokeRect(this.x - this.size, this.y - this.size, this.size*2, this.size*2);
+            
+            const offset = Math.sin(frameCount * 0.1) * 3;
+            ctx.fillStyle = '#000';
+            ctx.font = '24px Arial';
+            ctx.fillText('🎁', this.x, this.y + 8 + offset);
+        }
     }
 }
-
 class Particle {
     constructor(x, y, color) {
         this.x = x; this.y = y;
@@ -630,6 +780,7 @@ function update() {
         if(Math.random() < 0.5) lootBoxes.push(new LootBox());
     }
     floatingTexts.forEach(ft => { ft.y -= 1; ft.life -= 0.02; });
+    if(typeof boars !== 'undefined') boars.forEach(b => b.update());
 
     // Collisions
     for(let i = bullets.length - 1; i >= 0; i--) {
@@ -671,6 +822,7 @@ function update() {
     particles = particles.filter(p => p.life > 0);
     floatingTexts = floatingTexts.filter(ft => ft.life > 0);
     lootBoxes = lootBoxes.filter(lb => lb.active);
+    if(typeof boars !== 'undefined') boars = boars.filter(b => b.active);
 }
 
 function draw() {
@@ -690,6 +842,7 @@ function draw() {
     if(players) players.forEach(p => p.draw(ctx));
 
     lootBoxes.forEach(lb => lb.draw(ctx));
+    if(typeof boars !== 'undefined') boars.forEach(b => b.draw(ctx));
     floatingTexts.forEach(ft => {
         ctx.globalAlpha = Math.max(0, ft.life);
         ctx.fillStyle = ft.color;
