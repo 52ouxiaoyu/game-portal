@@ -439,7 +439,6 @@ const enemies = [
 ];
 
 let player = null, boss = null, turn = 1, logEntries = [];
-events._tempData = {};
 let winStreak = 0; // 连胜计数
 
 function initGame(charId) {
@@ -586,6 +585,7 @@ function growBoss() {
 }
 
 const events = {
+  _tempData: {},
   intro: () => showText('旁白', `你选择了${player.char.name}！\n\n蛇精抓走了爷爷，你必须提升实力去救他。\n\n⚠️ 蛇精每回合都在变强！要在实力足够时尽快挑战！`, [{ text: '🔍 开始冒险', next: 'explore' }]),
 
   explore: () => {
