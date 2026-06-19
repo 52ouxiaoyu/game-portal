@@ -907,6 +907,7 @@ class Game {
         const diffMult = this.difficulty === 'easy' ? 0.7 : (this.difficulty === 'hard' ? 1.3 : 1);
         this.enemiesRemaining = Math.floor(this.currentLevel.totalEnemies * diffMult);
         if (this.currentStage === 0) { this.baseHealth = 5; this.maxBaseHealth = 5; }
+        else { this.baseHealth = this.maxBaseHealth; }
         if (this.players.length === 0) {
             this.players = [
                 new Player(this, TILE_SIZE * 8, TILE_SIZE * 22, COLORS.PLAYER1, { up:'KeyW', down:'KeyS', left:'KeyA', right:'KeyD', shoot:'Space' }, 1),
