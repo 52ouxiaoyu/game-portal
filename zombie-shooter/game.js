@@ -320,27 +320,46 @@ class Player {
             ctx.fillRect(15, -15, 10, 5); ctx.fillRect(15, 10, 10, 5);
             ctx.restore();
         } else {
+            
+            ctx.save();
+            ctx.translate(this.x, this.y);
+            ctx.rotate(Math.atan2(this.facing.y, this.facing.x));
+            
+            // Shoulders/Torso
             ctx.fillStyle = this.color;
             ctx.beginPath();
-            ctx.arc(this.x, this.y, this.size, 0, Math.PI*2);
+            ctx.ellipse(0, 0, this.size - 2, this.size, 0, 0, Math.PI*2);
             ctx.fill();
-            ctx.strokeStyle = '#fff';
-            ctx.lineWidth = 2;
-            ctx.stroke();
 
-            // Visor
-            ctx.fillStyle = '#111';
-            ctx.beginPath();
-            ctx.arc(this.x + this.facing.x * 10, this.y + this.facing.y * 10, 8, 0, Math.PI*2);
-            ctx.fill();
+            // Backpack
+            ctx.fillStyle = '#333';
+            ctx.fillRect(-this.size-2, -8, 8, 16);
+
+            // Left arm & Hand
+            ctx.fillStyle = this.color;
+            ctx.fillRect(0, -this.size+2, 18, 6);
+            ctx.fillStyle = '#ffccaa'; // skin
+            ctx.beginPath(); ctx.arc(18, -this.size+5, 4, 0, Math.PI*2); ctx.fill();
+
+            // Right arm & Hand
+            ctx.fillStyle = this.color;
+            ctx.fillRect(0, this.size-8, 18, 6);
+            ctx.fillStyle = '#ffccaa'; // skin
+            ctx.beginPath(); ctx.arc(18, this.size-5, 4, 0, Math.PI*2); ctx.fill();
 
             // Gun
-            ctx.strokeStyle = '#555';
-            ctx.lineWidth = 6;
-            ctx.beginPath();
-            ctx.moveTo(this.x, this.y);
-            ctx.lineTo(this.x + this.facing.x * 25, this.y + this.facing.y * 25);
-            ctx.stroke();
+            ctx.fillStyle = '#222';
+            ctx.fillRect(10, -3, 25, 6); // barrel
+            
+            // Helmet
+            ctx.fillStyle = '#1a3300';
+            ctx.beginPath(); ctx.arc(0, 0, 10, 0, Math.PI*2); ctx.fill();
+            // Visor (Goggles)
+            ctx.fillStyle = '#0ff';
+            ctx.beginPath(); ctx.arc(2, 0, 8, -Math.PI/3, Math.PI/3); ctx.fill();
+
+            ctx.restore();
+
         }
 
 
@@ -439,6 +458,7 @@ class Zombie {
         this.active = true;
         this.damage = isBoss ? 30 : 10;
         this.scoreVal = isBoss ? 500 : 10;
+        this.facing = {x: 1, y: 0};
     }
     
     update() {
@@ -456,6 +476,7 @@ class Zombie {
             if(minDist > 0) {
                 this.x += (dx / minDist) * this.speed;
                 this.y += (dy / minDist) * this.speed;
+                this.facing = {x: dx/minDist, y: dy/minDist};
             }
             if(minDist < this.size + target.size) {
                 if(target.shieldTime <= 0) {
@@ -478,186 +499,59 @@ class Zombie {
     }
 
     draw(ctx) {
-        ctx.fillStyle = this.color;
-        ctx.beginPath();
-        // pixel style zombie
-        ctx.fillRect(this.x - this.size, this.y - this.size, this.size*2, this.size*2);
-        ctx.fillStyle = '#ff0000'; // red eyes
-        ctx.fillRect(this.x - this.size + 4, this.y - this.size + 4, 4, 4);
-        ctx.fillRect(this.x + this.size - 8, this.y - this.size + 4, 4, 4);
-        ctx.fillStyle = '#336600'; // dark green arms
-        ctx.fillRect(this.x - this.size - 4, this.y, 4, 10);
-        ctx.fillRect(this.x + this.size, this.y, 4, 10);
-        
-        if(this.hp < this.maxHp) {
-            ctx.fillStyle = '#f00';
-            ctx.fillRect(this.x - this.size, this.y - this.size - 8, this.size*2, 4);
-            ctx.fillStyle = '#0f0';
-            ctx.fillRect(this.x - this.size, this.y - this.size - 8, this.size*2 * (this.hp/this.maxHp), 4);
-        }
-    }
-}
-
-
-
-class WildBoar {
-    constructor(x, y) {
-        this.x = x; this.y = y;
-        this.size = 25;
-        this.dx = (Math.random() - 0.5) * 20;
-        this.dy = (Math.random() - 0.5) * 20;
-        this.active = true;
-        this.life = 600; // 10 seconds
-    }
-    update() {
-        this.life--;
-        if(this.life <= 0) this.active = false;
-        this.x += this.dx;
-        this.y += this.dy;
-        if(this.x < 0 || this.x > CANVAS_W) this.dx *= -1;
-        if(this.y < 0 || this.y > CANVAS_H) this.dy *= -1;
-        
-        // Kill zombies
-        zombies.forEach(z => {
-            if(!z.active) return;
-            if(Math.hypot(z.x - this.x, z.y - this.y) < this.size + z.size) {
-                z.active = false; score += z.scoreVal; killCount++;
-                createParticles(z.x, z.y, '#ff0000', 10);
-                addFloatingText(z.x, z.y, "野猪冲撞!", "#ff9900");
-            }
-        });
-    }
-    draw(ctx) {
-        ctx.fillStyle = '#8B4513';
+        if(!this.active) return;
         ctx.save();
         ctx.translate(this.x, this.y);
-        ctx.rotate(Math.atan2(this.dy, this.dx));
-        // Boar body
-        ctx.fillRect(-15, -10, 30, 20);
-        // Tusks
-        ctx.fillStyle = '#fff';
-        ctx.beginPath(); ctx.moveTo(15, -8); ctx.lineTo(25, -12); ctx.lineTo(15, -4); ctx.fill();
-        ctx.beginPath(); ctx.moveTo(15, 8); ctx.lineTo(25, 12); ctx.lineTo(15, 4); ctx.fill();
+        ctx.rotate(Math.atan2(this.facing.y, this.facing.x));
+        
+        let s = this.size;
+        let armSway = Math.sin(frameCount * 0.1) * 5;
+
+        // Zombie Body (Pixel style)
+        ctx.fillStyle = this.color; // Dark Green
+        ctx.fillRect(-s+4, -s+4, s*2-8, s*2-8);
+        
+        // Shoulders
+        ctx.fillStyle = '#1A3300'; // Darker green clothing
+        ctx.fillRect(-s, -s, 10, s*2);
+
+        // Arms (Reaching forward)
+        ctx.fillStyle = '#2d5700'; // Arm skin
+        ctx.fillRect(0, -s-2, s + 10 + armSway, 6); // Left Arm
+        ctx.fillRect(0, s-4, s + 10 - armSway, 6); // Right Arm
+        
+        // Bloody Hands
+        ctx.fillStyle = '#800000'; // Blood red
+        ctx.fillRect(s + 10 + armSway, -s-2, 4, 6);
+        ctx.fillRect(s + 10 - armSway, s-4, 4, 6);
+
+        // Head
+        ctx.fillStyle = this.color;
+        ctx.beginPath();
+        ctx.arc(0, 0, s*0.6, 0, Math.PI*2);
+        ctx.fill();
+
+        // Eyes (Red glowing pixels)
+        ctx.fillStyle = '#ff0000';
+        ctx.fillRect(s*0.2, -s*0.3, 4, 4);
+        ctx.fillRect(s*0.2, s*0.3-4, 4, 4);
+
+        if(this.isBoss) {
+            // Boss Spikes
+            ctx.fillStyle = '#555';
+            ctx.beginPath(); ctx.moveTo(-s, -s); ctx.lineTo(-s-10, -s-10); ctx.lineTo(-s+5, -s); ctx.fill();
+            ctx.beginPath(); ctx.moveTo(-s, s); ctx.lineTo(-s-10, s+10); ctx.lineTo(-s+5, s); ctx.fill();
+            ctx.beginPath(); ctx.moveTo(-s-5, 0); ctx.lineTo(-s-20, 0); ctx.lineTo(-s-5, 5); ctx.fill();
+        }
+
         ctx.restore();
-    }
-}
-
-class LootBox {
-    constructor() {
-        this.x = 100 + Math.random() * (CANVAS_W - 200);
-        this.y = 100 + Math.random() * (CANVAS_H - 200);
-        this.z = 500; // Height for airdrop
-        this.size = 20;
-        this.active = true;
-        this.color = '#ffd700'; // gold
         
-        const r = Math.random();
-        if(r < 0.1) this.type = 'mech';       // 10% Mech
-        else if(r < 0.2) this.type = 'vehicle';// 10% Motorcycle
-        else if(r < 0.3) this.type = 'boar';   // 10% Wild Boar
-        else if(r < 0.4) this.type = 'nuke';   // 10% Nuke
-        else if(r < 0.6) this.type = 'medkit'; // 20% Medkit
-        else if(r < 0.8) this.type = 'stim';   // 20% Stimpack
-        else this.type = 'trap';               // 20% Trap
-    }
-    update() {
-        if(this.z > 0) {
-            this.z -= 3; // Fall speed
-            if(this.z <= 0) {
-                this.z = 0;
-                createParticles(this.x, this.y, '#fff', 20); // Landing dust
-                audio.levelUp();
-                
-                // If it's a boar, it spawns immediately upon landing
-                if(this.type === 'boar') {
-                    this.active = false;
-                    boars.push(new WildBoar(this.x, this.y));
-                    addFloatingText(this.x, this.y, "🐗 疯狂野猪出笼!!", "#ff5500");
-                }
-            }
-            return; // Can't collect while falling
-        }
-
-        players.forEach(p => {
-            if(!this.active || p.hp <= 0) return;
-            const dist = Math.hypot(p.x - this.x, p.y - this.y);
-            if(dist < this.size + p.size) {
-                this.collect(p);
-            }
-        });
-    }
-    collect(p) {
-        this.active = false;
-        audio.levelUp();
-        createParticles(this.x, this.y, this.color, 30);
-        
-        switch(this.type) {
-            case 'mech':
-                p.mechTime = 900; // 15 seconds
-                p.mechHp = 500;
-                addFloatingText(this.x, this.y, "🤖 终极机甲降临!!", "#ff00ff");
-                break;
-            case 'vehicle':
-                p.vehicleTime = 600; // 10 seconds
-                addFloatingText(this.x, this.y, "🏍️ 暴走摩托!!", "#ff3300");
-                break;
-            case 'medkit':
-                p.hp = Math.min(p.maxHp, p.hp + 50);
-                addFloatingText(this.x, this.y, "急救包! HP +50", "#00ff00");
-                break;
-            case 'nuke':
-                zombies.forEach(z => { z.active = false; createParticles(z.x, z.y, '#ffaa00', 10); score += z.scoreVal; killCount++; });
-                addFloatingText(this.x, this.y, "☢️ 核弹轰炸! 全屏秒杀", "#ffaa00");
-                break;
-            case 'stim':
-                p.buffTime = 300;
-                addFloatingText(this.x, this.y, "⚡ 兴奋剂! 极速射击", "#00ffff");
-                break;
-            case 'trap':
-                p.hp -= 30;
-                audio.playerHit();
-                addFloatingText(this.x, this.y, "💣 炸弹陷阱! -30 HP", "#ff0000");
-                if(p.hp <= 0 && players.every(pl => pl.hp <= 0)) gameOver();
-                break;
-        }
-    }
-    draw(ctx) {
-        if(!this.active) return;
-        
-        if(this.z > 0) {
-            // Draw shadow
-            ctx.fillStyle = 'rgba(0,0,0,0.5)';
-            ctx.beginPath();
-            ctx.arc(this.x, this.y, this.size * (1 - this.z/500), 0, Math.PI*2);
-            ctx.fill();
-            
-            // Draw parachute
-            let py = this.y - this.z;
-            ctx.fillStyle = '#ff0000';
-            ctx.beginPath();
-            ctx.arc(this.x, py - 30, 40, Math.PI, 0);
-            ctx.fill();
-            // Strings
-            ctx.strokeStyle = '#fff';
-            ctx.lineWidth = 1;
-            ctx.beginPath(); ctx.moveTo(this.x - 40, py - 30); ctx.lineTo(this.x - 10, py); ctx.stroke();
-            ctx.beginPath(); ctx.moveTo(this.x + 40, py - 30); ctx.lineTo(this.x + 10, py); ctx.stroke();
-            
-            // Draw Box
-            ctx.fillStyle = this.color;
-            ctx.fillRect(this.x - 15, py - 15, 30, 30);
-            ctx.fillStyle = '#000'; ctx.font = '20px Arial'; ctx.fillText('🎁', this.x, py + 5);
-        } else {
-            // Landed box
-            ctx.fillStyle = this.color;
-            ctx.fillRect(this.x - this.size, this.y - this.size, this.size*2, this.size*2);
-            ctx.strokeStyle = '#fff';
-            ctx.strokeRect(this.x - this.size, this.y - this.size, this.size*2, this.size*2);
-            
-            const offset = Math.sin(frameCount * 0.1) * 3;
-            ctx.fillStyle = '#000';
-            ctx.font = '24px Arial';
-            ctx.fillText('🎁', this.x, this.y + 8 + offset);
+        // Boss HP Bar
+        if(this.isBoss && this.hp < this.maxHp) {
+            ctx.fillStyle = '#f00';
+            ctx.fillRect(this.x - 30, this.y + this.size + 10, 60, 6);
+            ctx.fillStyle = '#0f0';
+            ctx.fillRect(this.x - 30, this.y + this.size + 10, 60 * (this.hp/this.maxHp), 6);
         }
     }
 }
