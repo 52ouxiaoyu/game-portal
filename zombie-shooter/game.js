@@ -1105,16 +1105,21 @@ function update() {
         eventTimer = 600; // 10 seconds duration
         
         if(activeEvent === 'swarm') {
-            addFloatingText(CANVAS_W/2, CANVAS_H/2, "⚠️ 警告：侦测到大规模感染者群！ ⚠️", "#ff0000");
+            addFloatingText(camera.x, camera.y, "⚠️ 警告：侦测到大规模感染者群！ ⚠️", "#ff0000");
             audio.levelUp();
             screenShake = 30;
-            for(let i=0; i<30; i++) zombies.push(new Zombie());
+            for(let i=0; i<30; i++) {
+                let z = new Zombie();
+                z.x = camera.x + (Math.random()-0.5)*CANVAS_W*1.5;
+                z.y = camera.y + (Math.random()-0.5)*CANVAS_H*1.5;
+                zombies.push(z);
+            }
         } else if(activeEvent === 'bloodmoon') {
-            addFloatingText(CANVAS_W/2, CANVAS_H/2, "🌙 战地预警：目标进入狂暴状态！ 🌙", "#ff0000");
+            addFloatingText(camera.x, camera.y, "🌙 战地预警：目标进入狂暴状态！ 🌙", "#ff0000");
             audio.levelUp();
             screenShake = 20;
         } else if(activeEvent === 'orbital') {
-            addFloatingText(CANVAS_W/2, CANVAS_H/2, "🚀 轨道打击火力覆盖中！ 🚀", "#00ffff");
+            addFloatingText(camera.x, camera.y, "🚀 轨道打击火力覆盖中！ 🚀", "#00ffff");
             audio.levelUp();
             screenShake = 20;
         }
@@ -1125,8 +1130,8 @@ function update() {
         eventTimer--;
         if(activeEvent === 'orbital' && eventTimer % 10 === 0) {
             // Drop bombs randomly
-            let bx = Math.random() * CANVAS_W;
-            let by = Math.random() * CANVAS_H;
+            let bx = camera.x + (Math.random()-0.5)*CANVAS_W*1.5;
+            let by = camera.y + (Math.random()-0.5)*CANVAS_H*1.5;
             createParticles(bx, by, '#ffaa00', 30);
             screenShake = 5;
             audio.shootShotgun();
@@ -1166,6 +1171,16 @@ function update() {
     if(screenShake > 0) screenShake--;
     if(comboTimer > 0) {
         comboTimer--;
+
+    // Garbage collection to prevent memory leaks in infinite world
+    zombies = zombies.filter(z => z.active && Math.hypot(z.x - camera.x, z.y - camera.y) < CANVAS_W * 2);
+    bullets = bullets.filter(b => b.active);
+    particles = particles.filter(p => p.life > 0);
+    floatingTexts = floatingTexts.filter(ft => ft.life > 0);
+    lootBoxes = lootBoxes.filter(lb => lb.active && Math.hypot(lb.x - camera.x, lb.y - camera.y) < CANVAS_W * 3);
+    barrels = barrels.filter(b => b.active && Math.hypot(b.x - camera.x, b.y - camera.y) < CANVAS_W * 3);
+    
+
         if(comboTimer <= 0) {
             if(comboCount >= 10) addFloatingText(CANVAS_W/2, 150, `🔥 ${comboCount} 连杀终结!`, '#ffaa00');
             comboCount = 0;
