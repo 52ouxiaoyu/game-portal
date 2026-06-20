@@ -281,7 +281,7 @@ class PowerUp {
         else if (this.type === POWERUP_TYPES.TIME) this.game.enemyFrozenTimer = 300;
         else if (this.type === POWERUP_TYPES.MAX_WEAPON) {
             player.level = 30;
-            player.speed = 4 + 30 * 0.3;
+            player.speed = Math.min(8, 4 + 30 * 0.15);
             player.maxHealth = 1 + 30 * 2;
             player.health = player.maxHealth;
             this.game.showAnnouncement('终极武器 MAX WEAPON!', '#f0f');
@@ -593,7 +593,7 @@ class Tank {
     upgrade() { 
         if (this.level >= 30) return;
         this.level++;
-        this.speed = 4 + this.level * 0.3; 
+        this.speed = Math.min(8, 4 + this.level * 0.15); 
         if (this instanceof Player) {
             this.maxHealth = 1 + this.level * 2;
             this.health = this.maxHealth;
@@ -709,7 +709,7 @@ class Tank {
             if (this instanceof Player) {
                 this.game.shakeScreen(4);
                 this.level = Math.max(0, Math.floor((this.health - 1) / 2));
-                this.speed = 4 + this.level * 0.5;
+                this.speed = Math.min(8, 4 + this.level * 0.15);
                 this.shieldTimer = 30;
                 this.game.updateHUD();
             } else if (this.variant === 'HEAVY') {
@@ -1211,7 +1211,7 @@ class Boss extends Enemy {
             if (killer instanceof Player) { 
                 killer.score += 20000; 
                 killer.level = Math.max(killer.level, 5); 
-                killer.speed = 4 + killer.level * 0.3;
+                killer.speed = Math.min(8, 4 + killer.level * 0.15);
                 killer.setShield(600);
                 this.game.showFloatingText('+20000', this.x + this.width/2, this.y - 20, '#ff0');
                 this.game.showAnnouncement('BOSS 陨落! BOSS DESTROYED!', '#ff0');
