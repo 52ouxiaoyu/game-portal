@@ -470,7 +470,7 @@ class Bullet {
             for (let t of targets) {
                 if (!t.alive) continue;
                 let d = Math.hypot(t.x + t.width/2 - this.x, t.y + t.height/2 - this.y);
-                if (d < minDist && d < TILE_SIZE * 20) { minDist = d; target = t; }
+                if (d < minDist && d < TILE_SIZE * 8) { minDist = d; target = t; }
             }
             if (target) {
                 let dx = target.x + target.width/2 - this.x;
@@ -481,7 +481,7 @@ class Bullet {
                 let diff = angle - currentAngle;
                 while (diff > Math.PI) diff -= Math.PI * 2;
                 while (diff < -Math.PI) diff += Math.PI * 2;
-                let turnSpeed = 0.15 + Math.min(this.level * 0.01, 0.3);
+                let turnSpeed = 0.04;
                 let newAngle = currentAngle + Math.max(-turnSpeed, Math.min(turnSpeed, diff));
                 this.vx = Math.cos(newAngle) * this.speed;
                 this.vy = Math.sin(newAngle) * this.speed;
