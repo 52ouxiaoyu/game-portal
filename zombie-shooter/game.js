@@ -1147,8 +1147,9 @@ function update() {
     let cx = 0, cy = 0, count = 0;
     players.forEach(p => { if(p.hp > 0) { cx += p.x; cy += p.y; count++; }});
     if(count > 0) {
-        camera.x += (cx/count - camera.x) * 0.1;
-        camera.y += (cy/count - camera.y) * 0.1;
+        // Use faster easing (0.8 instead of 0.1) to prevent players from moving off-screen due to camera lag
+        camera.x += (cx/count - camera.x) * 0.8;
+        camera.y += (cy/count - camera.y) * 0.8;
     }
     
     // World Generation
@@ -1488,12 +1489,7 @@ function update() {
 }
 
 function draw() {
-    ctx.save();
-    if(screenShake > 0) {
-        ctx.translate((Math.random()-0.5)*screenShake, (Math.random()-0.5)*screenShake);
-    }
-
-    // Clear background
+    // Clear background before any translations to prevent edge ghosting
     if(activeEvent === 'bloodmoon') {
         ctx.fillStyle = '#300';
     } else {
@@ -1501,8 +1497,13 @@ function draw() {
     }
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-    // Apply Camera Translation
-    ctx.translate(canvas.width/2 - camera.x, canvas.height/2 - camera.y);
+    ctx.save();
+    if(screenShake > 0) {
+        ctx.translate((Math.random()-0.5)*screenShake, (Math.random()-0.5)*screenShake);
+    }
+
+    // Apply Camera Translation (rounded to prevent subpixel drifting of walls)
+    ctx.translate(Math.round(canvas.width/2 - camera.x), Math.round(canvas.height/2 - camera.y));
 
     // Draw Grid (Infinite scrolling floor)
     ctx.strokeStyle = '#222';
