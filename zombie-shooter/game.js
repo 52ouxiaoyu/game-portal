@@ -1104,10 +1104,10 @@ function update() {
             if(!generatedChunks.has(key)) {
                 generatedChunks.add(key);
                 // Create 1-3 buildings per chunk
-                let numB = Math.floor(Math.random()*3) + 1;
+                let numB = Math.floor(Math.random()*2) + 1;
                 for(let k=0; k<numB; k++) {
-                    let w = 150 + Math.random() * 300;
-                    let h = 150 + Math.random() * 300;
+                    let w = 80 + Math.random() * 120;
+                    let h = 80 + Math.random() * 120;
                     let bx = i * CHUNK_SIZE + Math.random() * (CHUNK_SIZE - w);
                     let by = j * CHUNK_SIZE + Math.random() * (CHUNK_SIZE - h);
                     buildings.push(new Building(bx, by, w, h));
@@ -1258,11 +1258,12 @@ function update() {
             p2.x += nx * (overlap / 2);
             p2.y += ny * (overlap / 2);
             
-            // Keep inside bounds
-            p1.x = Math.max(p1.size, Math.min(CANVAS_W - p1.size, p1.x));
-            p1.y = Math.max(p1.size, Math.min(CANVAS_H - p1.size, p1.y));
-            p2.x = Math.max(p2.size, Math.min(CANVAS_W - p2.size, p2.x));
-            p2.y = Math.max(p2.size, Math.min(CANVAS_H - p2.size, p2.y));
+            // Keep inside camera bounds
+            const margin = 50;
+            p1.x = Math.max(camera.x - CANVAS_W/2 + margin, Math.min(camera.x + CANVAS_W/2 - margin, p1.x));
+            p1.y = Math.max(camera.y - CANVAS_H/2 + margin, Math.min(camera.y + CANVAS_H/2 - margin, p1.y));
+            p2.x = Math.max(camera.x - CANVAS_W/2 + margin, Math.min(camera.x + CANVAS_W/2 - margin, p2.x));
+            p2.y = Math.max(camera.y - CANVAS_H/2 + margin, Math.min(camera.y + CANVAS_H/2 - margin, p2.y));
         }
     }
 
