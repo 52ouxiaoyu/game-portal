@@ -472,18 +472,19 @@ this.weapons = [];
             
         } else {
             // Player Logic
+            let wantsToShoot = false;
             if(this.id === 1) {
                 if(keys.KeyW) dy -= 1;
                 if(keys.KeyS) dy += 1;
                 if(keys.KeyA) dx -= 1;
                 if(keys.KeyD) dx += 1;
-                if(keys.Space) this.shoot();
+                if(keys.Space) wantsToShoot = true;
             } else {
                 if(keys.ArrowUp) dy -= 1;
                 if(keys.ArrowDown) dy += 1;
                 if(keys.ArrowLeft) dx -= 1;
                 if(keys.ArrowRight) dx += 1;
-                if(keys.Enter || keys.NumpadEnter) this.shoot();
+                if(keys.Enter || keys.NumpadEnter) wantsToShoot = true;
             }
 
             if(dx !== 0 || dy !== 0) {
@@ -491,6 +492,7 @@ this.weapons = [];
                 dx /= len; dy /= len;
                 this.facing = {x: dx, y: dy};
             }
+            if(wantsToShoot) this.shoot();
         }
 
         this.x += dx * currentSpeed;
@@ -749,7 +751,15 @@ class Bullet {
 
         this.x += this.dx * this.speed;
         this.y += this.dy * this.speed;
-        resolveBuildingCollision(this);
+        
+        // Destroy bullet if it hits a wall (instead of sliding along it)
+        for(let b of buildings) {
+            if(this.x > b.x && this.x < b.x + b.w && this.y > b.y && this.y < b.y + b.h) {
+                this.active = false;
+                createParticles(this.x, this.y, '#555', 5);
+                break;
+            }
+        }
     }
     draw(ctx) {
         ctx.fillStyle = this.color;
@@ -1164,7 +1174,8 @@ function update() {
                 buildings.push(new Building(i * CHUNK_SIZE, j * CHUNK_SIZE + wallLen + doorSize, wallThick, wallLen));
                 
                 // Random center obstacles (pillars or covers)
-                let rand = Math.random();
+                let hash = Math.abs(Math.sin(i * 12.9898 + j * 78.233) * 43758.5453);
+                let rand = hash - Math.floor(hash);
                 if(rand < 0.3) {
                     // Big center pillar
                     buildings.push(new Building(i * CHUNK_SIZE + halfC - 100, j * CHUNK_SIZE + halfC - 100, 200, 200));
