@@ -1286,6 +1286,11 @@ function update() {
     if(screenShake > 0) screenShake--;
     if(comboTimer > 0) {
         comboTimer--;
+        if(comboTimer <= 0) {
+            if(comboCount >= 10) addFloatingText(CANVAS_W/2, 150, `🔥 ${comboCount} 连杀终结!`, '#ffaa00');
+            comboCount = 0;
+        }
+    }
 
     // Garbage collection to prevent memory leaks in infinite world
     zombies = zombies.filter(z => z.active && Math.hypot(z.x - camera.x, z.y - camera.y) < (canvas.width || window.innerWidth) * 2);
@@ -1298,14 +1303,6 @@ function update() {
     // Check Game Over condition safely
     if(players.every(p => (p.hp <= 0))) {
         gameOver();
-    }
-
-    
-
-        if(comboTimer <= 0) {
-            if(comboCount >= 10) addFloatingText(CANVAS_W/2, 150, `🔥 ${comboCount} 连杀终结!`, '#ffaa00');
-            comboCount = 0;
-        }
     }
 
     // Time
