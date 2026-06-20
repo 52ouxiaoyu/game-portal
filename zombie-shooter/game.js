@@ -749,9 +749,7 @@ class Zombie {
                 }
                 this.active = false;
                 createParticles(this.x, this.y, '#ff0000', 10);
-                if(players.every(p => (p.hp <= 0))) {
-                    gameOver();
-                }
+
             }
         }
     }
@@ -1179,6 +1177,12 @@ function update() {
     floatingTexts = floatingTexts.filter(ft => ft.life > 0);
     lootBoxes = lootBoxes.filter(lb => lb.active && Math.hypot(lb.x - camera.x, lb.y - camera.y) < CANVAS_W * 3);
     barrels = barrels.filter(b => b.active && Math.hypot(b.x - camera.x, b.y - camera.y) < CANVAS_W * 3);
+
+    // Check Game Over condition safely
+    if(players.every(p => (p.hp <= 0))) {
+        gameOver();
+    }
+
     
 
         if(comboTimer <= 0) {
