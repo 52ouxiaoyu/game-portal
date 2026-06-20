@@ -297,6 +297,7 @@ class PowerUp {
         }
         else if (this.type === POWERUP_TYPES.FLY) {
             player.canFly = true;
+            player.flyTimer = 1800;
             this.game.showAnnouncement('获得飞行能力 CAN FLY!', '#ccc');
         }
         this.game.updateHUD();
@@ -819,6 +820,17 @@ class Player extends Tank {
         
 
         super.update();
+        if (this.canFly && this.flyTimer > 0) {
+            this.flyTimer--;
+            if (this.flyTimer <= 0) {
+                if (!this.game.map.isBlocked(this.x, this.y, this.width, this.height, false, this.canBoat, false)) {
+                    this.canFly = false;
+                    this.game.showFloatingText('降落！', this.x, this.y, '#ccc');
+                } else {
+                    this.flyTimer = 1;
+                }
+            }
+        }
         this.checkIdle();
         if (this.aiActive) this.runAI();
         else {
@@ -1031,7 +1043,18 @@ class Enemy extends Tank {
         this.dirTimer = 0; 
     } 
     update() { 
-        super.update(); 
+        super.update();
+        if (this.canFly && this.flyTimer > 0) {
+            this.flyTimer--;
+            if (this.flyTimer <= 0) {
+                if (!this.game.map.isBlocked(this.x, this.y, this.width, this.height, false, this.canBoat, false)) {
+                    this.canFly = false;
+                    this.game.showFloatingText('降落！', this.x, this.y, '#ccc');
+                } else {
+                    this.flyTimer = 1;
+                }
+            }
+        } 
         if (this.game.enemyFrozenTimer > 0) return;
         if (this.dirTimer <= 0) { this.direction = ['UP', 'DOWN', 'LEFT', 'RIGHT'][Math.floor(Math.random() * 4)]; this.dirTimer = 30 + Math.random() * 60; } else this.dirTimer--; const ox = this.x; const oy = this.y; this.move(this.direction); if (this.x === ox && this.y === oy) this.dirTimer = 0; if (Math.random() * 100 < (this.variant==='ELITE'? 4 : 2)) this.shoot(); 
     } 
@@ -1124,6 +1147,17 @@ class Boss extends Enemy {
     }
     update() {
         super.update();
+        if (this.canFly && this.flyTimer > 0) {
+            this.flyTimer--;
+            if (this.flyTimer <= 0) {
+                if (!this.game.map.isBlocked(this.x, this.y, this.width, this.height, false, this.canBoat, false)) {
+                    this.canFly = false;
+                    this.game.showFloatingText('降落！', this.x, this.y, '#ccc');
+                } else {
+                    this.flyTimer = 1;
+                }
+            }
+        }
         if (this.game.enemyFrozenTimer > 0) return;
         let nearestEnemy = null;
         let nearestDist = Infinity;
