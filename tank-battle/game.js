@@ -285,8 +285,8 @@ class PowerUp {
         else if (this.type === POWERUP_TYPES.TIME) this.game.enemyFrozenTimer = 300;
         else if (this.type === POWERUP_TYPES.MAX_WEAPON) {
             player.level = 4;
-            player.speed = Math.min(8, 4 + 30 * 0.15);
-            player.maxHealth = 1 + 30 * 2;
+            player.speed = Math.min(8, 4 + 4 * 0.15);
+            player.maxHealth = 1 + 4 * 2;
             player.health = player.maxHealth;
             this.game.showAnnouncement('终极武器 MAX WEAPON!', '#f0f');
             this.game.updateHUD();
