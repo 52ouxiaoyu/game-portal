@@ -258,7 +258,7 @@ class PowerUp {
         this.game = game; this.x = x; this.y = y; this.type = type; this.width = 64; this.height = 64; this.timer = 900; this.active = true;
         if (type === POWERUP_TYPES.FLY) this.game.showTip("💡 TIP: 吃到直升机🚁可获得飞行能力，无视地形与子弹，按开火键轰炸！", 600);
         else if (type === POWERUP_TYPES.BOAT) this.game.showTip("💡 TIP: 吃到小艇🚤可在水面上自由移动，利用湖泊躲避不会游泳的敌人！", 600);
-        else if (type === POWERUP_TYPES.MAX_WEAPON) this.game.showTip("💡 TIP: 终极神药来了！吃到🚀直接升至满级30级，火力全开！", 600);
+        else if (type === POWERUP_TYPES.MAX_WEAPON) this.game.showTip("💡 TIP: 终极神药来了！吃到🚀直接升至满级4级（紫色追踪），火力全开！", 600);
         else if (type === POWERUP_TYPES.BOMB) this.game.showTip("💡 TIP: 吃到炸弹💣可以瞬间消灭屏幕上的所有敌人！", 400);
         else if (type === POWERUP_TYPES.SHOVEL) this.game.showTip("💡 TIP: 吃到铁锹🏗️可以把基地周围的砖块升级为坚不可摧的钢板！", 400);
         else if (type === POWERUP_TYPES.TIME) this.game.showTip("💡 TIP: 吃到时钟⏳可以冻结所有敌人一段时间！", 400);
@@ -746,7 +746,7 @@ class Tank {
             
             if (killer.killStreak > 2) {
                 this.game.showFloatingText(`${killer.killStreak} COMBO!`, this.x + this.width/2, this.y - 30, '#ff0');
-                if (killer.killStreak === 3) this.game.showTip('💡 TIP: 连续击杀不仅能获得分数，连击10次还可以直升1级并获得天赋！', 400);
+                if (killer.killStreak === 5) this.game.showTip('💡 TIP: 连续击杀不仅能获得分数，连击10次还可以直升1级并获得天赋！', 400);
                 this.game.shakeScreen(Math.min(killer.killStreak * 2, 12));
                 if (killer.killStreak % 10 === 0) {
                     killer.upgrade();
