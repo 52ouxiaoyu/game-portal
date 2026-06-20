@@ -1049,10 +1049,10 @@ class Enemy extends Tank {
         else if (r < 0.6) this.variant = 'FAST';
         else this.variant = 'BASIC';
 
-        if (this.variant === 'FAST') { this.speed = (3.5 + Math.min(stage * 0.1, 1.5)) * diffMult; this.health = 1; this.color = '#FF9999'; }
-        else if (this.variant === 'HEAVY') { this.speed = (1.5 + Math.min(stage * 0.05, 1)) * diffMult; this.health = 3; this.color = '#777777'; }
-        else if (this.variant === 'ELITE') { this.speed = (2.5 + Math.min(stage * 0.1, 1.5)) * diffMult; this.health = 1; this.level = Math.min(3, 1 + Math.floor(stage / 10)); this.color = '#FF55FF'; }
-        else { this.speed = (2 + Math.min(stage * 0.1, 2)) * diffMult; this.health = 1; this.level = Math.min(3, Math.floor(stage / 15)); }
+        if (this.variant === 'FAST') { this.speed = (2.5 + Math.min(stage * 0.05, 0.8)) * diffMult; this.health = 1; this.color = '#FF9999'; }
+        else if (this.variant === 'HEAVY') { this.speed = (1.0 + Math.min(stage * 0.02, 0.5)) * diffMult; this.health = 3; this.color = '#777777'; }
+        else if (this.variant === 'ELITE') { this.speed = (1.8 + Math.min(stage * 0.05, 0.8)) * diffMult; this.health = 1; this.level = Math.min(3, 1 + Math.floor(stage / 10)); this.color = '#FF55FF'; }
+        else { this.speed = (1.5 + Math.min(stage * 0.05, 0.8)) * diffMult; this.health = 1; this.level = Math.min(3, Math.floor(stage / 15)); }
         
         this.dirTimer = 0; 
     } 
