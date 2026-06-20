@@ -173,7 +173,7 @@ class Barrel {
         if(this.dropY < 0) {
             ctx.fillStyle = 'rgba(255, 0, 0, 0.3)';
             ctx.beginPath();
-            ctx.ellipse(this.x, this.y, 20 + this.dropY/10, 10 + this.dropY/20, 0, 0, Math.PI*2);
+            ctx.ellipse(this.x, this.y, Math.max(0.1, 20 + this.dropY/10), Math.max(0.1, 10 + this.dropY/20), 0, 0, Math.PI*2);
             ctx.fill();
         }
         
@@ -626,7 +626,7 @@ this.weapons = [];
             // Shoulders/Torso
             ctx.fillStyle = this.color;
             ctx.beginPath();
-            ctx.ellipse(0, 0, this.size - 2, this.size, 0, 0, Math.PI*2);
+            ctx.ellipse(0, 0, Math.max(0.1, this.size - 2), Math.max(0.1, this.size), 0, 0, Math.PI*2);
             ctx.fill();
 
             // Backpack
