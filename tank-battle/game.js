@@ -517,6 +517,10 @@ class Bullet {
             if (tile === TILE_TYPES.BASE) {
                 if (!(this.owner instanceof Player && this.owner.aiActive)) {
                     this.game.baseHealth--;
+                    if (this.game.baseHealth === 2 || this.game.baseHealth === 1) {
+                        this.game.showAnnouncement('⚠️ 警告！大本营血量告急！ ⚠️', '#f00');
+                        audio.play('explosion');
+                    }
                     if (this.game.baseHealth <= 0) {
                         this.game.map.grid[24][12] = TILE_TYPES.BASE_DESTROYED;
                         this.game.map.grid[24][13] = TILE_TYPES.BASE_DESTROYED;
@@ -1560,6 +1564,18 @@ class Game {
             this.players.forEach(p => { if(p.alive) { p.draw(this.ctx); if (p.aiActive) { this.ctx.save(); this.ctx.fillStyle = 'rgba(0,0,0,0.7)'; this.ctx.beginPath(); this.ctx.arc(p.x + 30, p.y - 12, 14, 0, Math.PI * 2); this.ctx.fill(); this.ctx.fillStyle = '#0f0'; this.ctx.font = 'bold 12px Arial'; this.ctx.textAlign = 'center'; this.ctx.fillText('AI', p.x + 30, p.y - 8); this.ctx.restore(); } } }); this.enemies.forEach(e => e.draw(this.ctx)); this.bullets.forEach(b => b.draw(this.ctx)); this.effects.forEach(e => e.draw(this.ctx)); this.powerUps.forEach(p => p.draw(this.ctx));
             this.drawForest();
             this.ctx.restore();
+            if (this.baseHealth > 0 && this.baseHealth <= 2) {
+                this.ctx.save();
+                this.ctx.fillStyle = `rgba(255, 0, 0, ${Math.abs(Math.sin(Date.now() / 200)) * 0.3})`;
+                this.ctx.fillRect(0, 0, CANVAS_SIZE, CANVAS_SIZE);
+                this.ctx.fillStyle = '#f00';
+                this.ctx.font = 'bold 48px Arial';
+                this.ctx.textAlign = 'center';
+                if (Math.floor(Date.now() / 500) % 2 === 0) {
+                    this.ctx.fillText("🚨 大本营血量告急！速回防！ 🚨", CANVAS_SIZE/2, 100);
+                }
+                this.ctx.restore();
+            }
             this.floatingTexts.forEach(t => { this.ctx.save(); this.ctx.fillStyle = t.color; this.ctx.font = 'bold 16px Arial'; this.ctx.textAlign = 'center'; this.ctx.globalAlpha = t.timer / 60; this.ctx.fillText(t.text, t.x, t.y); this.ctx.restore(); });
             this.announcements.forEach(a => { this.ctx.save(); const scale = 1 + Math.sin(a.timer / 10) * 0.1; this.ctx.translate(CANVAS_SIZE / 2, a.y); this.ctx.scale(scale, scale); this.ctx.fillStyle = '#000'; this.ctx.font = 'bold 48px Arial'; this.ctx.textAlign = 'center'; this.ctx.fillText(a.text, 2, 2); this.ctx.fillStyle = a.color; this.ctx.fillText(a.text, 0, 0); this.ctx.restore(); });
             if (this.gameState === 'STAGE_CLEAR') { this.ctx.fillStyle = 'rgba(0,0,0,0.5)'; this.ctx.fillRect(0, 0, CANVAS_SIZE, CANVAS_SIZE); this.ctx.fillStyle = '#fff'; this.ctx.font = '60px "Courier New"'; this.ctx.textAlign = 'center'; this.ctx.fillText("过关 STAGE CLEAR!", CANVAS_SIZE/2, CANVAS_SIZE/2); }
