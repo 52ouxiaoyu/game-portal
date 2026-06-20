@@ -498,15 +498,18 @@ this.weapons = [];
 
         resolveBuildingCollision(this);
 
-        // Keep players within the current camera view (Co-op screen binding)
-        const margin = 50;
-        // Use canvas.width/height dynamically instead of the old constants to fix resize bugs!
-        let halfW = canvas.width / 2;
-        let halfH = canvas.height / 2;
-        if(this.x < camera.x - halfW + margin) this.x = camera.x - halfW + margin;
-        if(this.x > camera.x + halfW - margin) this.x = camera.x + halfW - margin;
-        if(this.y < camera.y - halfH + margin) this.y = camera.y - halfH + margin;
-        if(this.y > camera.y + halfH - margin) this.y = camera.y + halfH - margin;
+        // Co-op Screen Binding: Restrict movement relative to teammates to prevent camera easing stutter
+        let aliveTeammates = players.filter(p => p !== this && p.hp > 0);
+        if (aliveTeammates.length > 0) {
+            let margin = 50;
+            let other = aliveTeammates[0];
+            let maxDx = canvas.width - 2*margin;
+            let maxDy = canvas.height - 2*margin;
+            if (this.x < other.x - maxDx) this.x = other.x - maxDx;
+            if (this.x > other.x + maxDx) this.x = other.x + maxDx;
+            if (this.y < other.y - maxDy) this.y = other.y - maxDy;
+            if (this.y > other.y + maxDy) this.y = other.y + maxDy;
+        }
 
         // Check weapon level up
         for(let i = this.weapons.length - 1; i >= 0; i--) {
@@ -775,12 +778,16 @@ class Zombie {
             else this.type = 'exploder';
         }
 
-        // Spawn at edges
+        // Spawn at edges relative to camera
         const edge = Math.floor(Math.random() * 4);
-        if(edge === 0) { this.x = Math.random() * CANVAS_W; this.y = -30; }
-        else if(edge === 1) { this.x = CANVAS_W + 30; this.y = Math.random() * CANVAS_H; }
-        else if(edge === 2) { this.x = Math.random() * CANVAS_W; this.y = CANVAS_H + 30; }
-        else { this.x = -30; this.y = Math.random() * CANVAS_H; }
+        let cw = canvas.width || window.innerWidth;
+        let ch = canvas.height || window.innerHeight;
+        let cx = camera.x - cw/2;
+        let cy = camera.y - ch/2;
+        if(edge === 0) { this.x = cx + Math.random() * cw; this.y = cy - 30; }
+        else if(edge === 1) { this.x = cx + cw + 30; this.y = cy + Math.random() * ch; }
+        else if(edge === 2) { this.x = cx + Math.random() * cw; this.y = cy + ch + 30; }
+        else { this.x = cx - 30; this.y = cy + Math.random() * ch; }
 
         if(this.type === 'boss') {
             this.size = 35; this.speed = 0.8; this.hp = 1000 + survivalTime*10; this.color = '#ff00ff'; this.damage = 2; this.scoreVal = 500;
@@ -1270,7 +1277,7 @@ function update() {
         comboTimer--;
 
     // Garbage collection to prevent memory leaks in infinite world
-    zombies = zombies.filter(z => z.active && Math.hypot(z.x - camera.x, z.y - camera.y) < CANVAS_W * 2);
+    zombies = zombies.filter(z => z.active && Math.hypot(z.x - camera.x, z.y - camera.y) < (canvas.width || window.innerWidth) * 2);
     bullets = bullets.filter(b => b.active);
     particles = particles.filter(p => p.life > 0);
     floatingTexts = floatingTexts.filter(ft => ft.life > 0);
@@ -1314,14 +1321,7 @@ function update() {
             p2.x += nx * (overlap / 2);
             p2.y += ny * (overlap / 2);
             
-            // Keep inside camera bounds
-            const margin = 50;
-            let halfW = canvas.width / 2;
-            let halfH = canvas.height / 2;
-            p1.x = Math.max(camera.x - halfW + margin, Math.min(camera.x + halfW - margin, p1.x));
-            p1.y = Math.max(camera.y - halfH + margin, Math.min(camera.y + halfH - margin, p1.y));
-            p2.x = Math.max(camera.x - halfW + margin, Math.min(camera.x + halfW - margin, p2.x));
-            p2.y = Math.max(camera.y - halfH + margin, Math.min(camera.y + halfH - margin, p2.y));
+
         }
     }
 
