@@ -605,12 +605,12 @@ class Tank {
             this.game.showFloatingText(`LEVEL ${this.level}!`, this.x, this.y, '#0f0');
             
             if (!this.perks) this.perks = [];
-            const availablePerks = ['SPREAD', 'BOUNCE', 'VAMPIRIC', 'PIERCING', 'RAPID'].filter(p => !this.perks.includes(p) || p === 'RAPID');
+            const availablePerks = ['SPREAD', 'VAMPIRIC', 'PIERCING', 'RAPID'].filter(p => !this.perks.includes(p) || p === 'RAPID');
             if (availablePerks.length > 0) {
                 const perk = availablePerks[Math.floor(Math.random() * availablePerks.length)];
                 this.perks.push(perk);
                 this.game.showFloatingText(`获得天赋: ${perk}!`, this.x, this.y - 20, '#0ff');
-                this.game.showTip(`💡 TIP: 你获得了新天赋 [${perk}]！善用散弹、穿甲、弹射、吸血等能力！`, 400);
+                this.game.showTip(`💡 TIP: 你获得了新天赋 [${perk}]！善用散弹、穿甲、吸血、连发等能力！`, 400);
             }
             this.game.updateHUD();
         }
@@ -691,7 +691,7 @@ class Tank {
         }
         
         let b = new Bullet(this.game, this, bx, by, this.direction, this.level, bType);
-        if (this.perks && this.perks.includes('BOUNCE')) b.bounces = 2;
+        
         if (this.perks && this.perks.includes('PIERCING')) b.piercing = true;
         this.game.bullets.push(b);
         
@@ -701,7 +701,7 @@ class Tank {
              else { by2 -= 15; by3 += 15; }
              let b2 = new Bullet(this.game, this, bx2, by2, this.direction, this.level, bType);
              let b3 = new Bullet(this.game, this, bx3, by3, this.direction, this.level, bType);
-             if (this.perks && this.perks.includes('BOUNCE')) { b2.bounces = 2; b3.bounces = 2; }
+             
              if (this.perks && this.perks.includes('PIERCING')) { b2.piercing = true; b3.piercing = true; }
              this.game.bullets.push(b2, b3);
         }
