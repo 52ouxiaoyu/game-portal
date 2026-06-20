@@ -1475,11 +1475,13 @@ class Game {
 
         if (this.fortifyTimer > 0) { this.fortifyTimer--; if (this.fortifyTimer === 0) this.unfortifyBase(); }
         
-        // Random Airdrop for MAX_WEAPON
-        if (Math.random() < 0.0005) {
+        // Random Airdrop for Rare Items
+        if (Math.random() < 0.0001) {
             const px = TILE_SIZE * 2 + Math.random() * (CANVAS_SIZE - TILE_SIZE * 4);
             const py = TILE_SIZE * 2 + Math.random() * (CANVAS_SIZE - TILE_SIZE * 4);
-            this.powerUps.push(new PowerUp(this, px, py, POWERUP_TYPES.MAX_WEAPON));
+            const rareTypes = [POWERUP_TYPES.MAX_WEAPON, POWERUP_TYPES.BOAT, POWERUP_TYPES.FLY];
+            const type = rareTypes[Math.floor(Math.random() * rareTypes.length)];
+            this.powerUps.push(new PowerUp(this, px, py, type));
             this.effects.push(new Effect(px + 32, py + 32, 'SPAWN', 5));
             this.showAnnouncement('天降奇遇 AIRDROP!', '#0ff');
         }
