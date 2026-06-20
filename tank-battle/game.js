@@ -256,9 +256,13 @@ class Effect {
 class PowerUp {
     constructor(game, x, y, type) { 
         this.game = game; this.x = x; this.y = y; this.type = type; this.width = 64; this.height = 64; this.timer = 900; this.active = true;
-        if (type === 'HELI') this.game.showTip("💡 TIP: 吃到直升机🚁可获得飞行能力，无视地形与子弹，按开火键轰炸！", 600);
-        else if (type === 'BOAT') this.game.showTip("💡 TIP: 吃到小艇🚤可在水面上自由移动，利用湖泊躲避不会游泳的敌人！", 600);
-        else if (type === 'MAX_WEAPON') this.game.showTip("💡 TIP: 终极神药来了！吃到🚀直接升至满级30级，火力全开！", 600);
+        if (type === POWERUP_TYPES.FLY) this.game.showTip("💡 TIP: 吃到直升机🚁可获得飞行能力，无视地形与子弹，按开火键轰炸！", 600);
+        else if (type === POWERUP_TYPES.BOAT) this.game.showTip("💡 TIP: 吃到小艇🚤可在水面上自由移动，利用湖泊躲避不会游泳的敌人！", 600);
+        else if (type === POWERUP_TYPES.MAX_WEAPON) this.game.showTip("💡 TIP: 终极神药来了！吃到🚀直接升至满级30级，火力全开！", 600);
+        else if (type === POWERUP_TYPES.BOMB) this.game.showTip("💡 TIP: 吃到炸弹💣可以瞬间消灭屏幕上的所有敌人！", 400);
+        else if (type === POWERUP_TYPES.SHOVEL) this.game.showTip("💡 TIP: 吃到铁锹🏗️可以把基地周围的砖块升级为坚不可摧的钢板！", 400);
+        else if (type === POWERUP_TYPES.TIME) this.game.showTip("💡 TIP: 吃到时钟⏳可以冻结所有敌人一段时间！", 400);
+        else if (type === POWERUP_TYPES.STAR) this.game.showTip("💡 TIP: 吃到星星⭐可以直接升一级，火力提升！", 400);
     }
     update() {
         this.timer--; if (this.timer <= 0) this.active = false;
@@ -1344,7 +1348,7 @@ class Game {
         this.gameState = 'STAGE_START'; this.stageStartTimer = 120;
         document.getElementById('start-screen').classList.add('hidden'); document.getElementById('game-over-screen').classList.add('hidden');
         document.getElementById('stage-info').innerText = `关卡 Stage ${this.currentStage + 1}`;
-        this.showTip("💡 TIP: 深棕色的硬砖需要攻击两次，黑色的石头不可破坏，善用地形掩体！", 600);
+
         this.map.reset(this.currentStage); this.bullets = []; this.enemies = []; this.effects = []; this.powerUps = []; this.fortifyTimer = 0; this.enemyFrozenTimer = 0;
         this.stageClearTimer = 0;
         this.currentLevel = this.map.currentLevel;
