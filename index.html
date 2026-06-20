@@ -374,9 +374,32 @@
             }
         ];
 
+        const BASE_STATS = {
+            'tank': { plays: 1245, time: 1245 * 8 * 60 },
+            'calabash': { plays: 156, time: 156 * 15 * 60 },
+            'snake': { plays: 2314, time: 2314 * 5 * 60 },
+            'zombie': { plays: 54, time: 54 * 20 * 60 },
+            'kingdom': { plays: 832, time: 832 * 25 * 60 }
+        };
+
         function loadStats() {
             const stats = localStorage.getItem('gamePortalStats');
             return stats ? JSON.parse(stats) : {};
+        }
+
+        function getDisplayStats() {
+            const realStats = loadStats();
+            let displayStats = {};
+            for (const game of games) {
+                const id = game.id;
+                const base = BASE_STATS[id] || { plays: 0, time: 0 };
+                const real = realStats[id] || { plays: 0, time: 0 };
+                displayStats[id] = {
+                    plays: base.plays + real.plays,
+                    time: base.time + real.time
+                };
+            }
+            return displayStats;
         }
 
         function saveStats(stats) {
@@ -406,7 +429,7 @@
         }
 
         function getTotalStats() {
-            const stats = loadStats();
+            const stats = getDisplayStats();
             let totalPlays = 0, totalTime = 0;
             for (const key in stats) {
                 totalPlays += stats[key].plays || 0;
@@ -416,7 +439,7 @@
         }
 
         function renderGames() {
-            const stats = loadStats();
+            const stats = getDisplayStats();
             const grid = document.getElementById('games-grid');
             const sortedGames = [...games].sort((a, b) => (stats[b.id]?.plays || 0) - (stats[a.id]?.plays || 0));
 
