@@ -254,7 +254,12 @@ class Effect {
 }
 
 class PowerUp {
-    constructor(game, x, y, type) { this.game = game; this.x = x; this.y = y; this.type = type; this.width = 64; this.height = 64; this.timer = 900; this.active = true; }
+    constructor(game, x, y, type) { 
+        this.game = game; this.x = x; this.y = y; this.type = type; this.width = 64; this.height = 64; this.timer = 900; this.active = true;
+        if (type === 'HELI') this.game.showTip("💡 TIP: 吃到直升机🚁可获得飞行能力，无视地形与子弹，按开火键轰炸！", 600);
+        else if (type === 'BOAT') this.game.showTip("💡 TIP: 吃到小艇🚤可在水面上自由移动，利用湖泊躲避不会游泳的敌人！", 600);
+        else if (type === 'MAX_WEAPON') this.game.showTip("💡 TIP: 终极神药来了！吃到🚀直接升至满级30级，火力全开！", 600);
+    }
     update() {
         this.timer--; if (this.timer <= 0) this.active = false;
         if (!this.active) return;
@@ -600,6 +605,7 @@ class Tank {
                 const perk = availablePerks[Math.floor(Math.random() * availablePerks.length)];
                 this.perks.push(perk);
                 this.game.showFloatingText(`获得天赋: ${perk}!`, this.x, this.y - 20, '#0ff');
+                this.game.showTip(`💡 TIP: 你获得了新天赋 [${perk}]！善用散弹、穿甲、弹射、吸血等能力！`, 400);
             }
             this.game.updateHUD();
         }
@@ -718,6 +724,7 @@ class Tank {
             this.health = 0;
             this.game.effects.push(new Effect(this.x + 30, this.y + 30, 'EXPLOSION', 1));
             this.game.showFloatingText('SOS!', this.x + 30, this.y - 10, '#f00');
+            this.game.showTip('💡 TIP: 队友遇险！10秒内开车触碰发 SOS 的队友即可将其半血复活！', 600);
             audio.play('explosion');
             return;
         }
@@ -738,6 +745,7 @@ class Tank {
             
             if (killer.killStreak > 2) {
                 this.game.showFloatingText(`${killer.killStreak} COMBO!`, this.x + this.width/2, this.y - 30, '#ff0');
+                if (killer.killStreak === 3) this.game.showTip('💡 TIP: 连续击杀不仅能获得分数，连击5次还可以直升1级并获得天赋！', 400);
                 this.game.shakeScreen(Math.min(killer.killStreak * 2, 12));
                 if (killer.killStreak % 5 === 0) {
                     killer.upgrade();
@@ -1310,6 +1318,14 @@ class Game {
     shakeScreen(intensity) { this.shakeTimer = intensity; this.shakeIntensity = intensity; }
     showAnnouncement(text, color = '#fff') { this.announcements.push({ text, color, timer: 120, y: CANVAS_SIZE / 2 }); }
     showFloatingText(text, x, y, color = '#fff') { this.floatingTexts.push({ text, x, y, color, timer: 60, vy: -2 }); }
+    showTip(text, duration = 300) {
+        const banner = document.getElementById('tips-banner');
+        if (banner) {
+            banner.innerText = text;
+            banner.classList.remove('hidden');
+            this.tipTimer = duration;
+        }
+    }
     startGame() {
         audio.init();
         audio.play('start');
@@ -1328,6 +1344,7 @@ class Game {
         this.gameState = 'STAGE_START'; this.stageStartTimer = 120;
         document.getElementById('start-screen').classList.add('hidden'); document.getElementById('game-over-screen').classList.add('hidden');
         document.getElementById('stage-info').innerText = `关卡 Stage ${this.currentStage + 1}`;
+        this.showTip("💡 TIP: 深棕色的硬砖需要攻击两次，黑色的石头不可破坏，善用地形掩体！", 600);
         this.map.reset(this.currentStage); this.bullets = []; this.enemies = []; this.effects = []; this.powerUps = []; this.fortifyTimer = 0; this.enemyFrozenTimer = 0;
         this.stageClearTimer = 0;
         this.currentLevel = this.map.currentLevel;
@@ -1397,23 +1414,11 @@ class Game {
         if (!this.input.isDown('KeyP')) this.pausePressed = false;
         if (this.paused) return;
 
-        this.tipTimer = (this.tipTimer || 0) + 1;
-        if (this.tipTimer > 300) {
-            this.tipTimer = 0;
-            const TIPS = [
-                "💡 TIP: 连续击杀3个敌人即可达成 COMBO，连击5次直升1级并获得天赋！",
-                "💡 TIP: 队友头上闪烁 SOS 时，在10秒内开车触碰即可将其半血复活！",
-                "💡 TIP: 吃到直升机🚁可获得飞行能力，无视地形与子弹，按开火键轰炸！",
-                "💡 TIP: 吃到小艇🚤可在水面上自由移动，利用湖泊躲避不会游泳的敌人！",
-                "💡 TIP: 每次升级都会随机获得一项天赋：散弹、穿甲、弹射、极速或吸血！",
-                "💡 TIP: 深棕色的硬砖需要攻击两次，黑色的石头不可破坏，善用掩体！",
-                "💡 TIP: 击败红色闪烁的敌人会掉落强力道具，有时天降奇遇会掉落火箭包🚀！"
-            ];
-            this.currentTipIndex = ((this.currentTipIndex || 0) + 1) % TIPS.length;
-            const banner = document.getElementById('tips-banner');
-            if (banner) {
-                banner.innerText = TIPS[this.currentTipIndex];
-                banner.classList.remove('hidden');
+        if (this.tipTimer > 0) {
+            this.tipTimer--;
+            if (this.tipTimer <= 0) {
+                const banner = document.getElementById('tips-banner');
+                if (banner) banner.classList.add('hidden');
             }
         }
 
