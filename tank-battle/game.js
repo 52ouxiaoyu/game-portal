@@ -723,16 +723,7 @@ class Tank {
             return;
         }
         
-        if (this instanceof Player && !this.downed) {
-            this.downed = true;
-            this.downedTimer = 600;
-            this.health = 0;
-            this.game.effects.push(new Effect(this.x + 30, this.y + 30, 'EXPLOSION', 1));
-            this.game.showFloatingText('SOS!', this.x + 30, this.y - 10, '#f00');
-            this.game.showTip('💡 TIP: 队友遇险！10秒内开车触碰发 SOS 的队友即可将其半血复活！', 600);
-            audio.play('explosion');
-            return;
-        }
+        
 
         this.alive = false; this.game.effects.push(new Effect(this.x + 30, this.y + 30, 'EXPLOSION', this.isBoss ? 3 : 1));
         this.game.shakeScreen(this.isBoss ? 15 : 5);
@@ -822,30 +813,10 @@ class Player extends Tank {
     }
     update() {
         if (!this.alive) return;
-        if (this.downed) {
-            this.downedTimer--;
-            if (this.downedTimer % 30 === 0) this.game.effects.push(new Effect(this.x + this.width/2, this.y + this.height/2, 'SPAWN', 1));
-            if (this.downedTimer <= 0) {
-                this.downed = false;
-                this.health = 0;
-                this.alive = false;
-                this.game.effects.push(new Effect(this.x + this.width/2, this.y + this.height/2, 'EXPLOSION', 2));
-                audio.play('explosion');
-                this.game.handlePlayerDeath(this);
-            }
-            return;
-        }
+        
         if (this.comboTimer > 0) this.comboTimer--; else this.combo = 0;
         
-        // Revive teammate logic
-        const teammate = this.game.players.find(p => p !== this && p.alive && p.downed);
-        if (teammate && Math.hypot(this.x - teammate.x, this.y - teammate.y) < TILE_SIZE * 1.5) {
-            teammate.downed = false;
-            teammate.health = Math.max(1, Math.floor(teammate.maxHealth / 2));
-            teammate.setShield(120);
-            this.game.showFloatingText('REVIVED!', teammate.x, teammate.y, '#0f0');
-            audio.play('powerup');
-        }
+        
 
         super.update();
         this.checkIdle();
