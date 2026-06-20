@@ -614,7 +614,7 @@ class Tank {
             this.game.updateHUD();
         }
     }
-    update() { if (this.cooldown > 0) this.cooldown--; if (this.shieldTimer > 0) this.shieldTimer--; }
+    update() { if (this.cooldown > 0) this.cooldown--; if (this.shieldTimer > 0) this.shieldTimer--; if (this.flyBombCooldown > 0) this.flyBombCooldown--; }
     move(dir) {
         this.direction = dir; let nx = this.x; let ny = this.y;
         const onWater = this.game.map.isOnWater(this.x, this.y, this.width, this.height);
@@ -656,14 +656,15 @@ class Tank {
     }
     shoot() {
         if (this.canFly) {
-            if (this.cooldown > 0) return;
-            this.cooldown = 45;
-            this.game.effects.push(new Effect(this.x + 30, this.y + 30, 'EXPLOSION', 1.5));
-            audio.play('explosion');
-            this.game.enemies.forEach(e => {
-                if (e.alive && Math.hypot(e.x + e.width/2 - (this.x + 30), e.y + e.height/2 - (this.y + 30)) < TILE_SIZE * 3) e.destroy(this, 100);
-            });
-            return;
+            if (this.flyBombCooldown === undefined || this.flyBombCooldown <= 0) {
+                this.flyBombCooldown = 45;
+                this.game.effects.push(new Effect(this.x + 30, this.y + 30, 'EXPLOSION', 1.5));
+                audio.play('explosion');
+                this.game.enemies.forEach(e => {
+                    if (e.alive && Math.hypot(e.x + e.width/2 - (this.x + 30), e.y + e.height/2 - (this.y + 30)) < TILE_SIZE * 3) e.destroy(this, 100);
+                });
+            }
+            if (this.level < 2) return;
         }
         if (this.cooldown > 0) {
             if (this.perks && this.perks.includes('RAPID') && this.cooldown > 5) this.cooldown -= 1; // Faster cooldown
@@ -1053,8 +1054,8 @@ class Enemy extends Tank {
 
         if (this.variant === 'FAST') { this.speed = (3.5 + Math.min(stage * 0.1, 1.5)) * diffMult; this.health = 1; this.color = '#FF9999'; }
         else if (this.variant === 'HEAVY') { this.speed = (1.5 + Math.min(stage * 0.05, 1)) * diffMult; this.health = 3; this.color = '#777777'; }
-        else if (this.variant === 'ELITE') { this.speed = (2.5 + Math.min(stage * 0.1, 1.5)) * diffMult; this.health = 1; this.level = 2; this.color = '#FF55FF'; }
-        else { this.speed = (2 + Math.min(stage * 0.1, 2)) * diffMult; this.health = 1; }
+        else if (this.variant === 'ELITE') { this.speed = (2.5 + Math.min(stage * 0.1, 1.5)) * diffMult; this.health = 1; this.level = Math.min(3, 1 + Math.floor(stage / 10)); this.color = '#FF55FF'; }
+        else { this.speed = (2 + Math.min(stage * 0.1, 2)) * diffMult; this.health = 1; this.level = Math.min(3, Math.floor(stage / 15)); }
         
         this.dirTimer = 0; 
     } 
