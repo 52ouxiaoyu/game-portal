@@ -448,6 +448,13 @@ this.weapons = [];
 
         resolveBuildingCollision(this);
 
+        // Keep players within the current camera view (Co-op screen binding)
+        const margin = 50;
+        if(this.x < camera.x - CANVAS_W/2 + margin) this.x = camera.x - CANVAS_W/2 + margin;
+        if(this.x > camera.x + CANVAS_W/2 - margin) this.x = camera.x + CANVAS_W/2 - margin;
+        if(this.y < camera.y - CANVAS_H/2 + margin) this.y = camera.y - CANVAS_H/2 + margin;
+        if(this.y > camera.y + CANVAS_H/2 - margin) this.y = camera.y + CANVAS_H/2 - margin;
+
         // Check weapon level up
         for(let i = this.weapons.length - 1; i >= 0; i--) {
             if(killCount >= this.weapons[i].req) {
@@ -694,6 +701,13 @@ class Bullet {
         this.x += this.dx * this.speed;
         this.y += this.dy * this.speed;
         resolveBuildingCollision(this);
+
+        // Keep players within the current camera view (Co-op screen binding)
+        const margin = 50;
+        if(this.x < camera.x - CANVAS_W/2 + margin) this.x = camera.x - CANVAS_W/2 + margin;
+        if(this.x > camera.x + CANVAS_W/2 - margin) this.x = camera.x + CANVAS_W/2 - margin;
+        if(this.y < camera.y - CANVAS_H/2 + margin) this.y = camera.y - CANVAS_H/2 + margin;
+        if(this.y > camera.y + CANVAS_H/2 - margin) this.y = camera.y + CANVAS_H/2 - margin;
     }
     draw(ctx) {
         ctx.fillStyle = this.color;
