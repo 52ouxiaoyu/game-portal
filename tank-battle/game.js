@@ -781,16 +781,18 @@ class Tank {
             ctx.fillRect(px + w/2 - 8, py + h/2 - 8, 16, 16); ctx.strokeStyle = '#000'; ctx.strokeRect(px + w/2 - 8, py + h/2 - 8, 16, 16);
             ctx.fillStyle = this.level >= 4 ? '#f0f' : (this.level >= 3 ? '#0ff' : (this.level >= 2 ? '#f00' : (this.level >= 1 ? '#ff0' : this.color)));
             const barrelW = 6 + Math.min(this.level, 10) * 2;
-            if (this.direction === 'UP') ctx.fillRect(px + w/2 - barrelW/2, py - 8, barrelW, 24 + Math.min(this.level, 10) * 4);
-            else ctx.fillRect(px + w/2 - barrelW/2, py + h - 16 - Math.min(this.level, 10) * 4, barrelW, 24 + Math.min(this.level, 10) * 4);
+            const ext = Math.min(this.level, 4) * 2;
+            if (this.direction === 'UP') ctx.fillRect(px + w/2 - barrelW/2, py - 8 - ext, barrelW, 24 + ext);
+            else ctx.fillRect(px + w/2 - barrelW/2, py + h - 16, barrelW, 24 + ext);
         } else {
             ctx.fillRect(px + 8, py + 8, w - 16, h - 16); ctx.fillStyle = '#000'; ctx.fillRect(px, py, w, 8); ctx.fillRect(px, py + h - 8, w, 8);
             ctx.fillStyle = this.color; for (let i = 0; i < w; i += 8) { ctx.fillRect(px + i, py, 4, 8); ctx.fillRect(px + i, py + h - 8, 4, 8); }
             ctx.fillRect(px + w/2 - 8, py + h/2 - 8, 16, 16); ctx.strokeStyle = '#000'; ctx.strokeRect(px + w/2 - 8, py + h/2 - 8, 16, 16);
             ctx.fillStyle = this.level >= 4 ? '#f0f' : (this.level >= 3 ? '#0ff' : (this.level >= 2 ? '#f00' : (this.level >= 1 ? '#ff0' : this.color)));
             const barrelW = 6 + Math.min(this.level, 10) * 2;
-            if (this.direction === 'LEFT') ctx.fillRect(px - 8 - Math.min(this.level, 10) * 4, py + h/2 - barrelW/2, 24 + Math.min(this.level, 10) * 4, barrelW);
-            else ctx.fillRect(px + w - 16 - Math.min(this.level, 10) * 4, py + h/2 - barrelW/2, 24 + Math.min(this.level, 10) * 4, barrelW);
+            const ext = Math.min(this.level, 4) * 2;
+            if (this.direction === 'LEFT') ctx.fillRect(px - 8 - ext, py + h/2 - barrelW/2, 24 + ext, barrelW);
+            else ctx.fillRect(px + w - 16, py + h/2 - barrelW/2, 24 + ext, barrelW);
         }
         if (this.level >= 1) {
             ctx.fillStyle = this.level >= 1 ? '#fa0' : '#0ff';
