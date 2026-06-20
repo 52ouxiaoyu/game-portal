@@ -3,9 +3,9 @@ const TILE_SIZE = 32;
 const GRID_SIZE = 26;
 const CANVAS_SIZE = TILE_SIZE * GRID_SIZE; // 832px
 
-const TILE_TYPES = { EMPTY: 0, BRICK: 1, STEEL: 2, WATER: 3, FOREST: 4, ICE: 5, BASE: 9, BASE_DESTROYED: 10 };
+const TILE_TYPES = { EMPTY: 0, BRICK: 1, STEEL: 2, WATER: 3, FOREST: 4, ICE: 5, HARD_BRICK: 6, UNBREAKABLE: 7, BASE: 9, BASE_DESTROYED: 10 };
 const COLORS = { BRICK: '#B53120', BRICK_LIGHT: '#DC5341', STEEL: '#AAAAAA', STEEL_LIGHT: '#EEEEEE', WATER: '#2131E7', FOREST: '#21B521', PLAYER1: '#E7E721', PLAYER2: '#63C6FF', ENEMY: '#E7E7E7', BASE: '#E79C21' };
-const POWERUP_TYPES = { SHIELD: '🛡️', BOMB: '💣', STAR: '⭐', SHOVEL: '🏗️', LIFE: '❤️', TIME: '⏳' };
+const POWERUP_TYPES = { SHIELD: '🛡️', BOMB: '💣', STAR: '⭐', SHOVEL: '🏗️', LIFE: '❤️', TIME: '⏳', MAX_WEAPON: '🚀', BOAT: '🚤', FLY: '🚁' };
 
 function seededRandom(seed) {
     let s = seed;
@@ -42,8 +42,9 @@ function generateLevel(index) {
     const pattern = patterns[index % patterns.length];
     const brickDensity = 0.15 + difficulty * 0.2;
     const steelDensity = 0.02 + difficulty * 0.08;
-    const forestDensity = (index % 10 === 0) ? 0.15 : 0;
-    const iceDensity = (index % 7 === 0) ? 0.15 : 0;
+    const forestDensity = 0.05 + difficulty * 0.15;
+    const iceDensity = 0.02 + difficulty * 0.1;
+    const waterDensity = 0.03 + difficulty * 0.1;
     const isProtected = (x, y) => (x >= 7 && x <= 17 && y >= 21) || (x >= 11 && x <= 14 && y >= 23);
     const isSpawn = (x, y) => (x >= 0 && x <= 3 && y >= 0 && y <= 3) || (x >= 11 && x <= 14 && y >= 0 && y <= 3) || (x >= 22 && x <= 25 && y >= 0 && y <= 3);
     if (pattern === 'grid') {
@@ -130,21 +131,21 @@ function generateLevel(index) {
             const w = 1 + Math.floor(rng() * 3);
             const h = 1 + Math.floor(rng() * 3);
             if (rng() < steelDensity * 3) level.steels.push([y, x, h, w]);
-            else level.bricks.push([y, x, h, w]);
+            else { level.bricks.push([y, x, h, w]); }
         }
     }
-    if (difficulty > 0.2) {
-        const waterCount = Math.floor(difficulty * 6);
+    if (waterDensity > 0) {
+        const waterCount = Math.floor(3 + waterDensity * 20);
         for (let i = 0; i < waterCount; i++) {
             const x = 3 + Math.floor(rng() * 20);
             const y = 3 + Math.floor(rng() * 16);
             const w = 1 + Math.floor(rng() * 3);
             const h = 1 + Math.floor(rng() * 3);
-            level.waters.push([y, x, h, w]);
+            if (!isProtected(x, y) && !isSpawn(x, y)) level.waters.push([y, x, h, w]);
         }
     }
     if (forestDensity > 0) {
-        const forestCount = Math.floor(3 + forestDensity * 10);
+        const forestCount = Math.floor(2 + forestDensity * 20);
         for (let i = 0; i < forestCount; i++) {
             const x = 3 + Math.floor(rng() * 20);
             const y = 3 + Math.floor(rng() * 16);
@@ -154,11 +155,11 @@ function generateLevel(index) {
         }
     }
     if (iceDensity > 0) {
-        const iceCount = Math.floor(iceDensity * 20);
+        const iceCount = Math.floor(1 + iceDensity * 20);
         for (let i = 0; i < iceCount; i++) {
             const x = 3 + Math.floor(rng() * 20);
             const y = 3 + Math.floor(rng() * 16);
-            level.ices.push([y, x, 2, 2]);
+            if (!isProtected(x, y) && !isSpawn(x, y)) level.ices.push([y, x, 2, 2]);
         }
     }
     if (index < 10) {
@@ -257,7 +258,12 @@ class PowerUp {
     update() {
         this.timer--; if (this.timer <= 0) this.active = false;
         if (!this.active) return;
-        this.game.players.forEach(p => { if (this.active && p.alive && this.x < p.x + p.width && this.x + this.width > p.x && this.y < p.y + p.height && this.y + this.height > p.y) { this.applyEffect(p); this.active = false; } });
+        this.game.players.forEach(p => { 
+            const margin = 20;
+            if (this.active && p.alive && this.x - margin < p.x + p.width && this.x + this.width + margin > p.x && this.y - margin < p.y + p.height && this.y + this.height + margin > p.y) { 
+                this.applyEffect(p); this.active = false; 
+            } 
+        });
     }
     applyEffect(player) {
         audio.play('powerup');
@@ -268,6 +274,22 @@ class PowerUp {
         else if (this.type === POWERUP_TYPES.SHOVEL) this.game.fortifyBase();
         else if (this.type === POWERUP_TYPES.LIFE) this.game.lives++;
         else if (this.type === POWERUP_TYPES.TIME) this.game.enemyFrozenTimer = 300;
+        else if (this.type === POWERUP_TYPES.MAX_WEAPON) {
+            player.level = 30;
+            player.speed = 4 + 30 * 0.3;
+            player.maxHealth = 1 + 30 * 2;
+            player.health = player.maxHealth;
+            this.game.showAnnouncement('终极武器 MAX WEAPON!', '#f0f');
+            this.game.updateHUD();
+        }
+        else if (this.type === POWERUP_TYPES.BOAT) {
+            player.canBoat = true;
+            this.game.showAnnouncement('获得渡河能力 CAN BOAT!', '#0cf');
+        }
+        else if (this.type === POWERUP_TYPES.FLY) {
+            player.canFly = true;
+            this.game.showAnnouncement('获得飞行能力 CAN FLY!', '#ccc');
+        }
         this.game.updateHUD();
     }
     draw(ctx) { if (Math.floor(this.timer / 10) % 2 === 0) { ctx.font = '48px Arial'; ctx.fillText(this.type, this.x, this.y + 48); } }
@@ -279,10 +301,21 @@ class GameMap {
         const level = generateLevel(levelIndex);
         this.currentLevel = level;
         this.grid = Array(GRID_SIZE).fill().map(() => Array(GRID_SIZE).fill(0));
-        for (let i = 0; i < GRID_SIZE; i++) this.grid[0][i] = this.grid[GRID_SIZE - 1][i] = this.grid[i][0] = this.grid[i][GRID_SIZE - 1] = TILE_TYPES.STEEL;
-        level.bricks.forEach(([y,x,h,w]) => { for(let i=0; i<h; i++) for(let j=0; j<w; j++) if (y+i < GRID_SIZE && x+j < GRID_SIZE) this.grid[y+i][x+j] = TILE_TYPES.BRICK; });
-        level.steels.forEach(([y,x,h,w]) => { for(let i=0; i<h; i++) for(let j=0; j<w; j++) if (y+i < GRID_SIZE && x+j < GRID_SIZE) this.grid[y+i][x+j] = TILE_TYPES.STEEL; });
+        for (let i = 0; i < GRID_SIZE; i++) this.grid[0][i] = this.grid[GRID_SIZE - 1][i] = this.grid[i][0] = this.grid[i][GRID_SIZE - 1] = TILE_TYPES.UNBREAKABLE;
+        const hardBrickChance = Math.min(0.05 + levelIndex * 0.01, 0.4);
+        const unbreakableChance = Math.min(0.02 + levelIndex * 0.005, 0.2);
+        level.bricks.forEach(([y,x,h,w]) => { for(let i=0; i<h; i++) for(let j=0; j<w; j++) if (y+i < GRID_SIZE && x+j < GRID_SIZE) this.grid[y+i][x+j] = Math.random() < hardBrickChance ? TILE_TYPES.HARD_BRICK : TILE_TYPES.BRICK; });
+        level.steels.forEach(([y,x,h,w]) => { for(let i=0; i<h; i++) for(let j=0; j<w; j++) if (y+i < GRID_SIZE && x+j < GRID_SIZE) this.grid[y+i][x+j] = Math.random() < unbreakableChance ? TILE_TYPES.UNBREAKABLE : TILE_TYPES.STEEL; });
         if (level.waters) level.waters.forEach(([y,x,h,w]) => { for(let i=0; i<h; i++) for(let j=0; j<w; j++) if (y+i < GRID_SIZE && x+j < GRID_SIZE) this.grid[y+i][x+j] = TILE_TYPES.WATER; });
+        if (!level.waters || level.waters.length === 0) {
+            if (Math.random() < 0.4) {
+                const lx = 4 + Math.floor(Math.random() * 12);
+                const ly = 8 + Math.floor(Math.random() * 8);
+                const lw = 4 + Math.floor(Math.random() * 4);
+                const lh = 2 + Math.floor(Math.random() * 4);
+                for(let i=0; i<lh; i++) for(let j=0; j<lw; j++) if (ly+i < GRID_SIZE && lx+j < GRID_SIZE) this.grid[ly+i][lx+j] = TILE_TYPES.WATER;
+            }
+        }
         if (level.forests) level.forests.forEach(([y,x,h,w]) => { for(let i=0; i<h; i++) for(let j=0; j<w; j++) if (y+i < GRID_SIZE && x+j < GRID_SIZE) this.grid[y+i][x+j] = TILE_TYPES.FOREST; });
         if (level.ices) level.ices.forEach(([y,x,h,w]) => { for(let i=0; i<h; i++) for(let j=0; j<w; j++) if (y+i < GRID_SIZE && x+j < GRID_SIZE) this.grid[y+i][x+j] = TILE_TYPES.ICE; });
         this.clearArea(8, 22, 2, 2); this.clearArea(16, 22, 2, 2); this.clearArea(1, 1, 3, 3); this.clearArea(11, 1, 3, 3); this.clearArea(21, 1, 3, 3);
@@ -311,6 +344,14 @@ class GameMap {
                     ctx.fillStyle = COLORS.BRICK; ctx.fillRect(px, py, TILE_SIZE, TILE_SIZE);
                     ctx.fillStyle = COLORS.BRICK_LIGHT; ctx.fillRect(px, py, TILE_SIZE, 4); ctx.fillRect(px, py, 4, TILE_SIZE);
                     ctx.fillStyle = '#000'; ctx.fillRect(px + TILE_SIZE/2, py, 2, TILE_SIZE); ctx.fillRect(px, py + TILE_SIZE/2, TILE_SIZE, 2);
+                } else if (tile === TILE_TYPES.HARD_BRICK) {
+                    ctx.fillStyle = '#8B4513'; ctx.fillRect(px, py, TILE_SIZE, TILE_SIZE);
+                    ctx.fillStyle = '#A0522D'; ctx.fillRect(px, py, TILE_SIZE, 4); ctx.fillRect(px, py, 4, TILE_SIZE);
+                    ctx.fillStyle = '#000'; ctx.fillRect(px + TILE_SIZE/2, py, 2, TILE_SIZE); ctx.fillRect(px, py + TILE_SIZE/2, TILE_SIZE, 2);
+                } else if (tile === TILE_TYPES.UNBREAKABLE) {
+                    ctx.fillStyle = '#222'; ctx.fillRect(px, py, TILE_SIZE, TILE_SIZE);
+                    ctx.fillStyle = '#444'; ctx.fillRect(px + 4, py + 4, TILE_SIZE - 8, TILE_SIZE - 8);
+                    ctx.fillStyle = '#111'; ctx.fillRect(px + 8, py + 8, TILE_SIZE - 16, TILE_SIZE - 16);
                 } else if (tile === TILE_TYPES.STEEL) {
                     ctx.fillStyle = COLORS.STEEL; ctx.fillRect(px, py, TILE_SIZE, TILE_SIZE);
                     ctx.fillStyle = COLORS.STEEL_LIGHT; ctx.fillRect(px + 4, py + 4, TILE_SIZE - 8, TILE_SIZE - 8);
@@ -338,15 +379,20 @@ class GameMap {
         ctx.fillStyle = baseColor; ctx.fillRect(px + 8, py - 8, 48 * hpRatio, 5);
         ctx.strokeStyle = '#666'; ctx.lineWidth = 1; ctx.strokeRect(px + 8, py - 8, 48, 5);
     }
-    isBlocked(x, y, width, height, isBullet = false) {
+    isBlocked(x, y, width, height, isBullet = false, canBoat = false, canFly = false) {
         const left = Math.floor(x / TILE_SIZE); const right = Math.floor((x + width - 0.1) / TILE_SIZE);
         const top = Math.floor(y / TILE_SIZE); const bottom = Math.floor((y + height - 0.1) / TILE_SIZE);
         for (let i = top; i <= bottom; i++) {
             for (let j = left; j <= right; j++) {
                 if (i < 0 || i >= GRID_SIZE || j < 0 || j >= GRID_SIZE) return true;
                 const tile = this.grid[i][j];
-                if (isBullet) { if (tile === TILE_TYPES.BRICK || tile === TILE_TYPES.STEEL || tile === TILE_TYPES.BASE) return true; }
-                else { if (tile !== TILE_TYPES.EMPTY && tile !== TILE_TYPES.FOREST && tile !== TILE_TYPES.ICE && tile !== TILE_TYPES.WATER) return true; }
+                if (isBullet) { if (tile === TILE_TYPES.BRICK || tile === TILE_TYPES.HARD_BRICK || tile === TILE_TYPES.STEEL || tile === TILE_TYPES.UNBREAKABLE || tile === TILE_TYPES.BASE) return true; }
+                else { 
+                    if (tile === TILE_TYPES.EMPTY || tile === TILE_TYPES.FOREST || tile === TILE_TYPES.ICE) continue;
+                    if (tile === TILE_TYPES.WATER && (canBoat || canFly)) continue;
+                    if (tile !== TILE_TYPES.UNBREAKABLE && canFly) continue;
+                    return true;
+                }
             }
         }
         return false;
@@ -395,21 +441,69 @@ class InputHandler {
 }
 
 class Bullet {
-    constructor(game, owner, x, y, dir, level = 0) { 
+    constructor(game, owner, x, y, dir, level = 0, type = 'NORMAL') { 
         this.game = game; this.owner = owner; this.x = x; this.y = y; this.dir = dir; 
-        this.level = level; this.speed = 8; this.size = 8 + (level * 2); this.active = true; 
-        this.damage = (this.owner instanceof Player) ? 5 + level * 2 : 1;
+        this.level = level; this.type = type;
+        this.speed = 8 + (level * 0.2); 
+        this.size = 8 + Math.min(level, 5); 
+        this.active = true; 
+        this.damage = (this.owner instanceof Player) ? 5 + level * 3 : 1;
+        if (this.type === 'LASER' || this.type === 'LASER_MISSILE') { this.speed *= 2; this.damage *= 1.5; }
+        if (this.type === 'MISSILE') { this.speed *= 0.8; }
+        this.vx = undefined; this.vy = undefined;
     }
     update() {
-        if (this.dir === 'UP') this.y -= this.speed; else if (this.dir === 'DOWN') this.y += this.speed; else if (this.dir === 'LEFT') this.x -= this.speed; else if (this.dir === 'RIGHT') this.x += this.speed;
+        if (this.type === 'MISSILE' || this.type === 'LASER_MISSILE') {
+            let target = null;
+            let minDist = Infinity;
+            let targets = this.owner instanceof Player ? this.game.enemies : this.game.players;
+            for (let t of targets) {
+                if (!t.alive) continue;
+                let d = Math.hypot(t.x + t.width/2 - this.x, t.y + t.height/2 - this.y);
+                if (d < minDist && d < TILE_SIZE * 20) { minDist = d; target = t; }
+            }
+            if (target) {
+                let dx = target.x + target.width/2 - this.x;
+                let dy = target.y + target.height/2 - this.y;
+                let angle = Math.atan2(dy, dx);
+                let currentAngle = this.vx !== undefined ? Math.atan2(this.vy, this.vx) : 
+                                   (this.dir === 'UP' ? -Math.PI/2 : this.dir === 'DOWN' ? Math.PI/2 : this.dir === 'LEFT' ? Math.PI : 0);
+                let diff = angle - currentAngle;
+                while (diff > Math.PI) diff -= Math.PI * 2;
+                while (diff < -Math.PI) diff += Math.PI * 2;
+                let turnSpeed = 0.15 + Math.min(this.level * 0.01, 0.3);
+                let newAngle = currentAngle + Math.max(-turnSpeed, Math.min(turnSpeed, diff));
+                this.vx = Math.cos(newAngle) * this.speed;
+                this.vy = Math.sin(newAngle) * this.speed;
+                if (Math.abs(this.vx) > Math.abs(this.vy)) this.dir = this.vx > 0 ? 'RIGHT' : 'LEFT';
+                else this.dir = this.vy > 0 ? 'DOWN' : 'UP';
+            } else if (this.vx === undefined) {
+                this.vx = (this.dir === 'LEFT' ? -this.speed : this.dir === 'RIGHT' ? this.speed : 0);
+                this.vy = (this.dir === 'UP' ? -this.speed : this.dir === 'DOWN' ? this.speed : 0);
+            }
+        }
+        
+        if (this.vx !== undefined && this.vy !== undefined) {
+            this.x += this.vx; this.y += this.vy;
+        } else {
+            if (this.dir === 'UP') this.y -= this.speed; else if (this.dir === 'DOWN') this.y += this.speed; else if (this.dir === 'LEFT') this.x -= this.speed; else if (this.dir === 'RIGHT') this.x += this.speed;
+        }
         for (let other of this.game.bullets) {
             if (other === this || !other.active) continue;
             if (this.x < other.x + other.size && this.x + this.size > other.x && this.y < other.y + other.size && this.y + this.size > other.y) { this.active = false; other.active = false; this.triggerExplosion(this.x, this.y, true); return; }
         }
         const tx = Math.floor((this.x + this.size/2) / TILE_SIZE); const ty = Math.floor((this.y + this.size/2) / TILE_SIZE);
-        if (tx < 0 || tx >= GRID_SIZE || ty < 0 || ty >= GRID_SIZE) { this.active = false; return; }
+        if (tx < 0 || tx >= GRID_SIZE || ty < 0 || ty >= GRID_SIZE) { 
+            if (this.bounces > 0) { 
+                this.bounces--; 
+                if (this.vx !== undefined && this.vy !== undefined) { this.vx = -this.vx; this.vy = -this.vy; }
+                else { this.dir = this.dir === 'UP' ? 'DOWN' : (this.dir === 'DOWN' ? 'UP' : (this.dir === 'LEFT' ? 'RIGHT' : 'LEFT')); }
+                this.active = true; 
+            } else { this.active = false; }
+            return; 
+        }
         const tile = this.game.map.grid[ty][tx];
-        if (tile === TILE_TYPES.BRICK || tile === TILE_TYPES.STEEL || tile === TILE_TYPES.BASE) {
+        if (tile === TILE_TYPES.BRICK || tile === TILE_TYPES.HARD_BRICK || tile === TILE_TYPES.STEEL || tile === TILE_TYPES.UNBREAKABLE || tile === TILE_TYPES.BASE) {
             if (tile === TILE_TYPES.BASE) {
                 if (!(this.owner instanceof Player && this.owner.aiActive)) {
                     this.game.baseHealth--;
@@ -422,49 +516,92 @@ class Bullet {
                     }
                     this.game.shakeScreen(8);
                 }
+            } else {
+                this.triggerExplosion(this.x + this.size/2, this.y + this.size/2);
             }
-            this.triggerExplosion(this.x + this.size/2, this.y + this.size/2);
-            this.active = false;
+            if (this.bounces > 0 && tile !== TILE_TYPES.BASE) {
+                this.bounces--;
+                if (this.vx !== undefined && this.vy !== undefined) {
+                    if (Math.abs(this.vx) > Math.abs(this.vy)) this.vx = -this.vx; else this.vy = -this.vy;
+                } else {
+                    this.dir = this.dir === 'UP' ? 'DOWN' : (this.dir === 'DOWN' ? 'UP' : (this.dir === 'LEFT' ? 'RIGHT' : 'LEFT'));
+                }
+                this.active = true;
+            } else {
+                this.active = false;
+            }
             return;
         }
         const isEnemyBullet = this.owner instanceof Enemy;
         const tanks = isEnemyBullet ? this.game.players : this.game.enemies;
         for (const tank of tanks) {
             if (!tank.alive) continue;
-            if (this.x < tank.x + tank.width && this.x + this.size > tank.x && this.y < tank.y + tank.height && this.y + this.size > tank.y) { this.triggerExplosion(this.x + this.size/2, this.y + this.size/2); tank.destroy(this.owner, this.damage); this.active = false; break; }
+            if (tank.canFly && this.owner instanceof Enemy) continue;
+            if (this.x < tank.x + tank.width && this.x + this.size > tank.x && this.y < tank.y + tank.height && this.y + this.size > tank.y) { 
+                this.triggerExplosion(this.x + this.size/2, this.y + this.size/2); 
+                tank.destroy(this.owner, this.damage); 
+                if (!this.piercing) { this.active = false; break; }
+            }
         }
     }
     triggerExplosion(ex, ey, small = false) {
-        let radius = small ? 0.5 : (1 + this.level * 0.5);
+        let radius = small ? 0.5 : (1 + Math.min(this.level, 10) * 0.2);
         if (this.owner instanceof Player && !small) radius += 1.5;
         audio.play('explosion');
         this.game.effects.push(new Effect(ex, ey, 'EXPLOSION', radius));
         if (small) return;
         const gridX = Math.floor(ex / TILE_SIZE); const gridY = Math.floor(ey / TILE_SIZE); const range = Math.ceil(radius);
-        const isPlayerBullet = this.owner instanceof Player;
         for (let iy = gridY - range; iy <= gridY + range; iy++) {
             for (let ix = gridX - range; ix <= gridX + range; ix++) {
                 if (iy < 0 || iy >= GRID_SIZE || ix < 0 || ix >= GRID_SIZE) continue;
                 const tile = this.game.map.grid[iy][ix];
                 if (iy === 0 || iy === GRID_SIZE - 1 || ix === 0 || ix === GRID_SIZE - 1) continue;
                 if (tile === TILE_TYPES.BRICK) this.game.map.grid[iy][ix] = TILE_TYPES.EMPTY;
-                else if (tile === TILE_TYPES.STEEL && (this.level >= 3 || this.owner instanceof Player)) this.game.map.grid[iy][ix] = TILE_TYPES.EMPTY;
-                // Base is now only damaged by direct hits, so explosion radius won't accidentally destroy it
+                else if (tile === TILE_TYPES.HARD_BRICK) this.game.map.grid[iy][ix] = TILE_TYPES.BRICK;
+                else if (tile === TILE_TYPES.STEEL && this.level >= 5) this.game.map.grid[iy][ix] = TILE_TYPES.HARD_BRICK;
             }
         }
     }
-    draw(ctx) { ctx.save(); ctx.fillStyle = this.level >= 3 ? '#ff0' : '#fff'; ctx.beginPath(); ctx.arc(this.x + this.size/2, this.y + this.size/2, this.size/2, 0, Math.PI * 2); ctx.fill(); if (this.level >= 1) { ctx.shadowBlur = 15; ctx.shadowColor = this.level >= 3 ? '#ff0' : '#fff'; } ctx.restore(); }
+    draw(ctx) { 
+        ctx.save(); 
+        if (this.type === 'LASER' || this.type === 'LASER_MISSILE') {
+            ctx.fillStyle = '#0ff';
+            ctx.shadowBlur = 10; ctx.shadowColor = '#0ff';
+            ctx.fillRect(this.x, this.y, this.dir === 'UP' || this.dir === 'DOWN' ? this.size/2 : this.size*2, this.dir === 'UP' || this.dir === 'DOWN' ? this.size*2 : this.size/2);
+        } else if (this.type === 'MISSILE') {
+            ctx.fillStyle = '#f55';
+            ctx.shadowBlur = 10; ctx.shadowColor = '#f00';
+            ctx.beginPath(); ctx.arc(this.x + this.size/2, this.y + this.size/2, this.size/2, 0, Math.PI * 2); ctx.fill();
+            if (Math.random() < 0.5) this.game.effects.push(new Effect(this.x + this.size/2, this.y + this.size/2, 'EXPLOSION', 0.2));
+        } else {
+            ctx.fillStyle = this.level >= 3 ? '#ff0' : '#fff'; 
+            ctx.beginPath(); ctx.arc(this.x + this.size/2, this.y + this.size/2, this.size/2, 0, Math.PI * 2); ctx.fill(); 
+            if (this.level >= 1) { ctx.shadowBlur = 15; ctx.shadowColor = this.level >= 3 ? '#ff0' : '#fff'; } 
+        }
+        ctx.restore(); 
+    }
 }
 
 class Tank {
     constructor(game, x, y, color) { this.game = game; this.x = x; this.y = y; this.width = 60; this.height = 60; this.color = color; this.direction = 'UP'; this.speed = 4; this.cooldown = 0; this.alive = true; this.shieldTimer = 0; this.level = 0; this.score = 0; }
     setShield(d) { this.shieldTimer = d; }
     upgrade() { 
-        this.level = Math.min(this.level + 1, 3); 
-        this.speed = 4 + this.level * 0.5; 
+        if (this.level >= 30) return;
+        this.level++;
+        this.speed = 4 + this.level * 0.3; 
         if (this instanceof Player) {
             this.maxHealth = 1 + this.level * 2;
             this.health = this.maxHealth;
+            this.game.showFloatingText(`LEVEL ${this.level}!`, this.x, this.y, '#0f0');
+            
+            if (!this.perks) this.perks = [];
+            const availablePerks = ['SPREAD', 'BOUNCE', 'VAMPIRIC', 'PIERCING', 'RAPID'].filter(p => !this.perks.includes(p) || p === 'RAPID');
+            if (availablePerks.length > 0) {
+                const perk = availablePerks[Math.floor(Math.random() * availablePerks.length)];
+                this.perks.push(perk);
+                this.game.showFloatingText(`获得天赋: ${perk}!`, this.x, this.y - 20, '#0ff');
+            }
+            this.game.updateHUD();
         }
     }
     update() { if (this.cooldown > 0) this.cooldown--; if (this.shieldTimer > 0) this.shieldTimer--; }
@@ -473,7 +610,7 @@ class Tank {
         const onWater = this.game.map.isOnWater(this.x, this.y, this.width, this.height);
         const moveSpeed = onWater ? this.speed * 0.5 : this.speed;
         if (dir === 'UP') ny -= moveSpeed; else if (dir === 'DOWN') ny += moveSpeed; else if (dir === 'LEFT') nx -= moveSpeed; else if (dir === 'RIGHT') nx += moveSpeed;
-        if (!this.game.map.isBlocked(nx, ny, this.width, this.height)) { 
+        if (!this.game.map.isBlocked(nx, ny, this.width, this.height, false, this.canBoat, this.canFly)) { 
             this.x = nx; this.y = ny; this.onIce = false; 
             this.moveCounter = (this.moveCounter || 0) + 1;
             if (this.moveCounter % 5 === 0) this.game.effects.push(new Effect(this.x + this.width/2, this.y + this.height/2, 'TRACK', { dir: this.direction, w: this.width, h: this.height }));
@@ -504,21 +641,58 @@ class Tank {
             let sx = this.x, sy = this.y;
             if (this.iceSlideDir === 'UP') sy -= this.speed * 0.5; else if (this.iceSlideDir === 'DOWN') sy += this.speed * 0.5;
             else if (this.iceSlideDir === 'LEFT') sx -= this.speed * 0.5; else if (this.iceSlideDir === 'RIGHT') sx += this.speed * 0.5;
-            if (!this.game.map.isBlocked(sx, sy, this.width, this.height)) { this.x = sx; this.y = sy; }
+            if (!this.game.map.isBlocked(sx, sy, this.width, this.height, false, this.canBoat, this.canFly)) { this.x = sx; this.y = sy; }
         }
     }
     shoot() {
-        if (this.cooldown > 0) return;
+        if (this.canFly) {
+            if (this.cooldown > 0) return;
+            this.cooldown = 45;
+            this.game.effects.push(new Effect(this.x + 30, this.y + 30, 'EXPLOSION', 1.5));
+            audio.play('explosion');
+            this.game.enemies.forEach(e => {
+                if (e.alive && Math.hypot(e.x + e.width/2 - (this.x + 30), e.y + e.height/2 - (this.y + 30)) < TILE_SIZE * 3) e.destroy(this, 100);
+            });
+            return;
+        }
+        if (this.cooldown > 0) {
+            if (this.perks && this.perks.includes('RAPID') && this.cooldown > 5) this.cooldown -= 1; // Faster cooldown
+            return;
+        }
         let bulletCount = 0;
         for (const b of this.game.bullets) { if (b.owner === this && b.active) bulletCount++; }
-        const maxBullets = this.isBoss ? 2 : (this instanceof Player ? 1 + Math.floor(this.level / 2) : 1);
+        const maxBullets = this.isBoss ? 2 : (this instanceof Player ? 1 + Math.floor(this.level / 3) : 1);
         if (bulletCount >= maxBullets) return;
-        if (this.game.bullets.length >= 40) return; // slightly increase global cap just in case
-        this.cooldown = this instanceof Player ? Math.max(12, 35 - this.level * 6) : Math.max(30, 60 - this.level * 10);
+        if (this.game.bullets.length >= 80) return; 
+        this.cooldown = this instanceof Player ? Math.max(5, 35 - this.level * 1.5) : Math.max(30, 60 - this.level * 10);
+        if (this.perks && this.perks.includes('RAPID')) this.cooldown = Math.max(2, this.cooldown / 2);
+        
         let bx = this.x + 26; let by = this.y + 26;
         if (this.direction === 'UP') by = this.y - 10; else if (this.direction === 'DOWN') by = this.y + 60; else if (this.direction === 'LEFT') bx = this.x - 10; else if (this.direction === 'RIGHT') bx = this.x + 60;
         if (this instanceof Player) audio.play('shoot');
-        this.game.bullets.push(new Bullet(this.game, this, bx, by, this.direction, this.level));
+        
+        let bType = 'NORMAL';
+        if (this instanceof Player) {
+            if (this.level >= 20) bType = 'LASER_MISSILE';
+            else if (this.level >= 10) bType = 'LASER';
+            else if (this.level >= 5) bType = 'MISSILE';
+        }
+        
+        let b = new Bullet(this.game, this, bx, by, this.direction, this.level, bType);
+        if (this.perks && this.perks.includes('BOUNCE')) b.bounces = 2;
+        if (this.perks && this.perks.includes('PIERCING')) b.piercing = true;
+        this.game.bullets.push(b);
+        
+        if (this instanceof Player && (this.level >= 15 || (this.perks && this.perks.includes('SPREAD')))) {
+             let bx2 = bx, by2 = by, bx3 = bx, by3 = by;
+             if (this.direction === 'UP' || this.direction === 'DOWN') { bx2 -= 15; bx3 += 15; }
+             else { by2 -= 15; by3 += 15; }
+             let b2 = new Bullet(this.game, this, bx2, by2, this.direction, this.level, bType);
+             let b3 = new Bullet(this.game, this, bx3, by3, this.direction, this.level, bType);
+             if (this.perks && this.perks.includes('BOUNCE')) { b2.bounces = 2; b3.bounces = 2; }
+             if (this.perks && this.perks.includes('PIERCING')) { b2.piercing = true; b3.piercing = true; }
+             this.game.bullets.push(b2, b3);
+        }
     }
     destroy(killer, damage = 1) {
         if (this.shieldTimer > 0) return; 
@@ -531,11 +705,23 @@ class Tank {
                 this.level = Math.max(0, Math.floor((this.health - 1) / 2));
                 this.speed = 4 + this.level * 0.5;
                 this.shieldTimer = 30;
+                this.game.updateHUD();
             } else if (this.variant === 'HEAVY') {
                 this.color = this.health === 2 ? '#B56B20' : '#B53120';
             }
             return;
         }
+        
+        if (this instanceof Player && !this.downed) {
+            this.downed = true;
+            this.downedTimer = 600;
+            this.health = 0;
+            this.game.effects.push(new Effect(this.x + 30, this.y + 30, 'EXPLOSION', 1));
+            this.game.showFloatingText('SOS!', this.x + 30, this.y - 10, '#f00');
+            audio.play('explosion');
+            return;
+        }
+
         this.alive = false; this.game.effects.push(new Effect(this.x + 30, this.y + 30, 'EXPLOSION', this.isBoss ? 3 : 1));
         this.game.shakeScreen(this.isBoss ? 15 : 5);
         if (killer instanceof Player) {
@@ -549,17 +735,19 @@ class Tank {
                 killer.killStreak = 1;
             }
             killer.lastKillTime = now;
-            if (killer.killStreak >= 3 && killer.level < 1) {
-                killer.upgrade();
-                this.game.showAnnouncement(`P${killer.id} LEVEL UP!`, killer.color);
-            } else if (killer.killStreak >= 6 && killer.level < 2) {
-                killer.upgrade();
-                this.game.showAnnouncement(`P${killer.id} POWER UP!`, killer.color);
-            } else if (killer.killStreak >= 10 && killer.level < 3) {
-                killer.upgrade();
-                this.game.showAnnouncement(`P${killer.id} MAX POWER!`, killer.color);
+            
+            if (killer.killStreak > 2) {
+                this.game.showFloatingText(`${killer.killStreak} COMBO!`, this.x + this.width/2, this.y - 30, '#ff0');
+                this.game.shakeScreen(Math.min(killer.killStreak * 2, 12));
+                if (killer.killStreak % 5 === 0) {
+                    killer.upgrade();
+                }
             }
-            this.game.updateHUD();
+            // Vampiric Perk hook
+            if (killer.perks && killer.perks.includes('VAMPIRIC') && Math.random() < 0.5) {
+                killer.health = Math.min(killer.health + 1, killer.maxHealth);
+                this.game.showFloatingText('+1 HP', killer.x, killer.y, '#0f0');
+            }
         }
         if (this instanceof Player) this.game.handlePlayerDeath(this);
         if (this instanceof Enemy && Math.random() < 0.3) {
@@ -570,26 +758,26 @@ class Tank {
     draw(ctx) {
         const px = this.x; const py = this.y; const w = this.width; const h = this.height; ctx.save();
         if (this.level >= 1) {
-            ctx.shadowBlur = 8 + this.level * 4;
-            ctx.shadowColor = this.level >= 3 ? '#ff0' : (this.level === 2 ? '#0ff' : '#0f0');
+            ctx.shadowBlur = 8 + Math.min(this.level, 5) * 4;
+            ctx.shadowColor = this.level >= 20 ? '#f0f' : (this.level >= 10 ? '#0ff' : (this.level >= 5 ? '#f00' : (this.level >= 3 ? '#ff0' : (this.level === 2 ? '#0f0' : '#fff'))));
         }
         ctx.fillStyle = this.color;
         if (this.direction === 'UP' || this.direction === 'DOWN') {
             ctx.fillRect(px + 8, py + 8, w - 16, h - 16); ctx.fillStyle = '#000'; ctx.fillRect(px, py, 8, h); ctx.fillRect(px + w - 8, py, 8, h);
             ctx.fillStyle = this.color; for (let i = 0; i < h; i += 8) { ctx.fillRect(px, py + i, 8, 4); ctx.fillRect(px + w - 8, py + i, 8, 4); }
             ctx.fillRect(px + w/2 - 8, py + h/2 - 8, 16, 16); ctx.strokeStyle = '#000'; ctx.strokeRect(px + w/2 - 8, py + h/2 - 8, 16, 16);
-            ctx.fillStyle = this.level >= 3 ? '#ff0' : this.color;
-            const barrelW = 6 + this.level * 2;
-            if (this.direction === 'UP') ctx.fillRect(px + w/2 - barrelW/2, py - 8, barrelW, 24 + this.level * 4);
-            else ctx.fillRect(px + w/2 - barrelW/2, py + h - 16 - this.level * 4, barrelW, 24 + this.level * 4);
+            ctx.fillStyle = this.level >= 20 ? '#f0f' : (this.level >= 10 ? '#0ff' : (this.level >= 5 ? '#f00' : (this.level >= 3 ? '#ff0' : this.color)));
+            const barrelW = 6 + Math.min(this.level, 10) * 2;
+            if (this.direction === 'UP') ctx.fillRect(px + w/2 - barrelW/2, py - 8, barrelW, 24 + Math.min(this.level, 10) * 4);
+            else ctx.fillRect(px + w/2 - barrelW/2, py + h - 16 - Math.min(this.level, 10) * 4, barrelW, 24 + Math.min(this.level, 10) * 4);
         } else {
             ctx.fillRect(px + 8, py + 8, w - 16, h - 16); ctx.fillStyle = '#000'; ctx.fillRect(px, py, w, 8); ctx.fillRect(px, py + h - 8, w, 8);
             ctx.fillStyle = this.color; for (let i = 0; i < w; i += 8) { ctx.fillRect(px + i, py, 4, 8); ctx.fillRect(px + i, py + h - 8, 4, 8); }
             ctx.fillRect(px + w/2 - 8, py + h/2 - 8, 16, 16); ctx.strokeStyle = '#000'; ctx.strokeRect(px + w/2 - 8, py + h/2 - 8, 16, 16);
-            ctx.fillStyle = this.level >= 3 ? '#ff0' : this.color;
-            const barrelW = 6 + this.level * 2;
-            if (this.direction === 'LEFT') ctx.fillRect(px - 8 - this.level * 4, py + h/2 - barrelW/2, 24 + this.level * 4, barrelW);
-            else ctx.fillRect(px + w - 16 - this.level * 4, py + h/2 - barrelW/2, 24 + this.level * 4, barrelW);
+            ctx.fillStyle = this.level >= 20 ? '#f0f' : (this.level >= 10 ? '#0ff' : (this.level >= 5 ? '#f00' : (this.level >= 3 ? '#ff0' : this.color)));
+            const barrelW = 6 + Math.min(this.level, 10) * 2;
+            if (this.direction === 'LEFT') ctx.fillRect(px - 8 - Math.min(this.level, 10) * 4, py + h/2 - barrelW/2, 24 + Math.min(this.level, 10) * 4, barrelW);
+            else ctx.fillRect(px + w - 16 - Math.min(this.level, 10) * 4, py + h/2 - barrelW/2, 24 + Math.min(this.level, 10) * 4, barrelW);
         }
         if (this.level >= 2) {
             ctx.fillStyle = this.level >= 3 ? '#fa0' : '#0ff';
@@ -621,8 +809,32 @@ class Player extends Tank {
     }
     update() {
         if (!this.alive) return;
+        if (this.downed) {
+            this.downedTimer--;
+            if (this.downedTimer % 30 === 0) this.game.effects.push(new Effect(this.x + this.width/2, this.y + this.height/2, 'SPAWN', 1));
+            if (this.downedTimer <= 0) {
+                this.downed = false;
+                this.health = 0;
+                this.alive = false;
+                this.game.effects.push(new Effect(this.x + this.width/2, this.y + this.height/2, 'EXPLOSION', 2));
+                audio.play('explosion');
+                this.game.handlePlayerDeath(this);
+            }
+            return;
+        }
+        if (this.comboTimer > 0) this.comboTimer--; else this.combo = 0;
+        
+        // Revive teammate logic
+        const teammate = this.game.players.find(p => p !== this && p.alive && p.downed);
+        if (teammate && Math.hypot(this.x - teammate.x, this.y - teammate.y) < TILE_SIZE * 1.5) {
+            teammate.downed = false;
+            teammate.health = Math.max(1, Math.floor(teammate.maxHealth / 2));
+            teammate.setShield(120);
+            this.game.showFloatingText('REVIVED!', teammate.x, teammate.y, '#0f0');
+            audio.play('powerup');
+        }
+
         super.update();
-        if (this.killStreak > 0 && Date.now() - this.lastKillTime > 5000) this.killStreak = 0;
         this.checkIdle();
         if (this.aiActive) this.runAI();
         else {
@@ -751,7 +963,7 @@ class Player extends Tank {
         let tx = x, ty = y;
         if (dir === 'UP') ty -= checkDist; else if (dir === 'DOWN') ty += checkDist;
         else if (dir === 'LEFT') tx -= checkDist; else if (dir === 'RIGHT') tx += checkDist;
-        return this.game.map.isBlocked(tx - this.width/2, ty - this.height/2, this.width, this.height);
+        return this.game.map.isBlocked(tx - this.width/2, ty - this.height/2, this.width, this.height, false, this.canBoat, this.canFly);
     }
     getAlternateDir(blockedDir, dx, dy, myX, myY) {
         let dirs = ['UP', 'DOWN', 'LEFT', 'RIGHT'].filter(d => d !== blockedDir);
@@ -905,10 +1117,12 @@ class Boss extends Enemy {
             const angle = this.turretAngle + offset;
             const bx = cx + Math.cos(angle) * (this.barrelLength + 10);
             const by = cy + Math.sin(angle) * (this.barrelLength + 10);
+            
+            let normAngle = Math.atan2(Math.sin(angle), Math.cos(angle));
             let dir = 'DOWN';
-            if (angle > -Math.PI/4 && angle <= Math.PI/4) dir = 'RIGHT';
-            else if (angle > Math.PI/4 && angle <= 3*Math.PI/4) dir = 'DOWN';
-            else if (angle > -3*Math.PI/4 && angle <= -Math.PI/4) dir = 'UP';
+            if (normAngle > -Math.PI/4 && normAngle <= Math.PI/4) dir = 'RIGHT';
+            else if (normAngle > Math.PI/4 && normAngle <= 3*Math.PI/4) dir = 'DOWN';
+            else if (normAngle > -3*Math.PI/4 && normAngle <= -Math.PI/4) dir = 'UP';
             else dir = 'LEFT';
             
             const gx = Math.floor(bx / TILE_SIZE);
@@ -988,8 +1202,8 @@ class Boss extends Enemy {
             
             if (killer instanceof Player) { 
                 killer.score += 20000; 
-                killer.level = 3; 
-                killer.speed = 4 + killer.level * 0.5;
+                killer.level = Math.max(killer.level, 5); 
+                killer.speed = 4 + killer.level * 0.3;
                 killer.setShield(600);
                 this.game.showFloatingText('+20000', this.x + this.width/2, this.y - 20, '#ff0');
                 this.game.showAnnouncement('BOSS 陨落! BOSS DESTROYED!', '#ff0');
@@ -1136,6 +1350,19 @@ class Game {
     updateHUD() {
         document.getElementById('p1-score').innerText = String(this.players[0].score).padStart(5, '0');
         document.getElementById('p2-score').innerText = String(this.players[1].score).padStart(5, '0');
+        
+        const p1LvlEl = document.getElementById('p1-level');
+        const p2LvlEl = document.getElementById('p2-level');
+        const getWeaponHTML = (level) => {
+            if (level >= 20) return "<span style='color:#f0f;'>追踪激光(紫)</span>";
+            if (level >= 10) return "<span style='color:#0ff;'>穿透激光(青)</span>";
+            if (level >= 5) return "<span style='color:#f00;'>跟踪导弹(红)</span>";
+            if (level >= 3) return "<span style='color:#ff0;'>强化高爆(黄)</span>";
+            return "<span style='color:#fff;'>普通炮弹(白)</span>";
+        };
+        if(p1LvlEl) p1LvlEl.innerHTML = this.players[0].alive ? `火力: Lv.${this.players[0].level} [${getWeaponHTML(this.players[0].level)}]` : `DEAD`;
+        if(p2LvlEl) p2LvlEl.innerHTML = this.players[1].alive ? `火力: Lv.${this.players[1].level} [${getWeaponHTML(this.players[1].level)}]` : `DEAD`;
+
         document.getElementById('lives-info').innerText = `生命 Lives: ❤️x${this.lives}`;
         document.getElementById('enemies-info').innerText = `敌人 Enemies: ${this.enemiesRemaining + this.enemies.length}`;
     }
@@ -1169,6 +1396,26 @@ class Game {
         if (this.input.isDown('KeyP') && !this.pausePressed) { this.paused = !this.paused; this.pausePressed = true; }
         if (!this.input.isDown('KeyP')) this.pausePressed = false;
         if (this.paused) return;
+
+        this.tipTimer = (this.tipTimer || 0) + 1;
+        if (this.tipTimer > 300) {
+            this.tipTimer = 0;
+            const TIPS = [
+                "💡 TIP: 连续击杀3个敌人即可达成 COMBO，连击5次直升1级并获得天赋！",
+                "💡 TIP: 队友头上闪烁 SOS 时，在10秒内开车触碰即可将其半血复活！",
+                "💡 TIP: 吃到直升机🚁可获得飞行能力，无视地形与子弹，按开火键轰炸！",
+                "💡 TIP: 吃到小艇🚤可在水面上自由移动，利用湖泊躲避不会游泳的敌人！",
+                "💡 TIP: 每次升级都会随机获得一项天赋：散弹、穿甲、弹射、极速或吸血！",
+                "💡 TIP: 深棕色的硬砖需要攻击两次，黑色的石头不可破坏，善用掩体！",
+                "💡 TIP: 击败红色闪烁的敌人会掉落强力道具，有时天降奇遇会掉落火箭包🚀！"
+            ];
+            this.currentTipIndex = ((this.currentTipIndex || 0) + 1) % TIPS.length;
+            const banner = document.getElementById('tips-banner');
+            if (banner) {
+                banner.innerText = TIPS[this.currentTipIndex];
+                banner.classList.remove('hidden');
+            }
+        }
 
         if (this.weather !== 'NONE') {
             this.weatherParticles.forEach(p => {
@@ -1218,6 +1465,16 @@ class Game {
         }
 
         if (this.fortifyTimer > 0) { this.fortifyTimer--; if (this.fortifyTimer === 0) this.unfortifyBase(); }
+        
+        // Random Airdrop for MAX_WEAPON
+        if (Math.random() < 0.0005) {
+            const px = TILE_SIZE * 2 + Math.random() * (CANVAS_SIZE - TILE_SIZE * 4);
+            const py = TILE_SIZE * 2 + Math.random() * (CANVAS_SIZE - TILE_SIZE * 4);
+            this.powerUps.push(new PowerUp(this, px, py, POWERUP_TYPES.MAX_WEAPON));
+            this.effects.push(new Effect(px + 32, py + 32, 'SPAWN', 5));
+            this.showAnnouncement('天降奇遇 AIRDROP!', '#0ff');
+        }
+
         if (this.enemiesRemaining > 0 && this.enemies.length < Math.min(4 + Math.floor(this.currentStage / 10), 8)) {
             this.spawnTimer--;
             if (this.spawnTimer <= 0) {
