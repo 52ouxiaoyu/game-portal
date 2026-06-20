@@ -833,6 +833,7 @@ class Zombie {
                 this.x += (dx / minDist) * this.speed;
                 this.y += (dy / minDist) * this.speed;
                 this.facing = {x: dx/minDist, y: dy/minDist};
+                resolveBuildingCollision(this);
             }
             if(minDist < this.size + target.size) {
                 if(target.shieldTime <= 0) {
