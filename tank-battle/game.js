@@ -123,14 +123,14 @@ function generateLevel(index) {
             if (x === 12 && rng() < steelDensity * 3) level.steels.push([y, x, 1, 1]);
         }
     } else {
-        const count = Math.floor(20 + difficulty * 30);
+        const count = Math.floor(15 + difficulty * 15);
         for (let i = 0; i < count; i++) {
             const x = 2 + Math.floor(rng() * 22);
             const y = 2 + Math.floor(rng() * 18);
             if (isProtected(x, y) || isSpawn(x, y)) continue;
             const w = 1 + Math.floor(rng() * 3);
             const h = 1 + Math.floor(rng() * 3);
-            if (rng() < steelDensity * 3) level.steels.push([y, x, h, w]);
+            if (rng() < steelDensity) level.steels.push([y, x, h, w]);
             else { level.bricks.push([y, x, h, w]); }
         }
     }
