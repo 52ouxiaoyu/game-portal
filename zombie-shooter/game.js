@@ -311,9 +311,8 @@ this.weapons = [];
         }
 
         if(this.hp <= 0) {
-            if(!this.isDowned && this.lives > 0) {
+            if(!this.isDowned) {
                 this.isDowned = true;
-                this.lives--;
                 this.reviveProgress = 0;
             }
             if(this.isDowned) {
