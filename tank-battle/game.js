@@ -284,7 +284,7 @@ class PowerUp {
         else if (this.type === POWERUP_TYPES.LIFE) this.game.lives++;
         else if (this.type === POWERUP_TYPES.TIME) this.game.enemyFrozenTimer = 300;
         else if (this.type === POWERUP_TYPES.MAX_WEAPON) {
-            player.level = 30;
+            player.level = 4;
             player.speed = Math.min(8, 4 + 30 * 0.15);
             player.maxHealth = 1 + 30 * 2;
             player.health = player.maxHealth;
@@ -567,7 +567,7 @@ class Bullet {
                 if (iy === 0 || iy === GRID_SIZE - 1 || ix === 0 || ix === GRID_SIZE - 1) continue;
                 if (tile === TILE_TYPES.BRICK) this.game.map.grid[iy][ix] = TILE_TYPES.EMPTY;
                 else if (tile === TILE_TYPES.HARD_BRICK) this.game.map.grid[iy][ix] = TILE_TYPES.BRICK;
-                else if (tile === TILE_TYPES.STEEL && this.level >= 5) this.game.map.grid[iy][ix] = TILE_TYPES.HARD_BRICK;
+                else if (tile === TILE_TYPES.STEEL && this.level >= 2) this.game.map.grid[iy][ix] = TILE_TYPES.HARD_BRICK;
             }
         }
     }
@@ -583,9 +583,9 @@ class Bullet {
             ctx.beginPath(); ctx.arc(this.x + this.size/2, this.y + this.size/2, this.size/2, 0, Math.PI * 2); ctx.fill();
             if (Math.random() < 0.5) this.game.effects.push(new Effect(this.x + this.size/2, this.y + this.size/2, 'EXPLOSION', 0.2));
         } else {
-            ctx.fillStyle = this.level >= 3 ? '#ff0' : '#fff'; 
+            ctx.fillStyle = this.level >= 1 ? '#ff0' : '#fff'; 
             ctx.beginPath(); ctx.arc(this.x + this.size/2, this.y + this.size/2, this.size/2, 0, Math.PI * 2); ctx.fill(); 
-            if (this.level >= 1) { ctx.shadowBlur = 15; ctx.shadowColor = this.level >= 3 ? '#ff0' : '#fff'; } 
+            if (this.level >= 1) { ctx.shadowBlur = 15; ctx.shadowColor = this.level >= 1 ? '#ff0' : '#fff'; } 
         }
         ctx.restore(); 
     }
@@ -595,7 +595,7 @@ class Tank {
     constructor(game, x, y, color) { this.game = game; this.x = x; this.y = y; this.width = 60; this.height = 60; this.color = color; this.direction = 'UP'; this.speed = 4; this.cooldown = 0; this.alive = true; this.shieldTimer = 0; this.level = 0; this.score = 0; }
     setShield(d) { this.shieldTimer = d; }
     upgrade() { 
-        if (this.level >= 30) return;
+        if (this.level >= 4) return;
         this.level++;
         this.speed = Math.min(8, 4 + this.level * 0.15); 
         if (this instanceof Player) {
@@ -683,9 +683,9 @@ class Tank {
         
         let bType = 'NORMAL';
         if (this instanceof Player) {
-            if (this.level >= 20) bType = 'LASER_MISSILE';
-            else if (this.level >= 10) bType = 'LASER';
-            else if (this.level >= 5) bType = 'MISSILE';
+            if (this.level >= 4) bType = 'LASER_MISSILE';
+            else if (this.level >= 3) bType = 'LASER';
+            else if (this.level >= 1) bType = 'MISSILE';
         }
         
         let b = new Bullet(this.game, this, bx, by, this.direction, this.level, bType);
@@ -693,7 +693,7 @@ class Tank {
         if (this.perks && this.perks.includes('PIERCING')) b.piercing = true;
         this.game.bullets.push(b);
         
-        if (this instanceof Player && (this.level >= 15 || (this.perks && this.perks.includes('SPREAD')))) {
+        if (this instanceof Player && (this.level >= 3 || (this.perks && this.perks.includes('SPREAD')))) {
              let bx2 = bx, by2 = by, bx3 = bx, by3 = by;
              if (this.direction === 'UP' || this.direction === 'DOWN') { bx2 -= 15; bx3 += 15; }
              else { by2 -= 15; by3 += 15; }
@@ -771,14 +771,14 @@ class Tank {
         const px = this.x; const py = this.y; const w = this.width; const h = this.height; ctx.save();
         if (this.level >= 1) {
             ctx.shadowBlur = 8 + Math.min(this.level, 5) * 4;
-            ctx.shadowColor = this.level >= 20 ? '#f0f' : (this.level >= 10 ? '#0ff' : (this.level >= 5 ? '#f00' : (this.level >= 3 ? '#ff0' : (this.level === 2 ? '#0f0' : '#fff'))));
+            ctx.shadowColor = this.level >= 4 ? '#f0f' : (this.level >= 3 ? '#0ff' : (this.level >= 2 ? '#f00' : (this.level >= 1 ? '#ff0' : '#fff')));
         }
         ctx.fillStyle = this.color;
         if (this.direction === 'UP' || this.direction === 'DOWN') {
             ctx.fillRect(px + 8, py + 8, w - 16, h - 16); ctx.fillStyle = '#000'; ctx.fillRect(px, py, 8, h); ctx.fillRect(px + w - 8, py, 8, h);
             ctx.fillStyle = this.color; for (let i = 0; i < h; i += 8) { ctx.fillRect(px, py + i, 8, 4); ctx.fillRect(px + w - 8, py + i, 8, 4); }
             ctx.fillRect(px + w/2 - 8, py + h/2 - 8, 16, 16); ctx.strokeStyle = '#000'; ctx.strokeRect(px + w/2 - 8, py + h/2 - 8, 16, 16);
-            ctx.fillStyle = this.level >= 20 ? '#f0f' : (this.level >= 10 ? '#0ff' : (this.level >= 5 ? '#f00' : (this.level >= 3 ? '#ff0' : this.color)));
+            ctx.fillStyle = this.level >= 4 ? '#f0f' : (this.level >= 3 ? '#0ff' : (this.level >= 2 ? '#f00' : (this.level >= 1 ? '#ff0' : this.color)));
             const barrelW = 6 + Math.min(this.level, 10) * 2;
             if (this.direction === 'UP') ctx.fillRect(px + w/2 - barrelW/2, py - 8, barrelW, 24 + Math.min(this.level, 10) * 4);
             else ctx.fillRect(px + w/2 - barrelW/2, py + h - 16 - Math.min(this.level, 10) * 4, barrelW, 24 + Math.min(this.level, 10) * 4);
@@ -786,13 +786,13 @@ class Tank {
             ctx.fillRect(px + 8, py + 8, w - 16, h - 16); ctx.fillStyle = '#000'; ctx.fillRect(px, py, w, 8); ctx.fillRect(px, py + h - 8, w, 8);
             ctx.fillStyle = this.color; for (let i = 0; i < w; i += 8) { ctx.fillRect(px + i, py, 4, 8); ctx.fillRect(px + i, py + h - 8, 4, 8); }
             ctx.fillRect(px + w/2 - 8, py + h/2 - 8, 16, 16); ctx.strokeStyle = '#000'; ctx.strokeRect(px + w/2 - 8, py + h/2 - 8, 16, 16);
-            ctx.fillStyle = this.level >= 20 ? '#f0f' : (this.level >= 10 ? '#0ff' : (this.level >= 5 ? '#f00' : (this.level >= 3 ? '#ff0' : this.color)));
+            ctx.fillStyle = this.level >= 4 ? '#f0f' : (this.level >= 3 ? '#0ff' : (this.level >= 2 ? '#f00' : (this.level >= 1 ? '#ff0' : this.color)));
             const barrelW = 6 + Math.min(this.level, 10) * 2;
             if (this.direction === 'LEFT') ctx.fillRect(px - 8 - Math.min(this.level, 10) * 4, py + h/2 - barrelW/2, 24 + Math.min(this.level, 10) * 4, barrelW);
             else ctx.fillRect(px + w - 16 - Math.min(this.level, 10) * 4, py + h/2 - barrelW/2, 24 + Math.min(this.level, 10) * 4, barrelW);
         }
-        if (this.level >= 2) {
-            ctx.fillStyle = this.level >= 3 ? '#fa0' : '#0ff';
+        if (this.level >= 1) {
+            ctx.fillStyle = this.level >= 1 ? '#fa0' : '#0ff';
             ctx.fillRect(px + 2, py + 2, 6, 6);
             ctx.fillRect(px + w - 8, py + 2, 6, 6);
             ctx.fillRect(px + 2, py + h - 8, 6, 6);
@@ -1214,7 +1214,7 @@ class Boss extends Enemy {
             
             if (killer instanceof Player) { 
                 killer.score += 20000; 
-                killer.level = Math.max(killer.level, 5); 
+                killer.level = Math.max(killer.level, 2); 
                 killer.speed = Math.min(8, 4 + killer.level * 0.15);
                 killer.setShield(600);
                 this.game.showFloatingText('+20000', this.x + this.width/2, this.y - 20, '#ff0');
@@ -1375,10 +1375,10 @@ class Game {
         const p1LvlEl = document.getElementById('p1-level');
         const p2LvlEl = document.getElementById('p2-level');
         const getWeaponHTML = (level) => {
-            if (level >= 20) return "<span style='color:#f0f;'>追踪激光(紫)</span>";
-            if (level >= 10) return "<span style='color:#0ff;'>穿透激光(青)</span>";
-            if (level >= 5) return "<span style='color:#f00;'>跟踪导弹(红)</span>";
-            if (level >= 3) return "<span style='color:#ff0;'>强化高爆(黄)</span>";
+            if (level >= 4) return "<span style='color:#f0f;'>追踪激光(紫)</span>";
+            if (level >= 3) return "<span style='color:#0ff;'>穿透激光(青)</span>";
+            if (level >= 2) return "<span style='color:#f00;'>跟踪导弹(红)</span>";
+            if (level >= 1) return "<span style='color:#ff0;'>强化高爆(黄)</span>";
             return "<span style='color:#fff;'>普通炮弹(白)</span>";
         };
         if(p1LvlEl) p1LvlEl.innerHTML = this.players[0].alive ? `火力: Lv.${this.players[0].level} [${getWeaponHTML(this.players[0].level)}]` : `DEAD`;
