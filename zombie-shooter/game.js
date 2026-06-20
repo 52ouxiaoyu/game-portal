@@ -80,6 +80,43 @@ let currentWave = 1;
 let waveTimer = 0;
 let barrels = [];
 
+let camera = {x: 0, y: 0};
+let buildings = [];
+let bloodStains = [];
+let generatedChunks = new Set();
+const CHUNK_SIZE = 800;
+
+class Building {
+    constructor(x, y, w, h) {
+        this.x = x; this.y = y; this.w = w; this.h = h;
+    }
+    draw(ctx) {
+        // Draw 3D-ish roof effect
+        ctx.fillStyle = '#222';
+        ctx.fillRect(this.x, this.y, this.w, this.h);
+        ctx.fillStyle = '#333';
+        ctx.fillRect(this.x + 10, this.y + 10, this.w - 20, this.h - 20);
+        ctx.strokeStyle = '#0ff';
+        ctx.lineWidth = 2;
+        ctx.strokeRect(this.x, this.y, this.w, this.h);
+    }
+}
+
+class Blood {
+    constructor(x, y, w, h, color) {
+        this.x = x; this.y = y; this.w = w; this.h = h; this.color = color;
+        this.life = 1.0;
+    }
+    draw(ctx) {
+        if(this.life <= 0) return;
+        ctx.fillStyle = this.color;
+        ctx.globalAlpha = this.life;
+        ctx.fillRect(this.x, this.y, this.w, this.h);
+        ctx.globalAlpha = 1.0;
+    }
+}
+
+
 class Barrel {
     constructor(x, y) {
         this.x = x; this.y = y;
@@ -250,7 +287,7 @@ this.weapons = [];
                     killCount++;
                     createParticles(z.x, z.y, '#ff0000', 15);
                     screenShake = Math.max(screenShake, 5);
-                    for(let b=0; b<5; b++) bgCtx.fillRect(z.x + (Math.random()-0.5)*40, z.y + (Math.random()-0.5)*40, Math.random()*8+4, Math.random()*8+4);
+                    for(let b=0; b<5; b++) bloodStains.push(new Blood(z.x + (Math.random()-0.5)*40, z.y + (Math.random()-0.5)*40, Math.random()*8+4, Math.random()*8+4, '#800000'));
                     comboCount++; comboTimer = 180;
                     if(comboCount % 10 === 0) { screenShake = 10; addFloatingText(CANVAS_W/2, 100, `${comboCount} COMBO!`, '#ffaa00'); audio.levelUp(); }
                     audio.zombieDie();
@@ -353,10 +390,7 @@ this.weapons = [];
                 }
             }
 
-            if(this.x < 50) dx = 1;
-            if(this.x > CANVAS_W - 50) dx = -1;
-            if(this.y < 50) dy = 1;
-            if(this.y > CANVAS_H - 50) dy = -1;
+            
         } else {
             // Player Logic
             if(this.id === 1) {
@@ -383,8 +417,7 @@ this.weapons = [];
         this.x += dx * currentSpeed;
         this.y += dy * currentSpeed;
 
-        this.x = Math.max(this.size, Math.min(CANVAS_W - this.size, this.x));
-        this.y = Math.max(this.size, Math.min(CANVAS_H - this.size, this.y));
+        resolveBuildingCollision(this);
 
         // Check weapon level up
         for(let i = this.weapons.length - 1; i >= 0; i--) {
@@ -581,6 +614,26 @@ this.weapons = [];
     }
 }
 
+
+function resolveBuildingCollision(obj) {
+    buildings.forEach(b => {
+        let testX = obj.x;
+        let testY = obj.y;
+        if (obj.x < b.x) testX = b.x; else if (obj.x > b.x + b.w) testX = b.x + b.w;
+        if (obj.y < b.y) testY = b.y; else if (obj.y > b.y + b.h) testY = b.y + b.h;
+        let distX = obj.x - testX;
+        let distY = obj.y - testY;
+        let distance = Math.hypot(distX, distY);
+        let s = obj.size || 15;
+        if (distance < s) {
+            let overlap = s - distance;
+            if(distance === 0) { distX = 1; distY = 0; distance = 1; }
+            obj.x += (distX / distance) * overlap;
+            obj.y += (distY / distance) * overlap;
+        }
+    });
+}
+
 class Bullet {
     constructor(x, y, dx, dy, speed, damage, color, pierce=false, ownerId=0) {
         this.ownerId = ownerId;
@@ -611,7 +664,7 @@ class Bullet {
         }
         this.x += this.dx * this.speed;
         this.y += this.dy * this.speed;
-        if(this.x < 0 || this.x > CANVAS_W || this.y < 0 || this.y > CANVAS_H) this.active = false;
+        resolveBuildingCollision(this);
     }
     draw(ctx) {
         ctx.fillStyle = this.color;
@@ -925,12 +978,20 @@ function startGame() {
     survivalTime = 0;
     startTime = Date.now();
     players = [new Player(1), new Player(2)];
+    players[0].x = CANVAS_W/2 - 20;
+    players[1].x = CANVAS_W/2 + 20;
+    players[0].y = CANVAS_H/2;
+    players[1].y = CANVAS_H/2;
     zombies = [];
     bullets = [];
     particles = [];
     floatingTexts = [];
     lootBoxes = [];
     barrels = [];
+    buildings = [];
+    bloodStains = [];
+    generatedChunks.clear();
+    camera = {x: CANVAS_W/2, y: CANVAS_H/2};
     for(let i=0; i<5; i++) barrels.push(new Barrel(Math.random()*(CANVAS_W-200)+100, Math.random()*(CANVAS_H-200)+100));
     currentWave = 1;
     waveTimer = 0;
@@ -984,30 +1045,58 @@ function update() {
     if(gameState !== 'PLAYING') return;
     frameCount++;
     
+
+    // Camera Update
+    let cx = 0, cy = 0, count = 0;
+    players.forEach(p => { if(p.hp > 0) { cx += p.x; cy += p.y; count++; }});
+    if(count > 0) {
+        camera.x += (cx/count - camera.x) * 0.1;
+        camera.y += (cy/count - camera.y) * 0.1;
+    }
+    
+    // World Generation
+    let cX = Math.floor(camera.x / CHUNK_SIZE);
+    let cY = Math.floor(camera.y / CHUNK_SIZE);
+    for(let i = cX - 1; i <= cX + 1; i++) {
+        for(let j = cY - 1; j <= cY + 1; j++) {
+            let key = `${i},${j}`;
+            if(!generatedChunks.has(key)) {
+                generatedChunks.add(key);
+                // Create 1-3 buildings per chunk
+                let numB = Math.floor(Math.random()*3) + 1;
+                for(let k=0; k<numB; k++) {
+                    let w = 150 + Math.random() * 300;
+                    let h = 150 + Math.random() * 300;
+                    let bx = i * CHUNK_SIZE + Math.random() * (CHUNK_SIZE - w);
+                    let by = j * CHUNK_SIZE + Math.random() * (CHUNK_SIZE - h);
+                    buildings.push(new Building(bx, by, w, h));
+                }
+            }
+        }
+    }
+
     // Wave System
     waveTimer++;
     if(waveTimer > 3600) { // 60 seconds per wave
         currentWave++;
         waveTimer = 0;
-        addFloatingText(CANVAS_W/2, CANVAS_H/2, `🚨 第 ${currentWave} 波 尸潮来袭! 🚨`, "#ff0000");
+        addFloatingText(camera.x, camera.y, `🚨 第 ${currentWave} 波 尸潮来袭! 🚨`, "#ff0000");
         screenShake = 20;
         audio.levelUp();
         // Spawn Wave Boss
         for(let i=0; i<Math.floor(currentWave/2)+1; i++) {
-            zombies.push(new Zombie(true));
+            let z = new Zombie(true);
+            z.x = camera.x + (Math.random()-0.5)*CANVAS_W;
+            z.y = camera.y + (Math.random()-0.5)*CANVAS_H;
+            zombies.push(z);
         }
-        // Spawn new barrels
-        for(let i=0; i<3; i++) barrels.push(new Barrel(Math.random()*(CANVAS_W-200)+100, Math.random()*(CANVAS_H-200)+100));
+        for(let i=0; i<3; i++) barrels.push(new Barrel(camera.x + (Math.random()-0.5)*CANVAS_W, camera.y + (Math.random()-0.5)*CANVAS_H));
     }
 
     
-    // Gradually fade out blood stains from the background canvas
-    if (frameCount % 2 === 0) {
-        bgCtx.globalCompositeOperation = 'destination-out';
-        bgCtx.fillStyle = 'rgba(0, 0, 0, 0.01)';
-        bgCtx.fillRect(0, 0, bgCanvas.width, bgCanvas.height);
-        bgCtx.globalCompositeOperation = 'source-over';
-    }
+    // Update blood stains
+    bloodStains.forEach(b => b.life -= 0.005);
+    bloodStains = bloodStains.filter(b => b.life > 0);
 
     // Random Events every 40 seconds
     if(frameCount > 0 && frameCount % 2400 === 0) {
@@ -1202,7 +1291,7 @@ function update() {
                         hitStopFrames = 12; // 0.2s freeze
                         flashFrames = 15;
                         screenShake = 30;
-                        addFloatingText(CANVAS_W/2, CANVAS_H/2, "🌟 斩杀目标! 🌟", "#ffff00");
+                        addFloatingText(camera.x, camera.y, "🌟 斩杀目标! 🌟", "#ffff00");
                     } else if(Math.random() < 0.15) {
                         lootBoxes.push(new LootBox(z.x, z.y));
                     }
@@ -1226,8 +1315,7 @@ function update() {
                             }
                         });
                     }
-                    bgCtx.fillStyle = '#800000';
-                    for(let b=0; b<5; b++) bgCtx.fillRect(z.x + (Math.random()-0.5)*40, z.y + (Math.random()-0.5)*40, Math.random()*8+4, Math.random()*8+4);
+                    for(let b=0; b<5; b++) bloodStains.push(new Blood(z.x + (Math.random()-0.5)*40, z.y + (Math.random()-0.5)*40, Math.random()*8+4, Math.random()*8+4, '#800000'));
                     comboCount++; comboTimer = 180;
                     if(comboCount % 10 === 0) { screenShake = 10; addFloatingText(CANVAS_W/2, 100, `🔥 ${comboCount} COMBO!`, '#ffaa00'); audio.levelUp(); }
                     audio.zombieDie();
@@ -1352,7 +1440,7 @@ function gameLoop(timestamp) {
         console.error("Game Loop Error:", e);
         // Ensure game doesn't pause silently
         if(frameCount % 60 === 0) { // Notify only once a second
-             addFloatingText(CANVAS_W/2, 50, "⚠️ 战术头盔系统已自动重启", "#ff0000");
+             addFloatingText(camera.x, camera.y - CANVAS_H/2 + 50, "⚠️ 战术头盔系统已自动重启", "#ff0000");
         }
     }
     
