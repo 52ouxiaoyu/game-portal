@@ -742,9 +742,9 @@ class Tank {
             
             if (killer.killStreak > 2) {
                 this.game.showFloatingText(`${killer.killStreak} COMBO!`, this.x + this.width/2, this.y - 30, '#ff0');
-                if (killer.killStreak === 3) this.game.showTip('💡 TIP: 连续击杀不仅能获得分数，连击5次还可以直升1级并获得天赋！', 400);
+                if (killer.killStreak === 3) this.game.showTip('💡 TIP: 连续击杀不仅能获得分数，连击10次还可以直升1级并获得天赋！', 400);
                 this.game.shakeScreen(Math.min(killer.killStreak * 2, 12));
-                if (killer.killStreak % 5 === 0) {
+                if (killer.killStreak % 10 === 0) {
                     killer.upgrade();
                 }
             }
@@ -755,8 +755,16 @@ class Tank {
             }
         }
         if (this instanceof Player) this.game.handlePlayerDeath(this);
-        if (this instanceof Enemy && Math.random() < 0.3) {
-            const types = Object.values(POWERUP_TYPES); const type = types[Math.floor(Math.random() * types.length)];
+        if (this instanceof Enemy && Math.random() < 0.15) {
+            const standardTypes = [
+                POWERUP_TYPES.SHIELD, POWERUP_TYPES.SHIELD,
+                POWERUP_TYPES.BOMB, POWERUP_TYPES.BOMB,
+                POWERUP_TYPES.SHOVEL, POWERUP_TYPES.SHOVEL,
+                POWERUP_TYPES.TIME, POWERUP_TYPES.TIME,
+                POWERUP_TYPES.LIFE,
+                POWERUP_TYPES.STAR
+            ];
+            const type = standardTypes[Math.floor(Math.random() * standardTypes.length)];
             this.game.powerUps.push(new PowerUp(this.game, this.x, this.y, type));
         }
     }
@@ -1195,14 +1203,14 @@ class Boss extends Enemy {
         if (this.health <= 0) {
             this.alive = false; this.game.weather = 'NONE';
             for (let i = 0; i < 12; i++) {
-                const types = Object.values(POWERUP_TYPES);
+                const standardTypes = [POWERUP_TYPES.SHIELD, POWERUP_TYPES.BOMB, POWERUP_TYPES.SHOVEL, POWERUP_TYPES.TIME, POWERUP_TYPES.LIFE, POWERUP_TYPES.STAR];
                 const angle = (i / 12) * Math.PI * 2;
                 const dist = TILE_SIZE * 3;
                 let px = this.x + this.width/2 + Math.cos(angle) * dist - 32;
                 let py = this.y + this.height/2 + Math.sin(angle) * dist - 32;
                 px = Math.max(0, Math.min(CANVAS_SIZE - 64, px));
                 py = Math.max(0, Math.min(CANVAS_SIZE - 64, py));
-                this.game.powerUps.push(new PowerUp(this.game, px, py, types[Math.floor(Math.random()*types.length)]));
+                this.game.powerUps.push(new PowerUp(this.game, px, py, standardTypes[Math.floor(Math.random()*standardTypes.length)]));
             }
             
             for(let i = 0; i < 5; i++) {
