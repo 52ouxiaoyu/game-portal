@@ -500,10 +500,13 @@ this.weapons = [];
 
         // Keep players within the current camera view (Co-op screen binding)
         const margin = 50;
-        if(this.x < camera.x - CANVAS_W/2 + margin) this.x = camera.x - CANVAS_W/2 + margin;
-        if(this.x > camera.x + CANVAS_W/2 - margin) this.x = camera.x + CANVAS_W/2 - margin;
-        if(this.y < camera.y - CANVAS_H/2 + margin) this.y = camera.y - CANVAS_H/2 + margin;
-        if(this.y > camera.y + CANVAS_H/2 - margin) this.y = camera.y + CANVAS_H/2 - margin;
+        // Use canvas.width/height dynamically instead of the old constants to fix resize bugs!
+        let halfW = canvas.width / 2;
+        let halfH = canvas.height / 2;
+        if(this.x < camera.x - halfW + margin) this.x = camera.x - halfW + margin;
+        if(this.x > camera.x + halfW - margin) this.x = camera.x + halfW - margin;
+        if(this.y < camera.y - halfH + margin) this.y = camera.y - halfH + margin;
+        if(this.y > camera.y + halfH - margin) this.y = camera.y + halfH - margin;
 
         // Check weapon level up
         for(let i = this.weapons.length - 1; i >= 0; i--) {
@@ -740,24 +743,10 @@ class Bullet {
             let d = Math.hypot(z.x - this.x, z.y - this.y);
             if(d < closestDist) { closestDist = d; target = z; }
         });
-        if(target) {
-            const idealDx = (target.x - this.x) / closestDist;
-            const idealDy = (target.y - this.y) / closestDist;
-            this.dx = this.dx * 0.9 + idealDx * 0.1;
-            this.dy = this.dy * 0.9 + idealDy * 0.1;
-            const len = Math.hypot(this.dx, this.dy);
-            this.dx /= len; this.dy /= len;
-        }
+
         this.x += this.dx * this.speed;
         this.y += this.dy * this.speed;
         resolveBuildingCollision(this);
-
-        // Keep players within the current camera view (Co-op screen binding)
-        const margin = 50;
-        if(this.x < camera.x - CANVAS_W/2 + margin) this.x = camera.x - CANVAS_W/2 + margin;
-        if(this.x > camera.x + CANVAS_W/2 - margin) this.x = camera.x + CANVAS_W/2 - margin;
-        if(this.y < camera.y - CANVAS_H/2 + margin) this.y = camera.y - CANVAS_H/2 + margin;
-        if(this.y > camera.y + CANVAS_H/2 - margin) this.y = camera.y + CANVAS_H/2 - margin;
     }
     draw(ctx) {
         ctx.fillStyle = this.color;
@@ -1310,10 +1299,12 @@ function update() {
             
             // Keep inside camera bounds
             const margin = 50;
-            p1.x = Math.max(camera.x - CANVAS_W/2 + margin, Math.min(camera.x + CANVAS_W/2 - margin, p1.x));
-            p1.y = Math.max(camera.y - CANVAS_H/2 + margin, Math.min(camera.y + CANVAS_H/2 - margin, p1.y));
-            p2.x = Math.max(camera.x - CANVAS_W/2 + margin, Math.min(camera.x + CANVAS_W/2 - margin, p2.x));
-            p2.y = Math.max(camera.y - CANVAS_H/2 + margin, Math.min(camera.y + CANVAS_H/2 - margin, p2.y));
+            let halfW = canvas.width / 2;
+            let halfH = canvas.height / 2;
+            p1.x = Math.max(camera.x - halfW + margin, Math.min(camera.x + halfW - margin, p1.x));
+            p1.y = Math.max(camera.y - halfH + margin, Math.min(camera.y + halfH - margin, p1.y));
+            p2.x = Math.max(camera.x - halfW + margin, Math.min(camera.x + halfW - margin, p2.x));
+            p2.y = Math.max(camera.y - halfH + margin, Math.min(camera.y + halfH - margin, p2.y));
         }
     }
 
