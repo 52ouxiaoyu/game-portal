@@ -287,35 +287,46 @@ class Player {
         
         this.weapons = [];
         for(let i=1; i<=30; i++) {
-            let w = {name: `Lv.${i} 暴雨`, cd: 15, damage: 20, speed: 10, count: 1, spread: 0, pierce: false, isShockwave: false};
+            let w = {name: `Lv.${i} 手枪`, cd: 15, damage: 20, speed: 10, count: 1, spread: 0, pierce: false, isShockwave: false, isHoming: false};
             
             w.damage = 15 + Math.floor(i / 2) * 5;
             w.speed = 10 + i * 0.3;
             w.req = i * 15; // Requires 15 kills per level to rank up quickly
             
-            
             if(i <= 5) {
+                w.name = `Lv.${i} 战术手枪`;
                 w.count = 1;
-                w.cd = 16 - i * 2;
+                w.cd = 16 - i;
             } else if (i <= 10) {
-                w.count = 2;
-                w.spread = 0.2;
-                w.cd = 14 - (i - 5) * 1.5;
+                w.name = `Lv.${i} 霰弹枪`;
+                w.count = 2 + Math.floor((i-5)/2); // 2 to 4 bullets
+                w.spread = 0.5 + (i-5)*0.1;
+                w.cd = 25 - (i-5)*1.5;
+                w.damage = 30 + i;
             } else if (i <= 15) {
-                w.count = 3;
-                w.spread = 0.4;
-                w.cd = 10 - (i - 10) * 1;
+                w.name = `Lv.${i} 突击步枪`;
+                w.count = 1;
+                w.cd = 8 - Math.floor((i-10)*0.8); // Very fast
+                w.damage = 25 + i*2;
+                w.speed = 15;
             } else if (i <= 20) {
-                w.count = 4;
-                w.spread = 0.6;
-                w.cd = 8 - (i - 15) * 0.5;
+                w.name = `Lv.${i} 高能激光`;
+                w.count = 1;
                 w.pierce = true;
+                w.speed = 25; // Super fast
+                w.size = 8; // Large
+                w.cd = 25 - (i-15);
+                w.damage = 80 + i*5;
+                w.color = '#00ffff';
             } else if (i <= 25) {
-                w.count = 5;
+                w.name = `Lv.${i} 蜂群导弹`;
+                w.count = 2 + Math.floor((i-20)/2); // 2 to 4 missiles
                 w.spread = 1.0;
-                w.cd = 6 - (i - 20) * 0.4;
-                w.pierce = true;
-                w.pierce = true;
+                w.isHoming = true;
+                w.cd = 30 - (i-20);
+                w.damage = 120;
+                w.speed = 8;
+                w.color = '#ff0000';
             } else if (i < 30) {
                 w.name = `Lv.${i} 电磁脉冲`;
                 w.isShockwave = true;
@@ -630,13 +641,16 @@ class Player {
         
         for(let i = 0; i < count; i++) {
             let angle = startAngle + i * angleStep;
-            let b = new Bullet(this.x, this.y, Math.cos(angle), Math.sin(angle), w.speed, w.damage, '#fff', w.pierce, this.id);
+            let b = new Bullet(this.x, this.y, Math.cos(angle), Math.sin(angle), w.speed, w.damage, w.color || '#fff', w.pierce, this.id, w.isHoming);
             
-            if(this.weaponLevel >= 29) b.color = '#ff00ff';
-            else if(count >= 5) b.color = '#ffaa00';
-            else if(w.pierce) b.color = '#00ffff';
+            if(!w.color) {
+                if(this.weaponLevel >= 29) b.color = '#ff00ff';
+                else if(count >= 5) b.color = '#ffaa00';
+                else if(w.pierce) b.color = '#00ffff';
+            }
             
-            b.size = w.pierce ? 5 : 4;
+            b.size = w.size || (w.pierce ? 5 : 4);
+            if(w.isHoming) b.size = 6;
             bullets.push(b);
         }
         audio.shootPistol();
