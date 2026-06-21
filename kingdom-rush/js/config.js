@@ -1,14 +1,13 @@
 
 const CONFIG = {
     CANVAS_WIDTH: 1024,
-    CANVAS_HEIGHT: 768,
+    CANVAS_HEIGHT: 1000,
     FPS: 60,
     
     STARTING_GOLD: 0,
     
     HERO: {
-        y: 650,
-        speed: 8,
+        y: 850,
         baseDamage: 20,
         fireRate: 500, // ms
         projectileSpeed: 10,
@@ -27,7 +26,7 @@ const CONFIG = {
         TROLL: { id: 'troll', name: '巨魔', hp: 200, speed: 0.6, reward: 30, color: '#8B0000', size: 25 }
     },
 
-    CASTLE_Y: 700,
+    CASTLE_Y: 900,
 
     ITEMS: {
         BOMB: { id: 'bomb', color: '#000000', size: 15, text: '💣' },
