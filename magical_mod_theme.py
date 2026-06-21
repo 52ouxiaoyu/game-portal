@@ -1,4 +1,43 @@
+import os
 
+base_dir = "/Users/clawbox/game-portal/kingdom-rush/js"
+
+config_js = """
+const CONFIG = {
+    CANVAS_WIDTH: window.innerWidth,
+    CANVAS_HEIGHT: window.innerHeight,
+    FPS: 60,
+    
+    STARTING_GOLD: 0,
+    
+    HERO: {
+        baseDamage: 20,
+        fireRate: 500, // ms
+        projectileSpeed: 10,
+        size: 20
+    },
+
+    UPGRADES: [
+        { name: '攻击+', cost: 50, damageInc: 10, costMult: 1.5, type: 'damage' },
+        { name: '射速+', cost: 100, fireRateMult: 0.85, costMult: 1.6, type: 'speed' },
+        { name: '连弩', cost: 300, arrows: 1, costMult: 2.0, type: 'arrows' }
+    ],
+    
+    ENEMY_TYPES: {
+        INFANTRY: { id: 'infantry', name: '黄巾军', hp: 30, speed: 1.5, reward: 5, color: '#FFD700', size: 15 },
+        CAVALRY: { id: 'cavalry', name: '西凉铁骑', hp: 80, speed: 2.2, reward: 15, color: '#8B4513', size: 20 },
+        HEAVY: { id: 'heavy', name: '铁浮屠', hp: 250, speed: 0.6, reward: 30, color: '#808080', size: 25 }
+    },
+
+    ITEMS: {
+        BOMB: { id: 'bomb', color: '#FF4500', size: 15, text: '🧨' },
+        FREEZE: { id: 'freeze', color: '#00FFFF', size: 15, text: '📜' },
+        HEAL: { id: 'heal', color: '#FFD700', size: 15, text: '🥟' }
+    }
+};
+"""
+
+sprites_js = """
 const SPRITE_PALETTE = {
     '0': 'transparent',
     '1': '#000000', // Outline/Eyes
@@ -97,3 +136,12 @@ function drawSprite(ctx, spriteObj, x, y, sizeMultiplier, dynamicColor) {
         }
     }
 }
+"""
+
+with open(os.path.join(base_dir, 'config.js'), 'w') as f:
+    f.write(config_js)
+
+with open(os.path.join(base_dir, 'sprites.js'), 'w') as f:
+    f.write(sprites_js)
+
+print("Chinese Theme and enemy shapes applied successfully!")
