@@ -82,6 +82,7 @@ let barrels = [];
 
 let camera = {x: 0, y: 0};
 let buildings = [];
+let shockwaves = [];
 let bloodStains = [];
 let generatedChunks = new Set();
 const CHUNK_SIZE = 800;
@@ -345,14 +346,15 @@ class Player {
         this.mechType = 0;
         this.mechHp = 0;
         this.vehicleTime = 0;
-                this.reviveProgress = 0; // 0 to 180 (3 seconds at 60fps)
+        this.reviveProgress = 0; // 0 to 180 (3 seconds at 60fps)
+        this.invincibleTime = 0; // I-frames
         this.isDowned = false;
         this.lastInputTime = Date.now();
         this.isAI = false;
         
-this.weapons = [];
+        this.weapons = [];
         for(let i=1; i<=30; i++) {
-            let w = {name: `Lv.${i} 暴雨`, cd: 15, damage: 20, speed: 10, count: 1, spread: 0, pierce: false};
+            let w = {name: `Lv.${i} 暴雨`, cd: 15, damage: 20, speed: 10, count: 1, spread: 0, pierce: false, isShockwave: false};
             
             w.damage = 15 + Math.floor(i / 2) * 5;
             w.speed = 10 + i * 0.3;
@@ -380,18 +382,19 @@ this.weapons = [];
                 w.spread = 1.0;
                 w.cd = 6 - (i - 20) * 0.4;
                 w.pierce = true;
+                w.pierce = true;
             } else if (i < 30) {
-                w.count = 6 + (i - 26)*2;
-                w.spread = Math.PI; 
-                w.cd = 5;
-                w.pierce = true;
+                w.name = `Lv.${i} 电磁脉冲`;
+                w.isShockwave = true;
+                w.radius = 200 + (i-25)*20;
+                w.damage = 100 + (i-25)*20;
+                w.cd = 20 - (i-25)*2;
             } else { 
-                w.name = "🔥 毁灭者光轮 🔥";
-                w.count = 16;
-                w.spread = Math.PI * 2;
-                w.cd = 3;
-                w.pierce = true;
-                w.damage = 150;
+                w.name = "🌌 超新星爆破 🌌";
+                w.isShockwave = true;
+                w.radius = 450;
+                w.damage = 400;
+                w.cd = 12;
             }
             this.weapons.push(w);
         }
@@ -400,13 +403,15 @@ this.weapons = [];
 
     update() {
         if(this.cooldown > 0 && this.buffTime <= 0) this.cooldown--;
+        if(this.cooldown > 0 && this.buffTime > 0) this.cooldown -= 2;
         if(this.buffTime > 0) this.buffTime--;
         if(this.shieldTime > 0) this.shieldTime--;
+        if(this.mechTime > 0) this.mechTime--;
+        if(this.vehicleTime > 0) this.vehicleTime--;
+        if(this.invincibleTime > 0) this.invincibleTime--;
 
         
-        if(this.mechTime > 0) this.mechTime--;
         if(this.vehicleTime > 0) {
-            this.vehicleTime--;
             // Vehicle ramming
             zombies.forEach(z => {
                 if(!z.active) return;
@@ -634,9 +639,16 @@ this.weapons = [];
 
     shoot() {
         if(this.hp <= 0 || this.isDowned || this.cooldown > 0 || this.vehicleTime > 0) return;
-        const w = this.weapons[this.weaponLevel];
+        let w = this.weapon;
         this.cooldown = w.cd;
         
+        if (w.isShockwave) {
+            shockwaves.push(new Shockwave(this.x, this.y, '#00ffff', w.damage, w.radius, this.id));
+            audio.shootShotgun();
+            screenShake = 5;
+            return;
+        }
+
         if(this.mechTime > 0) {
             if(this.mechType === 1) { 
                 if(frameCount % 20 === 0) {
@@ -681,9 +693,7 @@ this.weapons = [];
     }
 
     draw(ctx) {
-        if(this.hp <= 0 && !this.isDowned) return;
-
-        if(this.isDowned) {
+        if(this.hp <= 0) {
             // Draw Tombstone
             ctx.fillStyle = '#666';
             ctx.fillRect(this.x - 15, this.y - 15, 30, 35);
@@ -701,6 +711,9 @@ this.weapons = [];
             }
             return;
         }
+
+        // Damage flickering (I-frames)
+        if (this.invincibleTime > 0 && Math.floor(frameCount / 4) % 2 === 0) return;
 
         if(this.mechTime > 0) {
             // Draw Mech - Awesome Cyberpunk Style
@@ -970,6 +983,38 @@ class Bullet {
     }
 }
 
+class Shockwave {
+    constructor(x, y, color, damage, maxRadius, ownerId) {
+        this.x = x; this.y = y; this.color = color; this.damage = damage;
+        this.maxRadius = maxRadius; this.ownerId = ownerId;
+        this.radius = 10;
+        this.active = true;
+        this.hitZombies = new Set();
+    }
+    update() {
+        if(!this.active) return;
+        this.radius += 15;
+        if(this.radius >= this.maxRadius) this.active = false;
+        
+        zombies.forEach(z => {
+            if(z.active && !this.hitZombies.has(z) && Math.hypot(z.x - this.x, z.y - this.y) < this.radius + z.size) {
+                this.hitZombies.add(z);
+                z.hp -= this.damage;
+                if(z.hp <= 0) { z.active = false; score += z.scoreVal; }
+                createParticles(z.x, z.y, '#00ffff', 3);
+            }
+        });
+    }
+    draw(ctx) {
+        if(!this.active) return;
+        ctx.strokeStyle = this.color;
+        ctx.lineWidth = Math.max(1, 8 * (1 - this.radius/this.maxRadius));
+        ctx.beginPath();
+        ctx.arc(this.x, this.y, this.radius, 0, Math.PI*2);
+        ctx.stroke();
+    }
+}
+
 class Zombie {
     constructor(isBoss = false) {
         this.isBoss = isBoss;
@@ -1038,14 +1083,16 @@ class Zombie {
                 resolveBuildingCollision(this);
             }
             if(minDist < this.size + target.size) {
-                if(target.shieldTime <= 0) {
+                if(target.shieldTime <= 0 && target.invincibleTime <= 0) {
                     if(target.mechTime > 0) {
                         target.mechHp -= this.damage * 20;
                         if(target.mechHp <= 0) target.mechTime = 0; // mech destroyed
+                        target.invincibleTime = 30; // 0.5s I-frames
                         audio.playerHit();
                     } else if(target.vehicleTime <= 0) {
                         target.hp -= this.damage;
-                        screenShake = 15;
+                        screenShake = 10;
+                        target.invincibleTime = 30; // 0.5s I-frames
                         audio.playerHit();
                     }
                 }
@@ -1321,6 +1368,7 @@ function startGame() {
     barrels = [];
     buildings = [];
     bloodStains = [];
+    shockwaves = [];
     generatedChunks.clear();
     camera = {x: CANVAS_W/2, y: CANVAS_H/2};
     for(let i=0; i<5; i++) barrels.push(new Barrel(Math.random()*(CANVAS_W-200)+100, Math.random()*(CANVAS_H-200)+100));
@@ -1570,6 +1618,7 @@ function update() {
     floatingTexts = floatingTexts.filter(ft => ft.life > 0);
     lootBoxes = lootBoxes.filter(lb => lb.active && Math.hypot(lb.x - camera.x, lb.y - camera.y) < CANVAS_W * 3);
     barrels = barrels.filter(b => b.active && Math.hypot(b.x - camera.x, b.y - camera.y) < CANVAS_W * 3);
+    shockwaves = shockwaves.filter(s => s.active);
 
     // Check Game Over condition safely
     if(players.every(p => (p.hp <= 0))) {
@@ -1632,6 +1681,7 @@ function update() {
     }
 
     bullets.forEach(b => b.update());
+    shockwaves.forEach(s => s.update());
     zombies.forEach(z => z.update());
     particles.forEach(p => p.update());
     barrels.forEach(b => b.update());
@@ -1789,17 +1839,20 @@ function draw() {
         ctx.beginPath(); ctx.moveTo(startX, startY + i); ctx.lineTo(startX + canvas.width, startY + i); ctx.stroke(); 
     }
     
-    // Draw Buildings (This was missing!)
+    // Draw Buildings
     buildings.forEach(b => b.draw(ctx));
 
     particles.forEach(p => p.draw(ctx));
-    bullets.forEach(b => b.draw(ctx));
+    buildings.forEach(b => b.draw(ctx));
+    bloodStains.forEach(b => b.draw(ctx));
+    lootBoxes.forEach(lb => lb.draw(ctx));
+    barrels.forEach(b => b.draw(ctx));
+    shockwaves.forEach(s => s.draw(ctx));
     zombies.forEach(z => z.draw(ctx));
+    if(typeof boars !== 'undefined') boars.forEach(b => b.draw(ctx));
+    bullets.forEach(b => b.draw(ctx));
     if(players) players.forEach(p => p.draw(ctx));
 
-    barrels.forEach(b => b.draw(ctx));
-    lootBoxes.forEach(lb => lb.draw(ctx));
-    if(typeof boars !== 'undefined') boars.forEach(b => b.draw(ctx));
     floatingTexts.forEach(ft => {
         ctx.globalAlpha = Math.max(0, ft.life);
         ctx.fillStyle = ft.color;
