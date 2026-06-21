@@ -175,7 +175,8 @@ class Game {
                 damage: CONFIG.HERO.baseDamage,
                 fireRate: CONFIG.HERO.fireRate,
                 arrows: 1,
-                upgradeLevels: [0, 0, 0]
+                upgradeLevels: [0, 0, 0],
+                buffs: { rapidTimer: 0, multiTimer: 0, slowTimer: 0, disarmTimer: 0 }
             });
         }
 
@@ -215,13 +216,16 @@ class Game {
     }
 
     shoot(hero) {
+        let actualArrows = hero.arrows;
+        if (hero.buffs.multiTimer > 0) actualArrows += 5; // 机关暴走!
+        
         const spread = 20;
-        for (let i = 0; i < hero.arrows; i++) {
+        for (let i = 0; i < actualArrows; i++) {
             let targetX = hero.x;
-            if (hero.arrows > 1) targetX = hero.x - (spread * (hero.arrows - 1)) / 2 + i * spread;
+            if (actualArrows > 1) targetX = hero.x - (spread * (actualArrows - 1)) / 2 + i * spread;
             
             let vx_straight = 0;
-            if (hero.arrows > 1) vx_straight = ((i / (hero.arrows - 1)) - 0.5) * 4;
+            if (actualArrows > 1) vx_straight = ((i / (actualArrows - 1)) - 0.5) * 4;
 
             this.projectiles.push({
                 heroOwner: hero,
@@ -281,10 +285,22 @@ class Game {
         this.waveMultiplier = 1 + Math.floor(this.gameTimer / 30000) * 0.2;
 
         this.heroes.forEach(hero => {
-            if (currentTime - hero.lastShotTime > hero.fireRate) {
-                this.shoot(hero);
-                hero.lastShotTime = currentTime;
+            if (hero.buffs.rapidTimer > 0) hero.buffs.rapidTimer -= deltaTime;
+            if (hero.buffs.multiTimer > 0) hero.buffs.multiTimer -= deltaTime;
+            if (hero.buffs.slowTimer > 0) hero.buffs.slowTimer -= deltaTime;
+            if (hero.buffs.disarmTimer > 0) hero.buffs.disarmTimer -= deltaTime;
+
+            let currentFireRate = hero.fireRate;
+            if (hero.buffs.rapidTimer > 0) currentFireRate = 80; // 机枪射速
+            if (hero.buffs.slowTimer > 0) currentFireRate = Math.max(1000, currentFireRate * 3); // 乌龟射速
+
+            if (hero.buffs.disarmTimer <= 0) {
+                if (currentTime - hero.lastShotTime > currentFireRate) {
+                    this.shoot(hero);
+                    hero.lastShotTime = currentTime;
+                }
             }
+
             if (hero.comboTimer > 0) hero.comboTimer -= deltaTime;
             else hero.combo = 0;
         });
@@ -375,7 +391,7 @@ class Game {
                         this.spawnFloatingText(`${lastHitter.combo}x COMBO!`, e.x, e.y - 20, lastHitter.color);
                     }
                 }
-                if (Math.random() < 0.1) {
+                if (Math.random() < 0.15) { // 提高爆率到15%，让场面更混乱
                     const itemTypes = Object.values(CONFIG.ITEMS);
                     this.items.push({
                         type: itemTypes[Math.floor(Math.random() * itemTypes.length)],
