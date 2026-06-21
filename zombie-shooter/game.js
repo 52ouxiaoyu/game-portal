@@ -1487,13 +1487,18 @@ function update() {
                 let hash3 = Math.abs(Math.sin(i * 45.123 + j * 12.456) * 65432.109);
                 let rand3 = hash3 - Math.floor(hash3);
 
-                let chunkType = Math.floor(rand1 * 6); // 6 different chunk types
+                let chunkType = Math.floor(rand1 * 10); // Expanded chunk types for varied density
                 let cx = i * CHUNK_SIZE;
                 let cy = j * CHUNK_SIZE;
 
-                if (chunkType === 0) {
+                if (chunkType < 3) {
+                    // 30% chance for completely open plaza (maybe 1 tiny cover)
+                    if(rand3 > 0.5) {
+                        buildings.push(new Building(cx + CHUNK_SIZE/2 - 50, cy + CHUNK_SIZE/2 - 50, 100, 100));
+                    }
+                } else if (chunkType === 3) {
                     // Open area with scattered small covers
-                    let numCovers = Math.floor(rand2 * 6) + 3;
+                    let numCovers = Math.floor(rand2 * 4) + 2;
                     for(let k=0; k<numCovers; k++) {
                         let w = 60 + (Math.abs(Math.sin(hash3+k)) * 120);
                         let h = 60 + (Math.abs(Math.cos(hash3+k)) * 120);
@@ -1501,32 +1506,34 @@ function update() {
                         let py = cy + (Math.abs(Math.cos(hash2+k)) * (CHUNK_SIZE - h));
                         buildings.push(new Building(px, py, w, h));
                     }
-                } else if (chunkType === 1) {
-                    // Classic Room with doors
-                    let doorSize = 200 + rand2 * 100;
+                } else if (chunkType === 4) {
+                    // Classic Room with very wide doors
+                    let doorSize = 350 + rand2 * 100;
                     let wallThick = 60;
                     let wallLen = (CHUNK_SIZE - doorSize) / 2;
-                    buildings.push(new Building(cx, cy, wallLen, wallThick));
-                    buildings.push(new Building(cx + wallLen + doorSize, cy, wallLen, wallThick));
-                    buildings.push(new Building(cx, cy, wallThick, wallLen));
-                    buildings.push(new Building(cx, cy + wallLen + doorSize, wallThick, wallLen));
-                    if(rand3 < 0.5) buildings.push(new Building(cx + CHUNK_SIZE/2 - 100, cy + CHUNK_SIZE/2 - 100, 200, 200));
-                } else if (chunkType === 2) {
-                    // L-Shape Blockade + Corner hideout
+                    if(wallLen > 0) {
+                        buildings.push(new Building(cx, cy, wallLen, wallThick));
+                        buildings.push(new Building(cx + wallLen + doorSize, cy, wallLen, wallThick));
+                        buildings.push(new Building(cx, cy, wallThick, wallLen));
+                        buildings.push(new Building(cx, cy + wallLen + doorSize, wallThick, wallLen));
+                    }
+                    if(rand3 < 0.3) buildings.push(new Building(cx + CHUNK_SIZE/2 - 100, cy + CHUNK_SIZE/2 - 100, 200, 200));
+                } else if (chunkType === 5) {
+                    // Dense L-Shape Blockade + Corner hideout
                     buildings.push(new Building(cx, cy, CHUNK_SIZE * 0.7, 80));
                     buildings.push(new Building(cx, cy, 80, CHUNK_SIZE * 0.7));
-                    if(rand3 > 0.4) {
-                        buildings.push(new Building(cx + CHUNK_SIZE - 250, cy + CHUNK_SIZE - 250, 250, 250));
+                    if(rand3 > 0.2) {
+                        buildings.push(new Building(cx + CHUNK_SIZE - 300, cy + CHUNK_SIZE - 300, 300, 300));
                     }
-                } else if (chunkType === 3) {
+                } else if (chunkType === 6) {
                     // Cross / X Blockade (creates 4 quadrants)
                     let thick = 80 + rand2 * 40;
-                    buildings.push(new Building(cx + CHUNK_SIZE/2 - thick/2, cy + 100, thick, CHUNK_SIZE - 200));
-                    buildings.push(new Building(cx + 100, cy + CHUNK_SIZE/2 - thick/2, CHUNK_SIZE - 200, thick));
-                } else if (chunkType === 4) {
-                    // Parallel Corridors / Trenches
+                    buildings.push(new Building(cx + CHUNK_SIZE/2 - thick/2, cy + 150, thick, CHUNK_SIZE - 300));
+                    buildings.push(new Building(cx + 150, cy + CHUNK_SIZE/2 - thick/2, CHUNK_SIZE - 300, thick));
+                } else if (chunkType <= 8) {
+                    // Parallel Corridors / Trenches (Dense)
                     let thick = 80;
-                    let gap = 200 + rand2 * 100;
+                    let gap = 150 + rand2 * 100;
                     if(rand3 < 0.5) {
                         // Vertical trenches
                         buildings.push(new Building(cx + gap, cy, thick, CHUNK_SIZE));
@@ -1536,11 +1543,9 @@ function update() {
                         buildings.push(new Building(cx, cy + gap, CHUNK_SIZE, thick));
                         buildings.push(new Building(cx, cy + CHUNK_SIZE - gap - thick, CHUNK_SIZE, thick));
                     }
-                } else if (chunkType === 5) {
-                    // T-Shape Chokepoint
-                    let thick = 100 + rand2 * 50;
-                    buildings.push(new Building(cx + 100, cy + 100, CHUNK_SIZE - 200, thick));
-                    buildings.push(new Building(cx + CHUNK_SIZE/2 - thick/2, cy + 100, thick, CHUNK_SIZE - 200));
+                } else {
+                    // Massive central monolith (Dense blocker)
+                    buildings.push(new Building(cx + 150, cy + 150, CHUNK_SIZE - 300, CHUNK_SIZE - 300));
                 }
             }
         }
