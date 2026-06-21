@@ -92,23 +92,13 @@ class Building {
         this.x = x; this.y = y; this.w = w; this.h = h;
     }
     draw(ctx) {
-        // Deterministic seed based on position to keep buildings stable
-        let seed = Math.abs(Math.sin(this.x * 12.9898 + this.y * 78.233)) * 43758.5453;
-        let rand = () => { seed = (seed * 9301 + 49297) % 233280; return seed / 233280; };
-        
-        // Distinct cyberpunk colors
-        // Distinct cyberpunk colors
-        let hues = [180, 300, 60, 120, 30, 210]; // Cyan, Magenta, Yellow, Green, Orange, Blue
-        let hue = hues[Math.floor(rand() * hues.length)];
-        let neonColor = `hsl(${hue}, 100%, 40%)`;
-
         // Solid Black Fill for walls/obstacles
         ctx.fillStyle = '#000000';
         ctx.fillRect(this.x, this.y, this.w, this.h);
-
-        // Subtle Neon Border
-        ctx.strokeStyle = neonColor;
-        ctx.lineWidth = 2;
+        
+        // Pure black border to cover seams
+        ctx.strokeStyle = '#000000';
+        ctx.lineWidth = 1;
         ctx.strokeRect(this.x, this.y, this.w, this.h);
     }
 }
@@ -1831,9 +1821,9 @@ function update() {
 function draw() {
     // Clear background before any translations to prevent edge ghosting
     if(activeEvent === 'bloodmoon') {
-        ctx.fillStyle = '#300';
+        ctx.fillStyle = '#4a0000'; // Brighter dark red for bloodmoon
     } else {
-        ctx.fillStyle = '#111';
+        ctx.fillStyle = '#2b2b2b'; // Brighter concrete floor
     }
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
@@ -1846,7 +1836,7 @@ function draw() {
     ctx.translate(Math.round(canvas.width/2 - camera.x), Math.round(canvas.height/2 - camera.y));
 
     // Draw Grid (Infinite scrolling floor)
-    ctx.strokeStyle = '#222';
+    ctx.strokeStyle = '#3a3a3a'; // Brighter grid lines
     ctx.lineWidth = 1;
     let startX = camera.x - canvas.width/2;
     let startY = camera.y - canvas.height/2;
