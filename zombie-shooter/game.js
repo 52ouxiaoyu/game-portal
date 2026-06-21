@@ -120,8 +120,10 @@ class Blood {
 
 class Barrel {
     constructor(x, y) {
-        this.x = x; this.y = y;
         this.size = 20;
+        let pos = getValidDropPosition(x, y, this.size);
+        this.x = pos.x; 
+        this.y = pos.y;
         this.hp = 50;
         this.active = true;
         this.dropY = -500; // For drop animation
@@ -877,6 +879,44 @@ function resolveBuildingCollision(obj) {
     });
 }
 
+function getValidDropPosition(x, y, size) {
+    let validX = x, validY = y;
+    let isRandom = (x === undefined || y === undefined);
+    
+    let attempts = 0;
+    let isValid = false;
+    while(!isValid && attempts < 50) {
+        if(isRandom) {
+            let cw = canvas.width || window.innerWidth;
+            let ch = canvas.height || window.innerHeight;
+            validX = camera.x - cw/2 + 50 + Math.random() * (cw - 100);
+            validY = camera.y - ch/2 + 50 + Math.random() * (ch - 100);
+        }
+        
+        isValid = true;
+        for(let b of buildings) {
+            if(validX + size > b.x && validX - size < b.x + b.w &&
+               validY + size > b.y && validY - size < b.y + b.h) {
+                isValid = false;
+                break;
+            }
+        }
+        
+        if(!isRandom && !isValid) {
+            // If it was a specific coordinate but stuck, slightly jitter it out
+            validX += (Math.random() - 0.5) * 50;
+            validY += (Math.random() - 0.5) * 50;
+        }
+        attempts++;
+    }
+    
+    if(!isValid) {
+        validX = camera.x;
+        validY = camera.y;
+    }
+    return {x: validX, y: validY};
+}
+
 function hasLineOfSight(x1, y1, x2, y2) {
     let dist = Math.hypot(x2 - x1, y2 - y1);
     let steps = Math.max(1, Math.ceil(dist / 20)); // Sample every 20 pixels
@@ -1203,9 +1243,10 @@ class Zombie {
 
 class LootBox {
     constructor(x, y) {
-        this.x = x !== undefined ? x : camera.x - (canvas.width || window.innerWidth)/2 + 50 + Math.random() * ((canvas.width || window.innerWidth) - 100);
-        this.y = y !== undefined ? y : camera.y - (canvas.height || window.innerHeight)/2 + 50 + Math.random() * ((canvas.height || window.innerHeight) - 100);
         this.size = 20;
+        let pos = getValidDropPosition(x, y, this.size);
+        this.x = pos.x;
+        this.y = pos.y;
         
         const rand = Math.random();
         if(rand < 0.15) this.type = 'nuke'; 
