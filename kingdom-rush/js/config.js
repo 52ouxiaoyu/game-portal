@@ -25,7 +25,9 @@ const CONFIG = {
         INFANTRY: { id: 'infantry', name: '黄巾军', hp: 30, speed: 1.5, reward: 5, color: '#FFD700', size: 15 },
         CAVALRY: { id: 'cavalry', name: '西凉铁骑', hp: 80, speed: 2.2, reward: 15, color: '#8B4513', size: 20 },
         HEAVY: { id: 'heavy', name: '铁浮屠', hp: 250, speed: 0.6, reward: 30, color: '#808080', size: 25 },
-        BOSS: { id: 'boss', name: '魔化主将', hp: 2000, speed: 0.3, reward: 500, color: '#8A2BE2', size: 50 }
+        BOSS_DOGE: { id: 'boss_doge', name: '精神小伙(狗头)', hp: 1500, speed: 0.4, reward: 500, color: '#FFD700', size: 40, jumpInterval: 1500, jumpRange: 2 },
+        BOSS_CXK: { id: 'boss_cxk', name: '中分战神(唱跳)', hp: 2000, speed: 0.3, reward: 800, color: '#808080', size: 45, jumpInterval: 800, jumpRange: 1 },
+        BOSS_BAOAN: { id: 'boss_baoan', name: '摸鱼保安(划水)', hp: 3000, speed: 0.2, reward: 1000, color: '#00BFFF', size: 50, jumpInterval: 3000, jumpRange: 3 }
     },
 
     ITEMS: {

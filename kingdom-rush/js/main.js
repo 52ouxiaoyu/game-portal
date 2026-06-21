@@ -345,8 +345,31 @@ class Game {
         for (let i = this.enemies.length - 1; i >= 0; i--) {
             const e = this.enemies[i];
             if (e.hitTimer > 0) e.hitTimer -= deltaTime;
-            if (e.frozenTimer > 0) e.frozenTimer -= deltaTime;
-            else e.y += e.type.speed * (0.8 + this.waveMultiplier*0.2) * (deltaTime / 16); 
+            if (e.frozenTimer > 0) {
+                e.frozenTimer -= deltaTime;
+            } else {
+                e.y += e.type.speed * (0.8 + this.waveMultiplier*0.2) * (deltaTime / 16);
+                
+                // Strafe logic for bosses
+                if (e.type.jumpInterval && this.numLanes > 1) {
+                    e.jumpTimer -= deltaTime;
+                    if (e.jumpTimer <= 0) {
+                        e.jumpTimer = e.type.jumpInterval + Math.random() * 500;
+                        const currentLaneIdx = Math.floor(e.x / (CONFIG.CANVAS_WIDTH / this.numLanes));
+                        let dir = (Math.random() > 0.5 ? 1 : -1) * Math.ceil(Math.random() * e.type.jumpRange);
+                        let newLaneIdx = currentLaneIdx + dir;
+                        if (newLaneIdx < 0) newLaneIdx = 0;
+                        if (newLaneIdx >= this.numLanes) newLaneIdx = this.numLanes - 1;
+                        
+                        e.targetX = (newLaneIdx + 0.5) * (CONFIG.CANVAS_WIDTH / this.numLanes);
+                    }
+                }
+                
+                // Smooth horizontal dash
+                if (e.targetX !== undefined && Math.abs(e.x - e.targetX) > 1) {
+                    e.x += (e.targetX - e.x) * 0.15;
+                }
+            } 
             
             if (e.y + (e.type.size*2) >= CONFIG.CANVAS_HEIGHT - 100) {
                 this.castleHp--;
@@ -653,7 +676,9 @@ class Game {
             if (e.hitTimer > 0) {
                 ctx.filter = 'brightness(200%)';
             }
-            drawSprite(ctx, SPRITES[spriteId], e.x, e.y, e.type.size/4, null);
+            // Support exact boss sprite IDs
+            const exactSprite = SPRITES[e.type.id.toUpperCase()];
+            drawSprite(ctx, exactSprite || SPRITES[spriteId], e.x, e.y, e.type.size/4, null);
             ctx.restore();
             
             if (e.frozenTimer > 0) {
