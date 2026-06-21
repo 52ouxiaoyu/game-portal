@@ -31,7 +31,8 @@ const CONFIG = {
         HEAVY: { id: 'heavy', name: '铁浮屠', hp: 250, speed: 0.4, reward: 50, color: '#808080', size: 25 },
         BOSS_LUBU: { id: 'boss_lubu', name: '无双吕布(飞将)', hp: 1500, speed: 0.4, reward: 500, color: '#FF0000', size: 40, jumpInterval: 1500, jumpRange: 2 },
         BOSS_ZHANGJIAO: { id: 'boss_zhangjiao', name: '天公张角(妖术)', hp: 2000, speed: 0.3, reward: 800, color: '#FFD700', size: 45, jumpInterval: 800, jumpRange: 1 },
-        BOSS_DONGZHUO: { id: 'boss_dongzhuo', name: '魔王董卓(肉山)', hp: 3000, speed: 0.2, reward: 1000, color: '#8A2BE2', size: 50, jumpInterval: 3000, jumpRange: 3 }
+        BOSS_DONGZHUO: { id: 'boss_dongzhuo', name: '魔王董卓(肉山)', hp: 3000, speed: 0.2, reward: 1000, color: '#8A2BE2', size: 50, jumpInterval: 3000, jumpRange: 3 },
+        FINAL_BOSS: { id: 'final_boss', name: '修罗·鬼神吕布(终极魔神)', hp: 150000, speed: 0.15, reward: 99999, color: '#8B0000', size: 120, jumpInterval: 2500, jumpRange: 5 }
     },
 
     ITEMS: {

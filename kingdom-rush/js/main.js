@@ -17,6 +17,8 @@ class Game {
         this.items = [];
         this.particles = [];
         this.floatingTexts = [];
+        this.finalBossSpawned = false;
+        this.gameWon = false;
         this.keys = {};
         
         this.lastTime = 0;
@@ -188,6 +190,8 @@ class Game {
         this.items = [];
         this.particles = [];
         this.floatingTexts = [];
+        this.finalBossSpawned = false;
+        this.gameWon = false;
         this.enemySpawnTimer = 0;
         this.gameOver = false;
     }
