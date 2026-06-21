@@ -267,7 +267,7 @@ class Player {
         this.cooldown = 0;
         this.buffTime = 0;
         this.shieldTime = 0;
-        this.mechTime = 0;
+        this.mechTime = 0; this.vehicleHp = 0;
         this.mechType = 0;
         this.mechHp = 0;
         this.vehicleTime = 0;
@@ -342,12 +342,10 @@ class Player {
         if(this.cooldown > 0 && this.buffTime > 0) this.cooldown -= 2;
         if(this.buffTime > 0) this.buffTime--;
         if(this.shieldTime > 0) this.shieldTime--;
-        if(this.mechTime > 0) this.mechTime--;
-        if(this.vehicleTime > 0) this.vehicleTime--;
         if(this.invincibleTime > 0) this.invincibleTime--;
 
         
-        if(this.vehicleTime > 0) {
+        if(this.vehicleHp > 0) {
             // Vehicle ramming
             zombies.forEach(z => {
                 if(!z.active) return;
@@ -369,12 +367,12 @@ class Player {
         let dx = 0; let dy = 0;
         let currentSpeed = this.speed;
         if(this.buffTime > 0) currentSpeed *= 1.5;
-        if(this.mechTime > 0) {
+        if(this.mechHp > 0) {
             if(this.mechType === 1) currentSpeed *= 0.4;
             else if(this.mechType === 2) currentSpeed *= 0.6;
             else if(this.mechType === 3) currentSpeed *= 1.3;
         }
-        if(this.vehicleTime > 0) currentSpeed *= 3.0; // Vehicle is fast
+        if(this.vehicleHp > 0) currentSpeed *= 3.0; // Vehicle is fast
 
         
         if(Date.now() - this.lastInputTime > 5000) {
@@ -576,30 +574,33 @@ class Player {
     shoot() {
         if(this.hp <= 0 || this.isDowned || this.cooldown > 0) return;
         
-        if(this.vehicleTime > 0) {
+        if(this.vehicleHp > 0) {
             this.cooldown = 15;
             audio.shootLaser();
-            // Motorcycle fires homing missiles
-            let b = new Bullet(this.x, this.y, this.facing.x, this.facing.y, 12, 150, '#ff0000', false, this.id, true);
-            bullets.push(b);
+            // Motorcycle fires multiple homing missiles
+            let angle = Math.atan2(this.facing.y, this.facing.x);
+            bullets.push(new Bullet(this.x, this.y, Math.cos(angle), Math.sin(angle), 12, 150, '#ff0000', false, this.id, true));
+            bullets.push(new Bullet(this.x, this.y, Math.cos(angle-0.3), Math.sin(angle-0.3), 12, 150, '#ff0000', false, this.id, true));
+            bullets.push(new Bullet(this.x, this.y, Math.cos(angle+0.3), Math.sin(angle+0.3), 12, 150, '#ff0000', false, this.id, true));
             return;
         }
 
-        if(this.mechTime > 0) {
+        if(this.mechHp > 0) {
             if(this.mechType === 1) { 
                 this.cooldown = 20;
                 audio.shootLaser();
                 let b = new Bullet(this.x, this.y, this.facing.x, this.facing.y, 10, 400, '#ff5500', true, this.id);
                 b.size = 15;
                 bullets.push(b);
-                let m = new Bullet(this.x, this.y, this.facing.x, this.facing.y, 12, 200, '#ff0000', false, this.id, true);
-                bullets.push(m);
+                let angle = Math.atan2(this.facing.y, this.facing.x);
+                bullets.push(new Bullet(this.x, this.y, Math.cos(angle-0.2), Math.sin(angle-0.2), 12, 200, '#ff0000', false, this.id, true));
+                bullets.push(new Bullet(this.x, this.y, Math.cos(angle+0.2), Math.sin(angle+0.2), 12, 200, '#ff0000', false, this.id, true));
             } else if(this.mechType === 2) { 
                 this.cooldown = 10;
                 audio.shootLaser();
                 for(let i=0; i<8; i++) {
                     let angle = Math.PI/4 * i + (frameCount*0.1);
-                    bullets.push(new Bullet(this.x, this.y, Math.cos(angle), Math.sin(angle), 15, 50, '#ff0000', true, this.id));
+                    bullets.push(new Bullet(this.x, this.y, Math.cos(angle), Math.sin(angle), 15, 50, '#ff0000', false, this.id, true));
                 }
                 bullets.push(new Bullet(this.x, this.y, this.facing.x, this.facing.y, 12, 100, '#ff00ff', false, this.id, true));
             } else if(this.mechType === 3) { 
@@ -607,9 +608,7 @@ class Player {
                 audio.shootMachine();
                 let angle = Math.atan2(this.facing.y, this.facing.x) + (Math.random()-0.5)*0.15;
                 bullets.push(new Bullet(this.x, this.y, Math.cos(angle), Math.sin(angle), 25, 30, '#00ffff', true, this.id));
-                if(Math.random() < 0.25) { // 25% chance
-                    bullets.push(new Bullet(this.x, this.y, Math.cos(angle), Math.sin(angle), 15, 80, '#ff00ff', false, this.id, true));
-                }
+                bullets.push(new Bullet(this.x, this.y, Math.cos(angle), Math.sin(angle), 15, 80, '#ff00ff', false, this.id, true));
             }
             return;
         }
@@ -671,7 +670,7 @@ class Player {
         // Damage flickering (I-frames)
         if (this.invincibleTime > 0 && Math.floor(frameCount / 4) % 2 === 0) return;
 
-        if(this.mechTime > 0) {
+        if(this.mechHp > 0) {
             // Draw Mech - Awesome Cyberpunk Style
             ctx.save();
             ctx.translate(this.x, this.y);
@@ -718,7 +717,7 @@ class Player {
             ctx.shadowBlur = 0; // Reset
             
             ctx.restore();
-        } else if(this.vehicleTime > 0) {
+        } else if(this.vehicleHp > 0) {
             // Draw Motorcycle - Akira Style
             ctx.save();
             ctx.translate(this.x, this.y);
@@ -1113,12 +1112,17 @@ class Zombie {
             }
             if(minDist < this.size + target.size) {
                 if(target.shieldTime <= 0 && target.invincibleTime <= 0) {
-                    if(target.mechTime > 0) {
-                        target.mechHp -= this.damage * 20;
-                        if(target.mechHp <= 0) target.mechTime = 0; // mech destroyed
+                    if(target.mechHp > 0) {
+                        target.mechHp -= 1;
                         target.invincibleTime = 30; // 0.5s I-frames
                         audio.playerHit();
-                    } else if(target.vehicleTime <= 0) {
+                        if(target.mechHp <= 0) addFloatingText(target.x, target.y - 30, "🔥 机甲损毁!", "#ff0000");
+                    } else if(target.vehicleHp > 0) {
+                        target.vehicleHp -= 1;
+                        target.invincibleTime = 30; // 0.5s I-frames
+                        audio.playerHit();
+                        if(target.vehicleHp <= 0) addFloatingText(target.x, target.y - 30, "🔥 摩托车损毁!", "#ff0000");
+                    } else if(target.vehicleHp <= 0) {
                         target.hp -= this.damage;
                         screenShake = 10;
                         target.invincibleTime = 30; // 0.5s I-frames
@@ -1287,11 +1291,11 @@ class LootBox {
         this.y = pos.y;
         
         const rand = Math.random();
-        if(rand < 0.15) this.type = 'nuke'; 
-        else if(rand < 0.30) this.type = 'ult'; 
-        else if(rand < 0.40) this.type = 'mech';
-        else if(rand < 0.50) this.type = 'vehicle';
-        else if(rand < 0.70) this.type = 'weapon_box'; // 20% dedicated chance to drop weapon upgrades!
+        if(rand < 0.10) this.type = 'nuke'; 
+        else if(rand < 0.20) this.type = 'ult'; 
+        else if(rand < 0.30) this.type = 'mech';
+        else if(rand < 0.40) this.type = 'vehicle';
+        else if(rand < 0.80) this.type = 'weapon_box'; // 40% dedicated chance to drop weapon upgrades!
         else {
             const types = ['heal', 'shield', 'buff', 'trap', 'revive'];
             this.type = types[Math.floor(Math.random() * types.length)];
@@ -1380,12 +1384,11 @@ class LootBox {
                     addFloatingText(p.x, p.y - 30, `🔫 火力升级! ${p.weapon.name}`, "#aa00ff");
                     audio.levelUp();
                 } else if(this.type === 'mech') {
-                    p.mechTime = 600;
-                    p.mechHp = 500;
+                    p.mechHp = 8;
                     addFloatingText(p.x, p.y - 30, "🤖 战术机甲部署!", "#555555");
                     audio.levelUp();
                 } else if(this.type === 'vehicle') {
-                    p.vehicleTime = 600;
+                    p.vehicleHp = 3;
                     addFloatingText(p.x, p.y - 30, "🏍️ 机动载具就绪!", "#ffaa00");
                     audio.levelUp();
                 } else if(this.type === 'nuke') {
@@ -2003,8 +2006,8 @@ function update() {
         let p1b = [];
         if(p1.shieldTime > 0) p1b.push('🛡️');
         if(p1.buffTime > 0) p1b.push('🌀');
-        if(p1.mechTime > 0) p1b.push('🤖');
-        if(p1.vehicleTime > 0) p1b.push('🏍️');
+        if(p1.mechHp > 0) p1b.push('🤖');
+        if(p1.vehicleHp > 0) p1b.push('🏍️');
         if(p1.hasUlt) p1b.push('⚡');
         document.getElementById('p1-buffs').textContent = p1b.length > 0 ? p1b.join(' ') : '无';
 
@@ -2014,8 +2017,8 @@ function update() {
         let p2b = [];
         if(p2.shieldTime > 0) p2b.push('🛡️');
         if(p2.buffTime > 0) p2b.push('🌀');
-        if(p2.mechTime > 0) p2b.push('🤖');
-        if(p2.vehicleTime > 0) p2b.push('🏍️');
+        if(p2.mechHp > 0) p2b.push('🤖');
+        if(p2.vehicleHp > 0) p2b.push('🏍️');
         if(p2.hasUlt) p2b.push('⚡');
         document.getElementById('p2-buffs').textContent = p2b.length > 0 ? p2b.join(' ') : '无';
     }
