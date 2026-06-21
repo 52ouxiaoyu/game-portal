@@ -248,7 +248,7 @@ class Game {
                 alive: true
             });
         }
-        if (weapon.id === 'cannon' || weapon.id === 'nuke') Audio.playExplosion();
+        if (weapon.id === 'trebuchet' || weapon.id === 'zhentianlei') Audio.playExplosion();
         else Audio.playShoot();
     }
     
@@ -731,7 +731,7 @@ class Game {
         });
 
         this.projectiles.forEach(p => {
-            const size = (p.sprite === 'NUKE') ? 4 : (p.sprite === 'CANNONBALL' || p.sprite === 'MISSILE') ? 3 : 2;
+            const size = (p.sprite === 'BOMB_WEAPON') ? 4 : (p.sprite === 'ROCK' || p.sprite === 'DRAGON') ? 3 : 2;
             drawSprite(ctx, SPRITES[p.sprite] || SPRITES.ARROW, p.x, p.y, size, p.color);
         });
 
