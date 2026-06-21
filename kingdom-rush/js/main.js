@@ -409,7 +409,7 @@ class Game {
                                 this.spawnFloatingText(`-${Math.floor(p.damage/2)}`, e2.x, e2.y - e2.type.size, '#FFA500', 12);
                                 if(e2.hp <= 0 && lastHitter) {
                                     lastHitter.score += e2.type.reward * 10;
-                                    lastHitter.gold += e2.type.reward;
+                                    lastHitter.gold += Math.floor(e2.type.reward * this.waveMultiplier); // Economy fix
                                 }
                             }
                         });

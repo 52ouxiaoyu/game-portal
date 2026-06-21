@@ -24,7 +24,8 @@ const CONFIG = {
     ENEMY_TYPES: {
         INFANTRY: { id: 'infantry', name: '黄巾军', hp: 30, speed: 1.5, reward: 5, color: '#FFD700', size: 15 },
         CAVALRY: { id: 'cavalry', name: '西凉铁骑', hp: 80, speed: 2.2, reward: 15, color: '#8B4513', size: 20 },
-        HEAVY: { id: 'heavy', name: '铁浮屠', hp: 250, speed: 0.6, reward: 30, color: '#808080', size: 25 }
+        HEAVY: { id: 'heavy', name: '铁浮屠', hp: 250, speed: 0.6, reward: 30, color: '#808080', size: 25 },
+        BOSS: { id: 'boss', name: '魔化主将', hp: 2000, speed: 0.3, reward: 500, color: '#8A2BE2', size: 50 }
     },
 
     ITEMS: {
