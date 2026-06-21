@@ -97,86 +97,19 @@ class Building {
         let rand = () => { seed = (seed * 9301 + 49297) % 233280; return seed / 233280; };
         
         // Distinct cyberpunk colors
+        // Distinct cyberpunk colors
         let hues = [180, 300, 60, 120, 30, 210]; // Cyan, Magenta, Yellow, Green, Orange, Blue
         let hue = hues[Math.floor(rand() * hues.length)];
-        let neonColor = `hsl(${hue}, 100%, 50%)`;
-        let dimNeon = `hsla(${hue}, 100%, 50%, 0.2)`;
+        let neonColor = `hsl(${hue}, 100%, 40%)`;
 
-        // Base building shadow/structure
-        ctx.fillStyle = '#111';
+        // Solid Black Fill for walls/obstacles
+        ctx.fillStyle = '#000000';
         ctx.fillRect(this.x, this.y, this.w, this.h);
-        
-        // Inner roof
-        ctx.fillStyle = '#222';
-        ctx.fillRect(this.x + 5, this.y + 5, this.w - 10, this.h - 10);
-        
-        // Roof pattern based on seed
-        let patternType = Math.floor(rand() * 4);
-        
-        ctx.save();
-        ctx.beginPath();
-        ctx.rect(this.x + 5, this.y + 5, this.w - 10, this.h - 10);
-        ctx.clip(); // Keep patterns inside the roof
 
-        if (patternType === 0) {
-            // Helipad
-            ctx.strokeStyle = dimNeon;
-            ctx.lineWidth = 4;
-            ctx.beginPath();
-            ctx.arc(this.x + this.w/2, this.y + this.h/2, Math.min(this.w, this.h)/3, 0, Math.PI*2);
-            ctx.stroke();
-            ctx.fillStyle = dimNeon;
-            ctx.font = `bold ${Math.floor(Math.min(this.w, this.h)/2)}px Arial`;
-            ctx.textAlign = 'center';
-            ctx.textBaseline = 'middle';
-            ctx.fillText('H', this.x + this.w/2, this.y + this.h/2);
-        } else if (patternType === 1) {
-            // Grid solar panels
-            ctx.strokeStyle = '#333';
-            ctx.lineWidth = 2;
-            for(let i = 15; i < this.w; i += 20) {
-                ctx.beginPath(); ctx.moveTo(this.x + i, this.y); ctx.lineTo(this.x + i, this.y + this.h); ctx.stroke();
-            }
-            for(let i = 15; i < this.h; i += 20) {
-                ctx.beginPath(); ctx.moveTo(this.x, this.y + i); ctx.lineTo(this.x + this.w, this.y + i); ctx.stroke();
-            }
-        } else if (patternType === 2) {
-            // Ventilation shafts
-            let numVents = Math.floor(rand() * 4) + 2;
-            for(let i=0; i<numVents; i++) {
-                let vx = this.x + 10 + rand() * (this.w - 40);
-                let vy = this.y + 10 + rand() * (this.h - 40);
-                ctx.fillStyle = '#1a1a1a';
-                ctx.fillRect(vx, vy, 20, 20);
-                ctx.fillStyle = '#000';
-                ctx.fillRect(vx + 2, vy + 2, 16, 16);
-            }
-        } else {
-            // Diagonal tech lines
-            ctx.strokeStyle = dimNeon;
-            ctx.lineWidth = 2;
-            for(let i = -this.h; i < this.w; i += 30) {
-                ctx.beginPath(); ctx.moveTo(this.x + i, this.y); ctx.lineTo(this.x + i + this.h, this.y + this.h); ctx.stroke();
-            }
-        }
-        ctx.restore();
-
-        // Border Glow
+        // Subtle Neon Border
         ctx.strokeStyle = neonColor;
-        ctx.lineWidth = rand() > 0.5 ? 2 : 1;
-        ctx.shadowColor = neonColor;
-        ctx.shadowBlur = rand() > 0.5 ? 10 : 0;
+        ctx.lineWidth = 2;
         ctx.strokeRect(this.x, this.y, this.w, this.h);
-        ctx.shadowBlur = 0;
-
-        // Corner nodes
-        if(rand() > 0.3) {
-            ctx.fillStyle = neonColor;
-            ctx.fillRect(this.x - 2, this.y - 2, 8, 8);
-            ctx.fillRect(this.x + this.w - 6, this.y - 2, 8, 8);
-            ctx.fillRect(this.x - 2, this.y + this.h - 6, 8, 8);
-            ctx.fillRect(this.x + this.w - 6, this.y + this.h - 6, 8, 8);
-        }
     }
 }
 
