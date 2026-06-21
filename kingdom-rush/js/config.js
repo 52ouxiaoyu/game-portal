@@ -27,7 +27,6 @@ const CONFIG = {
         TROLL: { id: 'troll', name: '巨魔', hp: 200, speed: 0.6, reward: 30, color: '#8B0000', size: 25 }
     },
 
-    LANES: [256, 512, 768],
     CASTLE_Y: 700,
 
     ITEMS: {
