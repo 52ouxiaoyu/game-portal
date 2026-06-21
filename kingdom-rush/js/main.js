@@ -126,7 +126,7 @@ class Game {
                         if (hero.gold >= cost) {
                             hero.gold -= cost;
                             hero.upgradeLevels[i]++;
-                            if (upg.type === 'damage') hero.damage += upg.damageInc;
+                            if (upg.type === 'weapon') hero.weaponTier = Math.min(CONFIG.WEAPON_TIERS.length - 1, hero.weaponTier + 1);
                             if (upg.type === 'speed') hero.fireRate *= upg.fireRateMult;
                             if (upg.type === 'arrows') hero.arrows += upg.arrows;
                             
@@ -326,6 +326,34 @@ class Game {
 
             if (hero.comboTimer > 0) hero.comboTimer -= deltaTime;
             else hero.combo = 0;
+            
+            // Auto Upgrade Logic: Buy the cheapest available upgrade
+            let cheapestIdx = -1;
+            let minCost = Infinity;
+            for (let i = 0; i < CONFIG.UPGRADES.length; i++) {
+                const upg = CONFIG.UPGRADES[i];
+                if (upg.type === 'weapon' && hero.weaponTier >= CONFIG.WEAPON_TIERS.length - 1) continue; // Max weapon
+                
+                const cost = Math.floor(upg.cost * Math.pow(upg.costMult, hero.upgradeLevels[i]));
+                if (cost < minCost && hero.gold >= cost) {
+                    minCost = cost;
+                    cheapestIdx = i;
+                }
+            }
+            if (cheapestIdx !== -1) {
+                const upg = CONFIG.UPGRADES[cheapestIdx];
+                hero.gold -= minCost;
+                hero.upgradeLevels[cheapestIdx]++;
+                if (upg.type === 'weapon') {
+                    hero.weaponTier = Math.min(CONFIG.WEAPON_TIERS.length - 1, hero.weaponTier + 1);
+                } else if (upg.type === 'speed') {
+                    hero.fireRate *= upg.fireRateMult;
+                } else if (upg.type === 'arrows') {
+                    hero.arrows += upg.arrows;
+                }
+                this.spawnFloatingText(`自动升级: ${upg.name}!`, hero.x, hero.y - 40, '#FFD700', 16);
+                Audio.playHit(); // Feedback sound
+            }
         });
 
         this.enemySpawnTimer += deltaTime;
