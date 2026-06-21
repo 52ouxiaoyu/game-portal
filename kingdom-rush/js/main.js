@@ -89,6 +89,8 @@ class Game {
     }
     
     handleClick(pos) {
+        Audio.init();
+        Audio.resume();
         const cx = CONFIG.CANVAS_WIDTH / 2;
         const cy = CONFIG.CANVAS_HEIGHT / 2;
 
@@ -349,6 +351,7 @@ class Game {
                 this.castleHp--;
                 this.triggerShake(10, 300);
                 this.spawnParticles(e.x, e.y, '#FF0000', 20);
+                Audio.playHit();
                 this.enemies.splice(i, 1);
                 
                 if (this.castleHp <= 0) {
@@ -370,6 +373,7 @@ class Game {
                     this.spawnParticles(p.x, p.y, p.color, 3);
                     this.spawnFloatingText(`-${p.damage}`, e.x, e.y - e.type.size, '#FF6347', 14);
                     this.projectiles.splice(j, 1);
+                    Audio.playHit();
                     hit = true;
                 }
             }
