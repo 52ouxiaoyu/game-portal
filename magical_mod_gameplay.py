@@ -1,4 +1,8 @@
+import os
 
+base_dir = "/Users/clawbox/game-portal/kingdom-rush/js"
+
+main_js_content = """
 class Game {
     constructor() {
         this.canvas = document.getElementById('gameCanvas');
@@ -709,3 +713,9 @@ class Game {
 window.addEventListener('load', () => {
     new Game();
 });
+"""
+
+with open(os.path.join(base_dir, 'main.js'), 'w') as f:
+    f.write(main_js_content)
+
+print("Bug fixed and game feel enhanced!")
