@@ -617,24 +617,101 @@ this.weapons = [];
         }
 
         if(this.mechTime > 0) {
-            // Draw Mech
-            ctx.fillStyle = '#444';
-            ctx.fillRect(this.x - 30, this.y - 30, 60, 60);
-            ctx.fillStyle = '#ff0000';
-            ctx.fillRect(this.x + this.facing.x*20 - 5, this.y + this.facing.y*20 - 5, 10, 10);
-            ctx.strokeStyle = '#222';
-            ctx.lineWidth = 10;
-            ctx.beginPath(); ctx.moveTo(this.x, this.y); ctx.lineTo(this.x + this.facing.x*40, this.y + this.facing.y*40); ctx.stroke();
-        } else if(this.vehicleTime > 0) {
-            // Draw Motorcycle
-            ctx.fillStyle = '#ff3300';
+            // Draw Mech - Awesome Cyberpunk Style
             ctx.save();
             ctx.translate(this.x, this.y);
             ctx.rotate(Math.atan2(this.facing.y, this.facing.x));
-            ctx.fillRect(-20, -10, 40, 20);
-            ctx.fillStyle = '#222'; // wheels
-            ctx.fillRect(-15, -15, 10, 5); ctx.fillRect(-15, 10, 10, 5);
-            ctx.fillRect(15, -15, 10, 5); ctx.fillRect(15, 10, 10, 5);
+            
+            // Base Chassis
+            ctx.fillStyle = '#2b2b2b';
+            ctx.beginPath();
+            ctx.moveTo(-25, -25); ctx.lineTo(10, -30); ctx.lineTo(25, -15);
+            ctx.lineTo(25, 15); ctx.lineTo(10, 30); ctx.lineTo(-25, 25);
+            ctx.closePath();
+            ctx.fill();
+            
+            // Armor Plates
+            ctx.fillStyle = '#555';
+            ctx.fillRect(-20, -20, 30, 40);
+            ctx.fillStyle = '#ff9900'; // Accent color
+            ctx.fillRect(5, -15, 10, 30);
+
+            // Left Shoulder & Cannon
+            ctx.fillStyle = '#333';
+            ctx.beginPath(); ctx.roundRect ? ctx.roundRect(-10, -40, 20, 20, 5) : ctx.rect(-10, -40, 20, 20); ctx.fill();
+            ctx.fillStyle = '#111';
+            ctx.fillRect(0, -35, 35, 10);
+            ctx.fillStyle = '#0ff'; // Energy glow
+            ctx.fillRect(30, -33, 5, 6);
+
+            // Right Shoulder & Cannon
+            ctx.fillStyle = '#333';
+            ctx.beginPath(); ctx.roundRect ? ctx.roundRect(-10, 20, 20, 20, 5) : ctx.rect(-10, 20, 20, 20); ctx.fill();
+            ctx.fillStyle = '#111';
+            ctx.fillRect(0, 25, 35, 10);
+            ctx.fillStyle = '#0ff'; // Energy glow
+            ctx.fillRect(30, 27, 5, 6);
+
+            // Cockpit Window (Glowing Red)
+            ctx.fillStyle = '#ff0000';
+            ctx.shadowColor = '#ff0000';
+            ctx.shadowBlur = 15;
+            ctx.beginPath();
+            ctx.moveTo(10, -10); ctx.lineTo(20, -5); ctx.lineTo(20, 5); ctx.lineTo(10, 10);
+            ctx.closePath();
+            ctx.fill();
+            ctx.shadowBlur = 0; // Reset
+            
+            ctx.restore();
+        } else if(this.vehicleTime > 0) {
+            // Draw Motorcycle - Akira Style
+            ctx.save();
+            ctx.translate(this.x, this.y);
+            ctx.rotate(Math.atan2(this.facing.y, this.facing.x));
+            
+            // Front Wheel (Extended)
+            ctx.fillStyle = '#111';
+            ctx.beginPath(); ctx.roundRect ? ctx.roundRect(15, -6, 20, 12, 4) : ctx.rect(15, -6, 20, 12); ctx.fill();
+            // Rear Wheel (Thick)
+            ctx.beginPath(); ctx.roundRect ? ctx.roundRect(-30, -8, 20, 16, 4) : ctx.rect(-30, -8, 20, 16); ctx.fill();
+            
+            // Neon wheel rims
+            ctx.strokeStyle = '#0ff';
+            ctx.lineWidth = 2;
+            ctx.strokeRect(20, -4, 10, 8);
+            ctx.strokeRect(-25, -5, 10, 10);
+            
+            // Body chassis
+            ctx.fillStyle = '#e60000'; // Bright red
+            ctx.beginPath();
+            ctx.moveTo(-25, -12); ctx.lineTo(-10, -15); ctx.lineTo(15, -8);
+            ctx.lineTo(20, 0); ctx.lineTo(15, 8); ctx.lineTo(-10, 15);
+            ctx.lineTo(-25, 12); ctx.closePath();
+            ctx.fill();
+            
+            // Windshield / Head section
+            ctx.fillStyle = '#000';
+            ctx.beginPath();
+            ctx.moveTo(0, -8); ctx.lineTo(15, -4); ctx.lineTo(15, 4); ctx.lineTo(0, 8);
+            ctx.closePath();
+            ctx.fill();
+            
+            // Headlight
+            ctx.fillStyle = '#fff';
+            ctx.shadowColor = '#fff';
+            ctx.shadowBlur = 10;
+            ctx.fillRect(18, -3, 3, 6);
+            ctx.shadowBlur = 0;
+            
+            // Exhaust flame (animated)
+            ctx.fillStyle = (frameCount % 4 < 2) ? '#0ff' : '#00f';
+            ctx.beginPath();
+            ctx.moveTo(-25, -6); ctx.lineTo(-35 - Math.random()*10, -8); ctx.lineTo(-25, -2);
+            ctx.closePath(); ctx.fill();
+            ctx.beginPath();
+            ctx.moveTo(-25, 6); ctx.lineTo(-35 - Math.random()*10, 8); ctx.lineTo(-25, 2);
+            ctx.closePath(); ctx.fill();
+            
             ctx.restore();
         } else {
             
