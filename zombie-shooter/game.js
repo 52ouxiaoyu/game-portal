@@ -490,6 +490,25 @@ this.weapons = [];
             if(dx !== 0 || dy !== 0) {
                 const len = Math.hypot(dx, dy);
                 dx /= len; dy /= len;
+            }
+
+            // Auto-aim at the nearest zombie
+            let autoTarget = null;
+            let minDist = Infinity;
+            zombies.forEach(z => {
+                if(z.active) {
+                    let dist = Math.hypot(z.x - this.x, z.y - this.y);
+                    if(dist < minDist) { minDist = dist; autoTarget = z; }
+                }
+            });
+
+            if(autoTarget) {
+                let ax = autoTarget.x - this.x;
+                let ay = autoTarget.y - this.y;
+                let aLen = Math.hypot(ax, ay);
+                if(aLen > 0) this.facing = {x: ax/aLen, y: ay/aLen};
+            } else if(dx !== 0 || dy !== 0) {
+                // Default to movement direction if no zombies are around
                 this.facing = {x: dx, y: dy};
             }
             if(wantsToShoot) this.shoot();
