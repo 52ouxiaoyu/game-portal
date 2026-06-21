@@ -1165,6 +1165,34 @@ class LootBox {
         this.life--;
         if(this.life <= 0) this.active = false;
 
+        // Push out of walls
+        resolveBuildingCollision(this);
+
+        // Magnetic siphon effect for items (except traps)
+        if(this.type !== 'trap') {
+            let closestDist = 150;
+            let targetPlayer = null;
+            players.forEach(p => {
+                if(p.hp > 0) {
+                    let d = Math.hypot(p.x - this.x, p.y - this.y);
+                    // Must have line of sight to magnetize, otherwise it pulls against walls
+                    if(d < closestDist && hasLineOfSight(this.x, this.y, p.x, p.y)) {
+                        closestDist = d;
+                        targetPlayer = p;
+                    }
+                }
+            });
+            if(targetPlayer) {
+                let dx = targetPlayer.x - this.x;
+                let dy = targetPlayer.y - this.y;
+                let norm = Math.hypot(dx, dy);
+                if(norm > 0) {
+                    this.x += (dx/norm) * 4;
+                    this.y += (dy/norm) * 4;
+                }
+            }
+        }
+
         // Check if zombies step on traps
         if(this.type === 'trap') {
             zombies.forEach(z => {
