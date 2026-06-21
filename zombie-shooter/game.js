@@ -986,11 +986,14 @@ class Shockwave {
 }
 
 class Zombie {
-    constructor(isBoss = false) {
+    constructor(isBoss = false, isUltimateBoss = false) {
         this.isBoss = isBoss;
+        this.isUltimateBoss = isUltimateBoss;
         
         // Types
-        if(isBoss) {
+        if(this.isUltimateBoss) {
+            this.type = 'ultimate_boss';
+        } else if(isBoss) {
             this.type = 'boss';
         } else {
             const rand = Math.random();
@@ -1000,8 +1003,13 @@ class Zombie {
             else this.type = 'exploder';
         }
 
-        // Spawn at edges relative to camera
-        const edge = Math.floor(Math.random() * 4);
+        if(this.isUltimateBoss) {
+            let angle = Math.random() * Math.PI * 2;
+            this.x = camera.x + Math.cos(angle) * 3500;
+            this.y = camera.y + Math.sin(angle) * 3500;
+        } else {
+            // Spawn at edges relative to camera
+            const edge = Math.floor(Math.random() * 4);
         let cw = canvas.width || window.innerWidth;
         let ch = canvas.height || window.innerHeight;
         let cx = camera.x - cw/2;
@@ -1011,7 +1019,9 @@ class Zombie {
         else if(edge === 2) { this.x = cx + Math.random() * cw; this.y = cy + ch + 30; }
         else { this.x = cx - 30; this.y = cy + Math.random() * ch; }
 
-        if(this.type === 'boss') {
+        if(this.type === 'ultimate_boss') {
+            this.size = 80; this.speed = 1.2; this.hp = 15000; this.color = '#ff00ff'; this.damage = 3; this.scoreVal = 50000;
+        } else if(this.type === 'boss') {
             this.size = 35; this.speed = 0.8; this.hp = 1000 + survivalTime*10; this.color = '#ff00ff'; this.damage = 2; this.scoreVal = 500;
         } else if(this.type === 'fast') {
             this.size = 12 + Math.random()*3; this.speed = 1.5 + Math.random()*0.5 + (survivalTime/180); this.hp = 10 + survivalTime/2; this.color = '#ffff00'; this.damage = 1; this.scoreVal = 15;
@@ -1359,6 +1369,7 @@ function startGame() {
     players[0].y = CANVAS_H/2;
     players[1].y = CANVAS_H/2;
     zombies = [];
+    zombies.push(new Zombie(true, true)); // Spawn ultimate boss
     bullets = [];
     particles = [];
     floatingTexts = [];
@@ -1402,10 +1413,38 @@ function togglePause() {
     }
 }
 
+function gameWon() {
+    gameState = 'GAME_WON';
+    document.getElementById('hud').classList.add('hidden');
+    document.getElementById('game-over-screen').classList.remove('hidden');
+    
+    let title = document.querySelector('#game-over-screen h1');
+    title.innerHTML = '游戏胜利<br><span style="font-size:24px;">YOU WIN!</span>';
+    title.style.color = '#0f0';
+    title.style.textShadow = '0 0 20px #0f0';
+    
+    document.getElementById('final-score').textContent = score;
+    document.getElementById('survival-time').textContent = survivalTime;
+    document.getElementById('kill-count').textContent = killCount;
+    
+    if(score > highScore) {
+        highScore = score;
+        localStorage.setItem('zs_highscore', highScore);
+        document.getElementById('high-score').textContent = highScore;
+        document.getElementById('new-high').classList.remove('hidden');
+    }
+}
+
 function gameOver() {
     gameState = 'GAME_OVER';
     document.getElementById('hud').classList.add('hidden');
     document.getElementById('game-over-screen').classList.remove('hidden');
+    
+    let title = document.querySelector('#game-over-screen h1');
+    title.innerHTML = '游戏结束<br><span style="font-size:24px;">GAME OVER</span>';
+    title.style.color = '#fff';
+    title.style.textShadow = '0 0 20px #f00';
+    
     document.getElementById('final-score').textContent = score;
     document.getElementById('survival-time').textContent = survivalTime;
     document.getElementById('kill-count').textContent = killCount;
@@ -1609,9 +1648,18 @@ function update() {
         }
     }
 
-    // Garbage collection to prevent memory leaks in infinite world
-    zombies = zombies.filter(z => z.active && Math.hypot(z.x - camera.x, z.y - camera.y) < (canvas.width || window.innerWidth) * 2);
-    bullets = bullets.filter(b => b.active);
+    // Check for ultimate boss
+    if(!zombies.some(z => z.isUltimateBoss && z.active)) {
+        if(gameState === 'PLAYING') {
+            score += 50000;
+            gameWon();
+            return;
+        }
+    }
+
+    // Garbage collection
+    bullets = bullets.filter(b => b.active && Math.hypot(b.x - camera.x, b.y - camera.y) < (canvas.width || window.innerWidth));
+    zombies = zombies.filter(z => z.active && (z.isUltimateBoss || Math.hypot(z.x - camera.x, z.y - camera.y) < (canvas.width || window.innerWidth) * 2));
     particles = particles.filter(p => p.life > 0);
     floatingTexts = floatingTexts.filter(ft => ft.life > 0);
     lootBoxes = lootBoxes.filter(lb => lb.active && Math.hypot(lb.x - camera.x, lb.y - camera.y) < CANVAS_W * 3);
@@ -1882,6 +1930,37 @@ function draw() {
         ctx.fillRect(CANVAS_W - 120, 50, 100, 5);
         ctx.fillStyle = '#ffaa00';
         ctx.fillRect(CANVAS_W - 120, 50, 100 * (comboTimer/180), 5);
+    }
+    
+    // Draw Ultimate Boss Arrow Pointer
+    let ultBoss = zombies.find(z => z.isUltimateBoss && z.active);
+    if(ultBoss) {
+        let dx = ultBoss.x - camera.x;
+        let dy = ultBoss.y - camera.y;
+        let dist = Math.hypot(dx, dy);
+        
+        ctx.save();
+        ctx.translate(canvas.width/2, canvas.height/2);
+        let angle = Math.atan2(dy, dx);
+        let arrowDist = Math.min(dist, Math.min(canvas.width, canvas.height)/2 - 80);
+        ctx.translate(Math.cos(angle) * arrowDist, Math.sin(angle) * arrowDist);
+        ctx.rotate(angle);
+        
+        ctx.fillStyle = '#ff00ff';
+        ctx.beginPath();
+        ctx.moveTo(20, 0);
+        ctx.lineTo(-15, 15);
+        ctx.lineTo(-15, -15);
+        ctx.fill();
+        
+        ctx.fillStyle = '#fff';
+        ctx.font = 'bold 16px Arial';
+        ctx.textAlign = 'center';
+        // Rotate text to stay upright
+        ctx.rotate(-angle);
+        ctx.fillText("终极BOSS", 0, -35);
+        ctx.fillText(Math.floor(dist/10) + "m", 0, 30);
+        ctx.restore();
     }
     
     ctx.restore();
