@@ -267,18 +267,18 @@ class Game {
     }
 
     update(currentTime, deltaTime) {
-        if (this.state !== 'playing' || this.paused) return;
-        
         if (deltaTime > 100) deltaTime = 16; 
 
-        this.gameTimer += deltaTime;
-        this.waveMultiplier = 1 + Math.floor(this.gameTimer / 30000) * 0.2;
-
         if (this.screenShakeMagnitude > 0.5) {
-            this.screenShakeMagnitude *= 0.9; // Smooth spring decay
+            this.screenShakeMagnitude *= 0.9;
         } else {
             this.screenShakeMagnitude = 0;
         }
+
+        if (this.state !== 'playing' || this.paused) return;
+
+        this.gameTimer += deltaTime;
+        this.waveMultiplier = 1 + Math.floor(this.gameTimer / 30000) * 0.2;
 
         this.heroes.forEach(hero => {
             if (currentTime - hero.lastShotTime > hero.fireRate) {
@@ -628,7 +628,9 @@ class Game {
             ctx.beginPath(); ctx.ellipse(hero.x, hero.y + 25, 20, 8, 0, 0, Math.PI*2); ctx.fill();
 
             drawSprite(ctx, SPRITES.HERO, hero.x, hero.y, 4, hero.color);
-            this.drawPixelText(ctx, hero.name, hero.x, hero.y + 45, 14, 'white', 'center');
+            // Draw P1/P2/P3 text above head in their distinct color
+            const pName = hero.name.split('(')[0];
+            this.drawPixelText(ctx, pName, hero.x, hero.y - 35, 20, hero.color, 'center');
         });
 
         this.projectiles.forEach(p => {
