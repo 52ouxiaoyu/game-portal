@@ -1203,8 +1203,8 @@ class Zombie {
 
 class LootBox {
     constructor(x, y) {
-        this.x = x || Math.random() * (CANVAS_W - 100) + 50;
-        this.y = y || Math.random() * (CANVAS_H - 100) + 50;
+        this.x = x !== undefined ? x : camera.x - (canvas.width || window.innerWidth)/2 + 50 + Math.random() * ((canvas.width || window.innerWidth) - 100);
+        this.y = y !== undefined ? y : camera.y - (canvas.height || window.innerHeight)/2 + 50 + Math.random() * ((canvas.height || window.innerHeight) - 100);
         this.size = 20;
         
         const rand = Math.random();
@@ -2040,16 +2040,33 @@ function draw() {
     ctx.restore();
 }
 
+let lastTimestamp = 0;
+let timeAccumulator = 0;
+const TICK_RATE = 1000 / 60; // 60 FPS Fixed Time Step
+
 function gameLoop(timestamp) {
-    if(gameState !== 'PLAYING') return;
+    if(gameState !== 'PLAYING') {
+        lastTimestamp = timestamp;
+        requestAnimationFrame(gameLoop);
+        return;
+    }
+    
+    let dt = timestamp - lastTimestamp;
+    if(dt > 100) dt = 100; // Cap dt to prevent spiral of death
+    lastTimestamp = timestamp;
+    timeAccumulator += dt;
     
     try {
-        if(hitStopFrames > 0) {
-            hitStopFrames--;
-        } else {
-            update();
+        while(timeAccumulator >= TICK_RATE) {
+            if(hitStopFrames > 0) {
+                hitStopFrames--;
+            } else {
+                update();
+            }
+            timeAccumulator -= TICK_RATE;
         }
         draw();
+        
         if(flashFrames > 0) {
             ctx.fillStyle = `rgba(255, 255, 255, ${flashFrames / 15})`;
             ctx.fillRect(0, 0, CANVAS_W, CANVAS_H);
@@ -2057,8 +2074,7 @@ function gameLoop(timestamp) {
         }
     } catch(e) {
         console.error("Game Loop Error:", e);
-        // Ensure game doesn't pause silently
-        if(frameCount % 60 === 0) { // Notify only once a second
+        if(frameCount % 60 === 0) {
              addFloatingText(camera.x, camera.y - CANVAS_H/2 + 50, "⚠️ 战术头盔系统已自动重启", "#ff0000");
         }
     }
