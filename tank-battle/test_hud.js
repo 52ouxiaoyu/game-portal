@@ -1,0 +1,15 @@
+const fs = require('fs');
+const jsdom = require("jsdom");
+const { JSDOM } = jsdom;
+const html = fs.readFileSync('index.html', 'utf8');
+const js = fs.readFileSync('game.js', 'utf8');
+const dom = new JSDOM(html, { url: "http://localhost", runScripts: "dangerously" });
+dom.window.localStorage = { getItem: () => "0", setItem: () => {} };
+dom.window.HTMLCanvasElement.prototype.getContext = function() { return { fillRect:()=>{}, fillText:()=>{} }; };
+let err = null;
+dom.window.onerror = function(msg, url, lineNo, columnNo, error) { err = msg + " at " + lineNo + ":" + columnNo; return false; };
+let scriptEl = dom.window.document.createElement("script");
+scriptEl.textContent = js;
+dom.window.document.body.appendChild(scriptEl);
+if (err) console.error("Global Error: " + err);
+else console.log("Loaded OK!");
