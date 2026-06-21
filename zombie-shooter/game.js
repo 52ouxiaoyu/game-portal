@@ -1010,14 +1010,15 @@ class Zombie {
         } else {
             // Spawn at edges relative to camera
             const edge = Math.floor(Math.random() * 4);
-        let cw = canvas.width || window.innerWidth;
-        let ch = canvas.height || window.innerHeight;
-        let cx = camera.x - cw/2;
-        let cy = camera.y - ch/2;
-        if(edge === 0) { this.x = cx + Math.random() * cw; this.y = cy - 30; }
-        else if(edge === 1) { this.x = cx + cw + 30; this.y = cy + Math.random() * ch; }
-        else if(edge === 2) { this.x = cx + Math.random() * cw; this.y = cy + ch + 30; }
-        else { this.x = cx - 30; this.y = cy + Math.random() * ch; }
+            let cw = canvas.width || window.innerWidth;
+            let ch = canvas.height || window.innerHeight;
+            let cx = camera.x - cw/2;
+            let cy = camera.y - ch/2;
+            if(edge === 0) { this.x = cx + Math.random() * cw; this.y = cy - 30; }
+            else if(edge === 1) { this.x = cx + cw + 30; this.y = cy + Math.random() * ch; }
+            else if(edge === 2) { this.x = cx + Math.random() * cw; this.y = cy + ch + 30; }
+            else { this.x = cx - 30; this.y = cy + Math.random() * ch; }
+        }
 
         if(this.type === 'ultimate_boss') {
             this.size = 80; this.speed = 1.2; this.hp = 15000; this.color = '#ff00ff'; this.damage = 3; this.scoreVal = 50000;
