@@ -638,7 +638,46 @@ class Player {
     }
 
     shoot() {
-        if(this.hp <= 0 || this.isDowned || this.cooldown > 0 || this.vehicleTime > 0) return;
+        if(this.hp <= 0 || this.isDowned || this.cooldown > 0) return;
+        
+        if(this.vehicleTime > 0) {
+            this.cooldown = 15;
+            audio.shootLaser();
+            // Motorcycle fires homing missiles
+            let b = new Bullet(this.x, this.y, this.facing.x, this.facing.y, 12, 150, '#ff0000', false, this.id, true);
+            bullets.push(b);
+            return;
+        }
+
+        if(this.mechTime > 0) {
+            if(this.mechType === 1) { 
+                this.cooldown = 20;
+                audio.shootLaser();
+                let b = new Bullet(this.x, this.y, this.facing.x, this.facing.y, 10, 400, '#ff5500', true, this.id);
+                b.size = 15;
+                bullets.push(b);
+                let m = new Bullet(this.x, this.y, this.facing.x, this.facing.y, 12, 200, '#ff0000', false, this.id, true);
+                bullets.push(m);
+            } else if(this.mechType === 2) { 
+                this.cooldown = 10;
+                audio.shootLaser();
+                for(let i=0; i<8; i++) {
+                    let angle = Math.PI/4 * i + (frameCount*0.1);
+                    bullets.push(new Bullet(this.x, this.y, Math.cos(angle), Math.sin(angle), 15, 50, '#ff0000', true, this.id));
+                }
+                bullets.push(new Bullet(this.x, this.y, this.facing.x, this.facing.y, 12, 100, '#ff00ff', false, this.id, true));
+            } else if(this.mechType === 3) { 
+                this.cooldown = 3;
+                audio.shootMachine();
+                let angle = Math.atan2(this.facing.y, this.facing.x) + (Math.random()-0.5)*0.15;
+                bullets.push(new Bullet(this.x, this.y, Math.cos(angle), Math.sin(angle), 25, 30, '#00ffff', true, this.id));
+                if(Math.random() < 0.25) { // 25% chance
+                    bullets.push(new Bullet(this.x, this.y, Math.cos(angle), Math.sin(angle), 15, 80, '#ff00ff', false, this.id, true));
+                }
+            }
+            return;
+        }
+
         let w = this.weapon;
         this.cooldown = w.cd;
         
@@ -646,28 +685,6 @@ class Player {
             shockwaves.push(new Shockwave(this.x, this.y, '#00ffff', w.damage, w.radius, this.id));
             audio.shootShotgun();
             screenShake = 5;
-            return;
-        }
-
-        if(this.mechTime > 0) {
-            if(this.mechType === 1) { 
-                if(frameCount % 20 === 0) {
-                    audio.shootLaser();
-                    let b = new Bullet(this.x, this.y, this.facing.x, this.facing.y, 10, 300, '#ff5500', true, this.id);
-                    b.size = 15;
-                    bullets.push(b);
-                }
-            } else if(this.mechType === 2) { 
-                audio.shootLaser();
-                for(let i=0; i<8; i++) {
-                    let angle = Math.PI/4 * i + (frameCount*0.1);
-                    bullets.push(new Bullet(this.x, this.y, Math.cos(angle), Math.sin(angle), 15, 50, '#ff0000', true, this.id));
-                }
-            } else if(this.mechType === 3) { 
-                audio.shootMachine();
-                let angle = Math.atan2(this.facing.y, this.facing.x) + (Math.random()-0.5)*0.15;
-                bullets.push(new Bullet(this.x, this.y, Math.cos(angle), Math.sin(angle), 25, 30, '#00ffff', true, this.id));
-            }
             return;
         }
 
@@ -939,7 +956,7 @@ function hasLineOfSight(x1, y1, x2, y2) {
 }
 
 class Bullet {
-    constructor(x, y, dx, dy, speed, damage, color, pierce=false, ownerId=0) {
+    constructor(x, y, dx, dy, speed, damage, color, pierce=false, ownerId=0, isHoming=false) {
         this.ownerId = ownerId;
         this.x = x; this.y = y;
         this.dx = dx; this.dy = dy;
@@ -947,17 +964,33 @@ class Bullet {
         this.damage = damage;
         this.color = color;
         this.pierce = pierce;
+        this.isHoming = isHoming;
         this.size = pierce ? 4 : 3;
+        if(this.isHoming) this.size = 6;
         this.active = true;
     }
     update() {
-        let closestDist = 200;
-        let target = null;
-        zombies.forEach(z => {
-            if (!z.active) return;
-            let d = Math.hypot(z.x - this.x, z.y - this.y);
-            if(d < closestDist) { closestDist = d; target = z; }
-        });
+        if(this.isHoming) {
+            let closestDist = 400; // Seeking range
+            let target = null;
+            zombies.forEach(z => {
+                if (!z.active) return;
+                let d = Math.hypot(z.x - this.x, z.y - this.y);
+                if(d < closestDist && hasLineOfSight(this.x, this.y, z.x, z.y)) { closestDist = d; target = z; }
+            });
+            if(target) {
+                let tx = target.x - this.x;
+                let ty = target.y - this.y;
+                let tLen = Math.hypot(tx, ty);
+                if(tLen > 0) {
+                    this.dx = this.dx * 0.90 + (tx/tLen) * 0.10;
+                    this.dy = this.dy * 0.90 + (ty/tLen) * 0.10;
+                    let norm = Math.hypot(this.dx, this.dy);
+                    this.dx /= norm; this.dy /= norm;
+                }
+            }
+            createParticles(this.x, this.y, '#ffaa00', 1); // Flame trail
+        }
 
         this.x += this.dx * this.speed;
         this.y += this.dy * this.speed;
@@ -1715,6 +1748,18 @@ function update() {
             const dist = Math.hypot(b.x - z.x, b.y - z.y);
             if(dist < z.size + b.size) {
                 z.hp -= b.damage;
+                if(b.isHoming) {
+                    // Missiles explode on impact
+                    createParticles(b.x, b.y, '#ff5500', 20);
+                    screenShake = 5;
+                    audio.shootShotgun();
+                    zombies.forEach(z2 => {
+                        if(z2.active && Math.hypot(z2.x - b.x, z2.y - b.y) < 80) {
+                            z2.hp -= b.damage * 0.5;
+                            if(z2.hp <= 0) { z2.active = false; score += z2.scoreVal; }
+                        }
+                    });
+                }
                 if(!b.pierce) b.active = false;
                 createParticles(b.x, b.y, '#fff', 3);
                 
