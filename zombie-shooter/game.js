@@ -356,6 +356,8 @@ this.weapons = [];
             
             w.damage = 15 + Math.floor(i / 2) * 5;
             w.speed = 10 + i * 0.3;
+            w.req = i * 15; // Requires 15 kills per level to rank up quickly
+            
             
             if(i <= 5) {
                 w.count = 1;
@@ -1092,12 +1094,13 @@ class LootBox {
         this.size = 20;
         
         const rand = Math.random();
-        if(rand < 0.25) this.type = 'nuke'; 
-        else if(rand < 0.50) this.type = 'ult'; 
-        else if(rand < 0.60) this.type = 'mech';
-        else if(rand < 0.70) this.type = 'vehicle';
+        if(rand < 0.15) this.type = 'nuke'; 
+        else if(rand < 0.30) this.type = 'ult'; 
+        else if(rand < 0.40) this.type = 'mech';
+        else if(rand < 0.50) this.type = 'vehicle';
+        else if(rand < 0.70) this.type = 'weapon_box'; // 20% dedicated chance to drop weapon upgrades!
         else {
-            const types = ['heal', 'shield', 'buff', 'weapon_box', 'trap', 'revive'];
+            const types = ['heal', 'shield', 'buff', 'trap', 'revive'];
             this.type = types[Math.floor(Math.random() * types.length)];
         }
 
