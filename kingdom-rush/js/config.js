@@ -11,8 +11,12 @@ const CONFIG = {
         { id: 'crossbow', name: '诸葛连弩', damage: 45, speed: 15, fireRate: 350, sprite: 'BOLT', color: '#FFD700' },
         { id: 'trebuchet', name: '霹雳车', damage: 120, speed: 8, fireRate: 800, sprite: 'ROCK', color: '#A9A9A9', splash: 80 },
         { id: 'ballista', name: '八牛床弩', damage: 60, speed: 30, fireRate: 150, sprite: 'BALLISTA', color: '#00FFFF', pierce: true },
+        { id: 'axe', name: '双刃回旋斧', damage: 150, speed: 15, fireRate: 600, sprite: 'AXE', color: '#FF4500', pierce: true, boomerang: true },
+        { id: 'shockwave', name: '伏波冲击波', damage: 200, speed: 6, fireRate: 1000, sprite: 'SHOCKWAVE', color: '#00BFFF', pierce: true, isWave: true },
+        { id: 'fan', name: '冰魄羽扇', damage: 80, speed: 12, fireRate: 400, sprite: 'FAN', color: '#E0FFFF', freeze: true },
         { id: 'firedragon', name: '火龙出水', damage: 400, speed: 12, fireRate: 1000, sprite: 'DRAGON', color: '#FF4500', homing: true, splash: 150 },
-        { id: 'zhentianlei', name: '万人敌(震天雷)', damage: 3000, speed: 5, fireRate: 2500, sprite: 'BOMB_WEAPON', color: '#FF0000', splash: 600 }
+        { id: 'sword', name: '太虚剑阵', damage: 180, speed: 20, fireRate: 150, sprite: 'SWORD', color: '#FFD700', homing: true, pierce: true },
+        { id: 'zhentianlei', name: '万人敌(震天雷)', damage: 5000, speed: 5, fireRate: 2500, sprite: 'BOMB_WEAPON', color: '#FF0000', splash: 600 }
     ],
 
     UPGRADES: [

@@ -243,12 +243,16 @@ class Game {
                 homing: weapon.homing,
                 splash: weapon.splash,
                 pierce: weapon.pierce,
+                boomerang: weapon.boomerang,
+                isWave: weapon.isWave,
+                freeze: weapon.freeze,
+                rotation: 0,
                 piercedEnemies: new Set(),
                 speedMultiplier: weapon.speed,
                 alive: true
             });
         }
-        if (weapon.id === 'trebuchet' || weapon.id === 'zhentianlei') Audio.playExplosion();
+        if (weapon.id === 'trebuchet' || weapon.id === 'zhentianlei' || weapon.id === 'shockwave') Audio.playExplosion();
         else Audio.playShoot();
     }
     
@@ -731,8 +735,17 @@ class Game {
         });
 
         this.projectiles.forEach(p => {
-            const size = (p.sprite === 'BOMB_WEAPON') ? 4 : (p.sprite === 'ROCK' || p.sprite === 'DRAGON') ? 3 : 2;
-            drawSprite(ctx, SPRITES[p.sprite] || SPRITES.ARROW, p.x, p.y, size, p.color);
+            const size = (p.sprite === 'BOMB_WEAPON') ? 4 : (p.sprite === 'ROCK' || p.sprite === 'DRAGON' || p.sprite === 'SHOCKWAVE') ? 3 : 2;
+            ctx.save();
+            ctx.translate(p.x, p.y);
+            if (p.sprite === 'AXE') {
+                p.rotation += 0.3;
+                ctx.rotate(p.rotation);
+            } else if (p.sprite === 'SWORD' || p.sprite === 'DRAGON') {
+                ctx.rotate(Math.atan2(p.vy, p.vx) + Math.PI/2);
+            }
+            drawSprite(ctx, SPRITES[p.sprite] || SPRITES.ARROW, 0, 0, size, p.color);
+            ctx.restore();
         });
 
         this.particles.forEach(pt => {
