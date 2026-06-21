@@ -4,7 +4,7 @@ const CONFIG = {
     CANVAS_HEIGHT: window.innerHeight,
     FPS: 60,
     
-    STARTING_GOLD: 0,
+    STARTING_GOLD: 200,
     
     WEAPON_TIERS: [
         { id: 'bow', name: '长弓', damage: 20, speed: 10, fireRate: 500, sprite: 'ARROW', color: '#FFFFFF' },
@@ -16,15 +16,15 @@ const CONFIG = {
     ],
 
     UPGRADES: [
-        { name: '神兵锻造', cost: 150, costMult: 2.5, type: 'weapon' },
-        { name: '轻功神行', cost: 100, fireRateMult: 0.85, costMult: 1.5, type: 'speed' },
-        { name: '万箭齐发', cost: 300, arrows: 1, costMult: 2.0, type: 'arrows' }
+        { name: '神兵锻造', cost: 80, costMult: 2.0, type: 'weapon' },
+        { name: '轻功神行', cost: 50, fireRateMult: 0.85, costMult: 1.5, type: 'speed' },
+        { name: '万箭齐发', cost: 150, arrows: 1, costMult: 2.0, type: 'arrows' }
     ],
     
     ENEMY_TYPES: {
-        INFANTRY: { id: 'infantry', name: '黄巾军', hp: 30, speed: 1.5, reward: 5, color: '#FFD700', size: 15 },
-        CAVALRY: { id: 'cavalry', name: '西凉铁骑', hp: 80, speed: 2.2, reward: 15, color: '#8B4513', size: 20 },
-        HEAVY: { id: 'heavy', name: '铁浮屠', hp: 250, speed: 0.6, reward: 30, color: '#808080', size: 25 },
+        INFANTRY: { id: 'infantry', name: '黄巾军', hp: 30, speed: 1.0, reward: 10, color: '#FFD700', size: 15 },
+        CAVALRY: { id: 'cavalry', name: '西凉铁骑', hp: 80, speed: 1.8, reward: 25, color: '#8B4513', size: 20 },
+        HEAVY: { id: 'heavy', name: '铁浮屠', hp: 250, speed: 0.4, reward: 50, color: '#808080', size: 25 },
         BOSS_LUBU: { id: 'boss_lubu', name: '无双吕布(飞将)', hp: 1500, speed: 0.4, reward: 500, color: '#FF0000', size: 40, jumpInterval: 1500, jumpRange: 2 },
         BOSS_ZHANGJIAO: { id: 'boss_zhangjiao', name: '天公张角(妖术)', hp: 2000, speed: 0.3, reward: 800, color: '#FFD700', size: 45, jumpInterval: 800, jumpRange: 1 },
         BOSS_DONGZHUO: { id: 'boss_dongzhuo', name: '魔王董卓(肉山)', hp: 3000, speed: 0.2, reward: 1000, color: '#8A2BE2', size: 50, jumpInterval: 3000, jumpRange: 3 }

@@ -470,7 +470,7 @@ class Game {
                         this.spawnFloatingText(`${lastHitter.combo}x COMBO!`, e.x, e.y - 20, lastHitter.color);
                     }
                 }
-                if (Math.random() < 0.15) { // 提高爆率到15%，让场面更混乱
+                if (Math.random() < 0.40) { // 提高爆率到40%，让场面更混乱
                     const itemTypes = Object.values(CONFIG.ITEMS);
                     this.items.push({
                         type: itemTypes[Math.floor(Math.random() * itemTypes.length)],
