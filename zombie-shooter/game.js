@@ -1026,9 +1026,10 @@ class Shockwave {
 }
 
 class Zombie {
-    constructor(isBoss = false, isUltimateBoss = false) {
+    constructor(isBoss = false, isUltimateBoss = false, bossId = 0) {
         this.isBoss = isBoss;
         this.isUltimateBoss = isUltimateBoss;
+        this.bossId = bossId;
         
         // Types
         if(this.isUltimateBoss) {
@@ -1044,9 +1045,10 @@ class Zombie {
         }
 
         if(this.isUltimateBoss) {
-            let angle = Math.random() * Math.PI * 2;
-            this.x = camera.x + Math.cos(angle) * 3500;
-            this.y = camera.y + Math.sin(angle) * 3500;
+            // Spawn 10 bosses in a massive circle, slowly closing in
+            let angle = (this.bossId / 10) * Math.PI * 2;
+            this.x = camera.x + Math.cos(angle) * 4500;
+            this.y = camera.y + Math.sin(angle) * 4500;
         } else {
             // Spawn at edges relative to camera
             const edge = Math.floor(Math.random() * 4);
@@ -1061,7 +1063,13 @@ class Zombie {
         }
 
         if(this.type === 'ultimate_boss') {
-            this.size = 80; this.speed = 1.2; this.hp = 15000; this.color = '#ff00ff'; this.damage = 3; this.scoreVal = 50000;
+            // Give each of the 10 bosses unique stats based on their bossId!
+            this.size = 60 + (this.bossId % 4) * 10; 
+            this.speed = 0.8 + (this.bossId % 3) * 0.3; 
+            this.hp = 10000 + this.bossId * 1500; 
+            this.color = `hsl(${this.bossId * 36}, 100%, 50%)`; 
+            this.damage = 3 + (this.bossId % 2); 
+            this.scoreVal = 50000;
         } else if(this.type === 'boss') {
             this.size = 35; this.speed = 0.8; this.hp = 1000 + survivalTime*10; this.color = '#ff00ff'; this.damage = 2; this.scoreVal = 500;
         } else if(this.type === 'fast') {
@@ -1479,7 +1487,9 @@ function startGame() {
     players[0].y = CANVAS_H/2;
     players[1].y = CANVAS_H/2;
     zombies = [];
-    zombies.push(new Zombie(true, true)); // Spawn ultimate boss
+    for(let i=0; i<10; i++) {
+        zombies.push(new Zombie(true, true, i)); // Spawn 10 ultimate bosses!
+    }
     bullets = [];
     particles = [];
     floatingTexts = [];
@@ -2047,9 +2057,9 @@ function draw() {
         ctx.fillRect(CANVAS_W - 120, 50, 100 * (comboTimer/180), 5);
     }
     
-    // Draw Ultimate Boss Arrow Pointer
-    let ultBoss = zombies.find(z => z.isUltimateBoss && z.active);
-    if(ultBoss) {
+    // Draw Ultimate Boss Arrow Pointers
+    let ultBosses = zombies.filter(z => z.isUltimateBoss && z.active);
+    ultBosses.forEach(ultBoss => {
         let dx = ultBoss.x - camera.x;
         let dy = ultBoss.y - camera.y;
         let dist = Math.hypot(dx, dy);
@@ -2057,26 +2067,26 @@ function draw() {
         ctx.save();
         ctx.translate(canvas.width/2, canvas.height/2);
         let angle = Math.atan2(dy, dx);
-        let arrowDist = Math.min(dist, Math.min(canvas.width, canvas.height)/2 - 80);
+        let arrowDist = Math.min(dist, Math.min(canvas.width, canvas.height)/2 - 60);
         ctx.translate(Math.cos(angle) * arrowDist, Math.sin(angle) * arrowDist);
         ctx.rotate(angle);
         
-        ctx.fillStyle = '#ff00ff';
+        ctx.fillStyle = ultBoss.color || '#ff00ff';
         ctx.beginPath();
-        ctx.moveTo(20, 0);
-        ctx.lineTo(-15, 15);
-        ctx.lineTo(-15, -15);
+        ctx.moveTo(15, 0);
+        ctx.lineTo(-10, 10);
+        ctx.lineTo(-10, -10);
         ctx.fill();
         
         ctx.fillStyle = '#fff';
-        ctx.font = 'bold 16px Arial';
+        ctx.font = 'bold 12px Arial';
         ctx.textAlign = 'center';
         // Rotate text to stay upright
         ctx.rotate(-angle);
-        ctx.fillText("终极BOSS", 0, -35);
-        ctx.fillText(Math.floor(dist/10) + "m", 0, 30);
+        ctx.fillText(`BOSS ${ultBoss.bossId + 1}`, 0, -20);
+        ctx.fillText(Math.floor(dist/10) + "m", 0, 20);
         ctx.restore();
-    }
+    });
     
     ctx.restore();
 }
