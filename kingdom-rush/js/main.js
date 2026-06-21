@@ -595,7 +595,7 @@ class Game {
             
             ctx.fillStyle = '#000'; ctx.fillRect(e.x - 20, e.y - e.type.size*2 - 10, 40, 8);
             ctx.fillStyle = 'red'; ctx.fillRect(e.x - 18, e.y - e.type.size*2 - 8, 36, 4);
-            ctx.fillStyle = '#32CD32'; ctx.fillRect(e.x - 18, e.y - e.type.size*2 - 8, 36 * (Math.max(0, e.hp) / e.type.maxHp), 4);
+            ctx.fillStyle = '#32CD32'; ctx.fillRect(e.x - 18, e.y - e.type.size*2 - 8, 36 * (Math.max(0, e.hp) / e.maxHp), 4);
         });
 
         this.heroes.forEach(hero => {
