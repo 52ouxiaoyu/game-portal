@@ -1,4 +1,84 @@
+import os
 
+base_dir = "/Users/clawbox/game-portal/kingdom-rush"
+
+index_html = """<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>王国保卫战 - Kingdom Rush</title>
+    <style>
+        body, html {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            background: #000;
+        }
+        #game-container {
+            width: 100%;
+            height: 100%;
+        }
+        canvas {
+            display: block;
+            width: 100%;
+            height: 100%;
+        }
+    </style>
+</head>
+<body>
+    <div id="game-container">
+        <canvas id="gameCanvas"></canvas>
+    </div>
+    <script src="js/config.js"></script>
+    <script src="js/audio.js"></script>
+    <script src="js/sprites.js"></script>
+    <script src="js/utils.js"></script>
+    <script src="js/renderer.js"></script>
+    <script src="js/ui.js"></script>
+    <script src="js/main.js"></script>
+</body>
+</html>
+"""
+
+config_js = """
+const CONFIG = {
+    CANVAS_WIDTH: window.innerWidth,
+    CANVAS_HEIGHT: window.innerHeight,
+    FPS: 60,
+    
+    STARTING_GOLD: 0,
+    
+    HERO: {
+        baseDamage: 20,
+        fireRate: 500, // ms
+        projectileSpeed: 10,
+        size: 20
+    },
+
+    UPGRADES: [
+        { name: '攻击+', cost: 50, damageInc: 10, costMult: 1.5, type: 'damage' },
+        { name: '射速+', cost: 100, fireRateMult: 0.85, costMult: 1.6, type: 'speed' },
+        { name: '多重箭', cost: 300, arrows: 1, costMult: 2.0, type: 'arrows' }
+    ],
+    
+    ENEMY_TYPES: {
+        GOBLIN: { id: 'goblin', name: '哥布林', hp: 30, speed: 1.5, reward: 5, color: '#228B22', size: 15 },
+        ORC: { id: 'orc', name: '兽人', hp: 80, speed: 1.0, reward: 15, color: '#556B2F', size: 20 },
+        TROLL: { id: 'troll', name: '巨魔', hp: 200, speed: 0.6, reward: 30, color: '#8B0000', size: 25 }
+    },
+
+    ITEMS: {
+        BOMB: { id: 'bomb', color: '#000000', size: 15, text: '💣' },
+        FREEZE: { id: 'freeze', color: '#00FFFF', size: 15, text: '❄️' },
+        HEAL: { id: 'heal', color: '#00FF00', size: 15, text: '💰' } // Changed to gold bag
+    }
+};
+"""
+
+main_js = """
 class Game {
     constructor() {
         this.canvas = document.getElementById('gameCanvas');
@@ -511,3 +591,15 @@ class Game {
 window.addEventListener('load', () => {
     new Game();
 });
+"""
+
+with open(os.path.join(base_dir, 'js', 'config.js'), 'w') as f:
+    f.write(config_js)
+
+with open(os.path.join(base_dir, 'js', 'main.js'), 'w') as f:
+    f.write(main_js)
+
+with open(os.path.join(base_dir, 'index.html'), 'w') as f:
+    f.write(index_html)
+
+print("Fullscreen and individual HUD successfully added!")

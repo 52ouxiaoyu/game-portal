@@ -4,11 +4,29 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>王国保卫战 - Kingdom Rush</title>
-    <link rel="stylesheet" href="css/style.css">
+    <style>
+        body, html {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            background: #000;
+        }
+        #game-container {
+            width: 100%;
+            height: 100%;
+        }
+        canvas {
+            display: block;
+            width: 100%;
+            height: 100%;
+        }
+    </style>
 </head>
 <body>
     <div id="game-container">
-        <canvas id="gameCanvas" width="1024" height="1000"></canvas>
+        <canvas id="gameCanvas"></canvas>
     </div>
     <script src="js/config.js"></script>
     <script src="js/audio.js"></script>
