@@ -294,7 +294,7 @@ class Game {
             ctx.fillStyle = 'white';
             ctx.font = '40px Arial';
             ctx.textAlign = 'center';
-            ctx.fillText('双人保卫战 (双将版)', CONFIG.CANVAS_WIDTH/2, 300);
+            ctx.fillText('王国保卫战 (射击版)', CONFIG.CANVAS_WIDTH/2, 300);
             ctx.font = '20px Arial';
             ctx.fillText('玩家1：A/D左右移动，玩家2：键盘左右方向键移动', CONFIG.CANVAS_WIDTH/2, 360);
             ctx.fillText('点击开始游戏', CONFIG.CANVAS_WIDTH/2, 420);
