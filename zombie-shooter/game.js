@@ -1310,7 +1310,16 @@ class LootBox {
                     addFloatingText(p.x, p.y - 30, "🏍️ 机动载具就绪!", "#ffaa00");
                     audio.levelUp();
                 } else if(this.type === 'nuke') {
-                    zombies.forEach(z => { z.active = false; score += z.scoreVal; createParticles(z.x, z.y, z.color, 15); });
+                    zombies.forEach(z => { 
+                        if(z.isUltimateBoss) {
+                            z.hp -= 2000;
+                            if(z.hp <= 0) { z.active = false; score += z.scoreVal; }
+                        } else {
+                            z.active = false; 
+                            score += z.scoreVal; 
+                        }
+                        createParticles(z.x, z.y, z.color, 15); 
+                    });
                     screenShake = 30;
                     audio.shootShotgun();
                     addFloatingText(CANVAS_W/2, CANVAS_H/2, "☢️ 战术核打击!", "#ff0000");
