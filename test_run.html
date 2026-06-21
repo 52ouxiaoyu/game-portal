@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html><body>
+<script src="/Users/clawbox/game-portal/kingdom-rush/js/config.js"></script>
+<script src="/Users/clawbox/game-portal/kingdom-rush/js/sprites.js"></script>
+<script src="/Users/clawbox/game-portal/kingdom-rush/js/audio.js"></script>
+<script src="/Users/clawbox/game-portal/kingdom-rush/js/main.js"></script>
+<script>
+    try {
+        const game = new Game('gameCanvas');
+        game.startGame();
+        game.update(0, 16);
+        game.render();
+        console.log("SUCCESS");
+    } catch (e) {
+        console.error(e.stack);
+    }
+</script>
+</body></html>

@@ -174,8 +174,8 @@ class Game {
                 score: 0,
                 combo: 0,
                 comboTimer: 0,
-                damage: CONFIG.HERO.baseDamage,
-                fireRate: CONFIG.HERO.fireRate,
+                damage: CONFIG.WEAPON_TIERS[0].damage,
+                fireRate: CONFIG.WEAPON_TIERS[0].fireRate,
                 arrows: 1,
                 upgradeLevels: [0, 0, 0],
                 weaponTier: 0,
@@ -220,8 +220,9 @@ class Game {
 
     shoot(hero) {
         let actualArrows = hero.arrows;
-        if (hero.buffs.multiTimer > 0) actualArrows += 5; // 机关暴走!
-        
+        if (hero.buffs.multiTimer > 0) actualArrows += 5;
+        const weapon = CONFIG.WEAPON_TIERS[hero.weaponTier || 0];
+
         const spread = 20;
         for (let i = 0; i < actualArrows; i++) {
             let targetX = hero.x;
@@ -232,16 +233,23 @@ class Game {
 
             this.projectiles.push({
                 heroOwner: hero,
-                x: hero.x,
+                x: targetX,
                 y: hero.y - 20,
                 vx: vx_straight,
-                vy: -CONFIG.HERO.projectileSpeed,
-                damage: hero.damage,
-                color: hero.color,
+                vy: -weapon.speed,
+                damage: weapon.damage,
+                color: weapon.color,
+                sprite: weapon.sprite,
+                homing: weapon.homing,
+                splash: weapon.splash,
+                pierce: weapon.pierce,
+                piercedEnemies: new Set(),
+                speedMultiplier: weapon.speed,
                 alive: true
             });
         }
-        Audio.playShoot();
+        if (weapon.id === 'cannon' || weapon.id === 'nuke') Audio.playExplosion();
+        else Audio.playShoot();
     }
     
     spawnParticles(x, y, color, count) {
@@ -723,7 +731,8 @@ class Game {
         });
 
         this.projectiles.forEach(p => {
-            drawSprite(ctx, SPRITES.ARROW, p.x, p.y, 2, null);
+            const size = (p.sprite === 'NUKE') ? 4 : (p.sprite === 'CANNONBALL' || p.sprite === 'MISSILE') ? 3 : 2;
+            drawSprite(ctx, SPRITES[p.sprite] || SPRITES.ARROW, p.x, p.y, size, p.color);
         });
 
         this.particles.forEach(pt => {
