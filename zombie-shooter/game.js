@@ -502,8 +502,11 @@ this.weapons = [];
                 let tdy = targetZ.y - this.y;
                 let tLen = Math.hypot(tdx, tdy);
                 if(tLen > 0) this.facing = {x: tdx/tLen, y: tdy/tLen};
-                // Don't shoot if a barrel is right in front of us
+                // Don't shoot if a barrel is right in front of us, or if blocked by a wall
                 let safeToShoot = true;
+                if(!hasLineOfSight(this.x, this.y, targetZ.x, targetZ.y)) {
+                    safeToShoot = false;
+                }
                 if(targetBarrel && closestBarrelDist < 200) {
                     // Check if barrel is roughly in the direction we are facing
                     let bdx = (targetBarrel.x - this.x) / closestBarrelDist;
@@ -571,13 +574,13 @@ this.weapons = [];
                 dx /= len; dy /= len;
             }
 
-            // Auto-aim at the nearest zombie
+            // Auto-aim at the nearest zombie with line of sight
             let autoTarget = null;
             let minDist = Infinity;
             zombies.forEach(z => {
                 if(z.active) {
                     let dist = Math.hypot(z.x - this.x, z.y - this.y);
-                    if(dist < minDist) { minDist = dist; autoTarget = z; }
+                    if(dist < minDist && hasLineOfSight(this.x, this.y, z.x, z.y)) { minDist = dist; autoTarget = z; }
                 }
             });
 
@@ -593,9 +596,13 @@ this.weapons = [];
             if(wantsToShoot) this.shoot();
         }
 
-        this.x += dx * currentSpeed;
-        this.y += dy * currentSpeed;
+        // Apply jitter to avoid perfect perpendicular lock, and split X/Y axes to allow sliding
+        let jitterX = (Math.random() - 0.5) * 0.1;
+        let jitterY = (Math.random() - 0.5) * 0.1;
 
+        this.x += (dx + jitterX) * currentSpeed;
+        resolveBuildingCollision(this);
+        this.y += (dy + jitterY) * currentSpeed;
         resolveBuildingCollision(this);
 
         // Co-op Screen Binding: Restrict movement relative to teammates to prevent camera easing stutter
@@ -903,6 +910,21 @@ function resolveBuildingCollision(obj) {
     });
 }
 
+function hasLineOfSight(x1, y1, x2, y2) {
+    let dist = Math.hypot(x2 - x1, y2 - y1);
+    let steps = Math.max(1, Math.ceil(dist / 20)); // Sample every 20 pixels
+    for(let i = 0; i <= steps; i++) {
+        let px = x1 + (x2 - x1) * (i / steps);
+        let py = y1 + (y2 - y1) * (i / steps);
+        for(let b of buildings) {
+            if(px > b.x && px < b.x + b.w && py > b.y && py < b.y + b.h) {
+                return false;
+            }
+        }
+    }
+    return true;
+}
+
 class Bullet {
     constructor(x, y, dx, dy, speed, damage, color, pierce=false, ownerId=0) {
         this.ownerId = ownerId;
@@ -1005,9 +1027,14 @@ class Zombie {
             const dx = target.x - this.x;
             const dy = target.y - this.y;
             if(minDist > 0) {
-                this.x += (dx / minDist) * this.speed;
-                this.y += (dy / minDist) * this.speed;
                 this.facing = {x: dx/minDist, y: dy/minDist};
+                // Split X and Y movement + jitter for smooth wall sliding behavior
+                let jitterX = (Math.random() - 0.5) * 0.2;
+                let jitterY = (Math.random() - 0.5) * 0.2;
+                
+                this.x += (dx/minDist + jitterX) * this.speed;
+                resolveBuildingCollision(this);
+                this.y += (dy/minDist + jitterY) * this.speed;
                 resolveBuildingCollision(this);
             }
             if(minDist < this.size + target.size) {
