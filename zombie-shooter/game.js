@@ -1124,6 +1124,18 @@ class LootBox {
         if(!this.active) return;
         this.life--;
         if(this.life <= 0) this.active = false;
+
+        // Check if zombies step on traps
+        if(this.type === 'trap') {
+            zombies.forEach(z => {
+                if(this.active && z.active && Math.hypot(z.x - this.x, z.y - this.y) < z.size + this.size) {
+                    this.triggerTrap();
+                }
+            });
+        }
+
+        if(!this.active) return;
+
         
         players.forEach(p => {
             if(p.hp > 0 && Math.hypot(p.x - this.x, p.y - this.y) < p.size + this.size) {
@@ -1161,9 +1173,7 @@ class LootBox {
                     audio.shootShotgun();
                     addFloatingText(CANVAS_W/2, CANVAS_H/2, "☢️ 战术核打击!", "#ff0000");
                 } else if(this.type === 'trap') {
-                    p.hp -= 1;
-                    addFloatingText(p.x, p.y - 30, "⚠️ 踩中地雷!", "#ff0000");
-                    audio.playerHit();
+                    this.triggerTrap();
                 } else if(this.type === 'revive') {
                     let deadPlayer = players.find(pl => pl.hp <= 0);
                     if(deadPlayer) {
@@ -1184,6 +1194,26 @@ class LootBox {
                 }
             }
         });
+    }
+
+    triggerTrap() {
+        this.active = false;
+        createParticles(this.x, this.y, '#ffaa00', 30);
+        audio.shootShotgun();
+        screenShake = 15;
+        zombies.forEach(z => {
+            if(z.active && Math.hypot(z.x - this.x, z.y - this.y) < 120) {
+                z.hp -= 300;
+                // Note: score will be handled in gameLoop if zombie dies, or we can handle it here if it's not a boss.
+            }
+        });
+        players.forEach(p2 => {
+            if(p2.hp > 0 && Math.hypot(p2.x - this.x, p2.y - this.y) < 100) {
+                p2.hp -= 1;
+                audio.playerHit();
+            }
+        });
+        addFloatingText(this.x, this.y, "💥 地雷引爆!", "#ff5500");
     }
     
     draw(ctx) {
