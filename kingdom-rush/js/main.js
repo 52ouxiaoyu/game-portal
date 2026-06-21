@@ -94,12 +94,12 @@ class Game {
 
         if (this.state === 'menu') {
             if (pos.y >= cy - 20 && pos.y <= cy + 20) {
-                if (pos.x >= cx - 110 && pos.x <= cx - 70) this.numPlayers = Math.max(1, this.numPlayers - 1);
-                else if (pos.x >= cx + 70 && pos.x <= cx + 110) this.numPlayers = Math.min(3, this.numPlayers + 1);
+                if (pos.x >= cx - 130 && pos.x <= cx - 90) this.numPlayers = Math.max(1, this.numPlayers - 1);
+                else if (pos.x >= cx + 90 && pos.x <= cx + 130) this.numPlayers = Math.min(3, this.numPlayers + 1);
             }
             if (pos.y >= cy + 50 && pos.y <= cy + 90) {
-                if (pos.x >= cx - 110 && pos.x <= cx - 70) this.numLanes = Math.max(1, this.numLanes - 1);
-                else if (pos.x >= cx + 70 && pos.x <= cx + 110) this.numLanes = Math.min(10, this.numLanes + 1);
+                if (pos.x >= cx - 130 && pos.x <= cx - 90) this.numLanes = Math.max(1, this.numLanes - 1);
+                else if (pos.x >= cx + 90 && pos.x <= cx + 130) this.numLanes = Math.min(10, this.numLanes + 1);
             }
             if (pos.x >= cx - 100 && pos.x <= cx + 100 && pos.y >= cy + 140 && pos.y <= cy + 190) {
                 this.startGame();
