@@ -235,9 +235,12 @@ class Game {
             let vx_straight = 0;
             if (actualArrows > 1) vx_straight = ((i / (actualArrows - 1)) - 0.5) * 4;
 
-            let dmg = weapon.damage;
+            let dmg = weapon.damage * (hero.damageMultiplier || 1);
             let pSize = 1;
             if (hero.buffs.giantTimer > 0) { dmg *= 3; pSize = 3; }
+            if (this.projectiles.length > 250) {
+                this.projectiles.shift(); // Hard cap to prevent lag
+            }
             this.projectiles.push({
                 heroOwner: hero,
                 x: targetX,
@@ -318,8 +321,8 @@ class Game {
             if (hero.buffs.giantTimer > 0) hero.buffs.giantTimer -= deltaTime;
 
             let currentFireRate = hero.fireRate;
-            if (hero.buffs.rapidTimer > 0) currentFireRate = 80; // 机枪射速
-            if (hero.buffs.slowTimer > 0) currentFireRate = Math.max(1000, currentFireRate * 3); // 乌龟射速
+            if (hero.buffs.rapidTimer > 0) currentFireRate = 100; // Limit rapid fire to 100ms
+            if (hero.buffs.slowTimer > 0) currentFireRate = Math.max(1000, currentFireRate * 3);
 
             if (hero.buffs.disarmTimer <= 0) {
                 if (currentTime - hero.lastShotTime > currentFireRate) {
@@ -351,9 +354,17 @@ class Game {
                 if (upg.type === 'weapon') {
                     hero.weaponTier = Math.min(CONFIG.WEAPON_TIERS.length - 1, hero.weaponTier + 1);
                 } else if (upg.type === 'speed') {
-                    hero.fireRate *= upg.fireRateMult;
+                    if (hero.fireRate > 150) {
+                        hero.fireRate *= upg.fireRateMult;
+                    } else {
+                        hero.damageMultiplier *= 1.2; // Cap reached, convert to damage
+                    }
                 } else if (upg.type === 'arrows') {
-                    hero.arrows += upg.arrows;
+                    if (hero.arrows < 5) {
+                        hero.arrows += upg.arrows;
+                    } else {
+                        hero.damageMultiplier *= 1.5; // Cap reached, convert to damage
+                    }
                 }
                 this.spawnFloatingText(`自动升级: ${upg.name}!`, hero.x, hero.y - 40, '#FFD700', 16);
                 Audio.playHit(); // Feedback sound
