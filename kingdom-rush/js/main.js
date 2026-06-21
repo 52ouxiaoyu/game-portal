@@ -298,7 +298,8 @@ class Game {
 
         for (let i = this.particles.length - 1; i >= 0; i--) {
             let pt = this.particles[i];
-            pt.x += pt.vx; pt.y += pt.vy;
+            let ts = deltaTime / 16;
+            pt.x += pt.vx * ts; pt.y += pt.vy * ts;
             pt.life -= deltaTime / 500;
             if(pt.life <= 0) this.particles.splice(i, 1);
         }
@@ -306,15 +307,16 @@ class Game {
         for (let i = this.floatingTexts.length - 1; i >= 0; i--) {
             let ft = this.floatingTexts[i];
             ft.x += (Math.random() - 0.5);
-            ft.y += ft.vy;
+            ft.y += ft.vy * (deltaTime / 16);
             ft.life -= deltaTime / 1000;
             if(ft.life <= 0) this.floatingTexts.splice(i, 1);
         }
 
         for (let i = this.projectiles.length - 1; i >= 0; i--) {
             const p = this.projectiles[i];
-            p.x += p.vx;
-            p.y += p.vy;
+            let ts = deltaTime / 16;
+            p.x += p.vx * ts;
+            p.y += p.vy * ts;
             if (p.y < 110 || p.x < 0 || p.x > CONFIG.CANVAS_WIDTH) {
                 this.projectiles.splice(i, 1);
             }
@@ -324,7 +326,7 @@ class Game {
             const e = this.enemies[i];
             if (e.hitTimer > 0) e.hitTimer -= deltaTime;
             if (e.frozenTimer > 0) e.frozenTimer -= deltaTime;
-            else e.y += e.type.speed * (0.8 + this.waveMultiplier*0.2); 
+            else e.y += e.type.speed * (0.8 + this.waveMultiplier*0.2) * (deltaTime / 16); 
             
             if (e.y + (e.type.size*2) >= CONFIG.CANVAS_HEIGHT - 100) {
                 this.castleHp--;
@@ -384,7 +386,7 @@ class Game {
 
         for (let i = this.items.length - 1; i >= 0; i--) {
             const item = this.items[i];
-            item.y += item.vy;
+            item.y += item.vy * (deltaTime / 16);
             
             for (let j = this.projectiles.length - 1; j >= 0; j--) {
                 const p = this.projectiles[j];
@@ -580,11 +582,16 @@ class Game {
                 ctx.globalAlpha = 0.5;
                 ctx.filter = 'brightness(200%)';
             }
-            if (e.frozenTimer > 0) {
-                ctx.filter = 'hue-rotate(180deg) brightness(150%)';
+            if (e.hitTimer > 0) {
+                ctx.filter = 'brightness(200%)';
             }
             drawSprite(ctx, SPRITES[spriteId], e.x, e.y, e.type.size/4, null);
             ctx.restore();
+            
+            if (e.frozenTimer > 0) {
+                ctx.fillStyle = 'rgba(0, 255, 255, 0.4)';
+                ctx.fillRect(e.x - e.type.size, e.y - e.type.size, e.type.size*2, e.type.size*2);
+            }
             
             ctx.fillStyle = '#000'; ctx.fillRect(e.x - 20, e.y - e.type.size*2 - 10, 40, 8);
             ctx.fillStyle = 'red'; ctx.fillRect(e.x - 18, e.y - e.type.size*2 - 8, 36, 4);
