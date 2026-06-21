@@ -347,9 +347,29 @@ class Game {
         for (let i = this.projectiles.length - 1; i >= 0; i--) {
             const p = this.projectiles[i];
             let ts = deltaTime / 16;
+            
+            if (p.boomerang) p.vy += 0.4 * ts;
+            
+            if (p.homing) {
+                let closest = null, minD = Infinity;
+                this.enemies.forEach(eTarget => {
+                    if (eTarget.y < p.y) {
+                        let d = Math.hypot(eTarget.x - p.x, eTarget.y - p.y);
+                        if (d < minD) { minD = d; closest = eTarget; }
+                    }
+                });
+                if (closest) {
+                    const dx = closest.x - p.x, dy = closest.y - p.y;
+                    const len = Math.hypot(dx, dy);
+                    p.vx += (dx/len * 0.8) * ts; p.vy += (dy/len * 0.8) * ts;
+                    const vlen = Math.hypot(p.vx, p.vy);
+                    if (vlen > p.speedMultiplier) { p.vx = (p.vx/vlen) * p.speedMultiplier; p.vy = (p.vy/vlen) * p.speedMultiplier; }
+                }
+            }
+            
             p.x += p.vx * ts;
             p.y += p.vy * ts;
-            if (p.y < 110 || p.x < 0 || p.x > CONFIG.CANVAS_WIDTH) {
+            if (p.y < 110 || p.x < 0 || p.x > CONFIG.CANVAS_WIDTH || p.y > CONFIG.CANVAS_HEIGHT) {
                 this.projectiles.splice(i, 1);
             }
         }
@@ -402,25 +422,12 @@ class Game {
             let lastHitter = null;
             for (let j = this.projectiles.length - 1; j >= 0; j--) {
                 const p = this.projectiles[j];
-                
-                if (p.homing) {
-                    let closest = null, minD = Infinity;
-                    this.enemies.forEach(eTarget => {
-                        if (eTarget.y < p.y) { // only target enemies ahead
-                            let d = Math.hypot(eTarget.x - p.x, eTarget.y - p.y);
-                            if (d < minD) { minD = d; closest = eTarget; }
-                        }
-                    });
-                    if (closest) {
-                        const dx = closest.x - p.x, dy = closest.y - p.y;
-                        const len = Math.hypot(dx, dy);
-                        p.vx += (dx/len * 0.8) * ts; p.vy += (dy/len * 0.8) * ts;
-                        const vlen = Math.hypot(p.vx, p.vy);
-                        if (vlen > p.speedMultiplier) { p.vx = (p.vx/vlen) * p.speedMultiplier; p.vy = (p.vy/vlen) * p.speedMultiplier; }
-                    }
-                }
 
-                if (Math.hypot(e.x - p.x, e.y - p.y) < e.type.size * 2) {
+                let hitbox = e.type.size * 2;
+                if (p.isWave) hitbox += 150; // Massively wider hitbox for shockwave
+                if (p.boomerang) hitbox += 30; // Slightly larger for axe
+
+                if (Math.hypot(e.x - p.x, e.y - p.y) < hitbox) {
                     if (p.pierce) {
                         if (p.piercedEnemies.has(e)) continue;
                         p.piercedEnemies.add(e);
