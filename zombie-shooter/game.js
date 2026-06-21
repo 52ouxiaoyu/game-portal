@@ -1071,15 +1071,15 @@ class Zombie {
             this.damage = 3 + (this.bossId % 2); 
             this.scoreVal = 50000;
         } else if(this.type === 'boss') {
-            this.size = 35; this.speed = 0.8; this.hp = 1000 + survivalTime*10; this.color = '#ff00ff'; this.damage = 2; this.scoreVal = 500;
+            this.size = 35; this.speed = 0.8; this.hp = 1000 + survivalTime*10; this.color = '#333333'; this.damage = 2; this.scoreVal = 500;
         } else if(this.type === 'fast') {
-            this.size = 12 + Math.random()*3; this.speed = 1.5 + Math.random()*0.5 + (survivalTime/180); this.hp = 10 + survivalTime/2; this.color = '#ffff00'; this.damage = 1; this.scoreVal = 15;
+            this.size = 12 + Math.random()*3; this.speed = 1.5 + Math.random()*0.5 + (survivalTime/180); this.hp = 10 + survivalTime/2; this.color = '#778899'; this.damage = 1; this.scoreVal = 15;
         } else if(this.type === 'tank') {
-            this.size = 25 + Math.random()*5; this.speed = 0.3 + Math.random()*0.3 + (survivalTime/300); this.hp = 100 + survivalTime*3; this.color = '#4444ff'; this.damage = 2; this.scoreVal = 30;
+            this.size = 25 + Math.random()*5; this.speed = 0.3 + Math.random()*0.3 + (survivalTime/300); this.hp = 100 + survivalTime*3; this.color = '#2f4f4f'; this.damage = 2; this.scoreVal = 30;
         } else if(this.type === 'exploder') {
-            this.size = 18 + Math.random()*4; this.speed = 0.8 + Math.random()*0.5 + (survivalTime/180); this.hp = 15 + survivalTime; this.color = '#ff5500'; this.damage = 1; this.scoreVal = 20;
+            this.size = 18 + Math.random()*4; this.speed = 0.8 + Math.random()*0.5 + (survivalTime/180); this.hp = 15 + survivalTime; this.color = '#8b0000'; this.damage = 1; this.scoreVal = 20;
         } else { // normal
-            this.size = 15 + Math.random()*5; this.speed = 0.6 + Math.random()*0.6 + (survivalTime/180); this.hp = 20 + survivalTime; this.color = '#00ff00'; this.damage = 1; this.scoreVal = 10;
+            this.size = 15 + Math.random()*5; this.speed = 0.6 + Math.random()*0.6 + (survivalTime/180); this.hp = 20 + survivalTime; this.color = '#a9a9a9'; this.damage = 1; this.scoreVal = 10;
         }
         
         if(activeEvent === 'bloodmoon') this.speed *= 2;
@@ -1207,34 +1207,52 @@ class Zombie {
             ctx.shadowBlur = 0;
 
         } else {
-            // Normal Zombie Body (Pixel style)
+            // Pixel Robot Design (Crawler Bots)
             ctx.fillStyle = this.color; 
-            ctx.fillRect(-s+4, -s+4, s*2-8, s*2-8);
             
-            // Shoulders
-            ctx.fillStyle = '#1A3300';
-            ctx.fillRect(-s, -s, 10, s*2);
-
-            // Arms (Reaching forward)
-            ctx.fillStyle = '#2d5700'; 
-            ctx.fillRect(0, -s-2, s + 10 + armSway, 6); 
-            ctx.fillRect(0, s-4, s + 10 - armSway, 6); 
+            // Main Chassis (Square)
+            ctx.fillRect(-s*0.7, -s*0.7, s*1.4, s*1.4);
             
-            // Bloody Hands
-            ctx.fillStyle = '#800000';
-            ctx.fillRect(s + 10 + armSway, -s-2, 4, 6);
-            ctx.fillRect(s + 10 - armSway, s-4, 4, 6);
+            // Tracks (Tank treads)
+            ctx.fillStyle = '#222'; 
+            // Left track
+            ctx.fillRect(-s, -s, s*2, s*0.4);
+            // Right track
+            ctx.fillRect(-s, s - s*0.4, s*2, s*0.4);
+            
+            // Tread details (animated)
+            ctx.fillStyle = '#444';
+            let treadOffset = (frameCount * this.speed * 2) % (s*0.4);
+            for(let i = -s; i < s; i += s*0.4) {
+                let px = i + treadOffset;
+                if(px < s) {
+                    ctx.fillRect(px, -s, 2, s*0.4);
+                    ctx.fillRect(px, s - s*0.4, 2, s*0.4);
+                }
+            }
 
-            // Head
-            ctx.fillStyle = this.color;
+            // Head / Turret
+            ctx.fillStyle = '#555';
             ctx.beginPath();
-            ctx.arc(0, 0, s*0.6, 0, Math.PI*2);
+            ctx.arc(0, 0, s*0.5, 0, Math.PI*2);
             ctx.fill();
 
-            // Eyes (Red glowing pixels)
-            ctx.fillStyle = '#ff0000';
-            ctx.fillRect(s*0.2, -s*0.3, 4, 4);
-            ctx.fillRect(s*0.2, s*0.3-4, 4, 4);
+            // Glowing Visor / Sensor Eye
+            let eyeColor = '#00ffff'; 
+            if(this.type === 'exploder') eyeColor = '#ff0000'; 
+            else if(this.type === 'fast') eyeColor = '#00ff00'; 
+            else if(this.type === 'tank') eyeColor = '#ffaa00'; 
+            else if(this.type === 'boss') eyeColor = '#ff00ff'; 
+            
+            ctx.fillStyle = eyeColor;
+            ctx.shadowColor = eyeColor;
+            ctx.shadowBlur = 10;
+            // Visor (Facing forward, +X direction)
+            ctx.beginPath();
+            ctx.arc(s*0.1, 0, s*0.3, -Math.PI/2.5, Math.PI/2.5);
+            ctx.lineTo(s*0.1, 0);
+            ctx.fill();
+            ctx.shadowBlur = 0;
         }
 
         ctx.restore();
