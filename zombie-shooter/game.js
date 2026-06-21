@@ -1093,41 +1093,100 @@ class Zombie {
         let s = this.size;
         let armSway = Math.sin(frameCount * 0.1) * 5;
 
-        // Zombie Body (Pixel style)
-        ctx.fillStyle = this.color; // Dark Green
-        ctx.fillRect(-s+4, -s+4, s*2-8, s*2-8);
-        
-        // Shoulders
-        ctx.fillStyle = '#1A3300'; // Darker green clothing
-        ctx.fillRect(-s, -s, 10, s*2);
+        if (this.isUltimateBoss || this.isBoss) {
+            // Bio-mechanical mutant spider design
+            let legCount = this.isUltimateBoss ? 8 : 6;
+            let legColor = this.isUltimateBoss ? '#aa0000' : '#4400aa';
+            let coreColor = this.isUltimateBoss ? '#220000' : '#110022';
+            let pulseColor = this.isUltimateBoss ? '#ff0000' : '#aa00ff';
+            let eyeColor = '#ffff00';
 
-        // Arms (Reaching forward)
-        ctx.fillStyle = '#2d5700'; // Arm skin
-        ctx.fillRect(0, -s-2, s + 10 + armSway, 6); // Left Arm
-        ctx.fillRect(0, s-4, s + 10 - armSway, 6); // Right Arm
-        
-        // Bloody Hands
-        ctx.fillStyle = '#800000'; // Blood red
-        ctx.fillRect(s + 10 + armSway, -s-2, 4, 6);
-        ctx.fillRect(s + 10 - armSway, s-4, 4, 6);
+            // Draw terrifying legs
+            ctx.strokeStyle = legColor;
+            ctx.lineWidth = this.isUltimateBoss ? 10 : 6;
+            ctx.lineCap = 'round';
+            ctx.lineJoin = 'round';
+            for(let i = 0; i < legCount; i++) {
+                let angleOffset = (Math.PI * 2 / legCount) * i;
+                // Animate legs crawling
+                let walkCycle = Math.sin(frameCount * 0.1 + i);
+                let angle = angleOffset + walkCycle * 0.2;
+                
+                let reach = s * 1.5;
+                let kneeDist = s * 0.8;
+                
+                // Front legs point forward more
+                if (Math.abs(angle) < Math.PI/2) reach = s * 1.8;
+                
+                let lx = Math.cos(angle) * reach;
+                let ly = Math.sin(angle) * reach;
+                let mx = Math.cos(angle) * kneeDist + Math.cos(angle + Math.PI/2) * (walkCycle * 10);
+                let my = Math.sin(angle) * kneeDist + Math.sin(angle + Math.PI/2) * (walkCycle * 10);
+                
+                ctx.beginPath();
+                ctx.moveTo(0, 0);
+                ctx.lineTo(mx, my);
+                ctx.lineTo(lx, ly);
+                ctx.stroke();
+            }
 
-        // Head
-        ctx.fillStyle = this.color;
-        ctx.beginPath();
-        ctx.arc(0, 0, s*0.6, 0, Math.PI*2);
-        ctx.fill();
+            // Outer Carapace
+            ctx.fillStyle = coreColor;
+            ctx.beginPath(); 
+            ctx.arc(0, 0, s*0.9, 0, Math.PI*2); 
+            ctx.fill();
 
-        // Eyes (Red glowing pixels)
-        ctx.fillStyle = '#ff0000';
-        ctx.fillRect(s*0.2, -s*0.3, 4, 4);
-        ctx.fillRect(s*0.2, s*0.3-4, 4, 4);
+            // Pulsating organic core
+            ctx.fillStyle = pulseColor;
+            let pulse = Math.abs(Math.sin(frameCount * 0.08));
+            ctx.beginPath(); 
+            ctx.arc(0, 0, s*0.4 + pulse * (s*0.15), 0, Math.PI*2); 
+            ctx.fill();
 
-        if(this.isBoss) {
-            // Boss Spikes
-            ctx.fillStyle = '#555';
-            ctx.beginPath(); ctx.moveTo(-s, -s); ctx.lineTo(-s-10, -s-10); ctx.lineTo(-s+5, -s); ctx.fill();
-            ctx.beginPath(); ctx.moveTo(-s, s); ctx.lineTo(-s-10, s+10); ctx.lineTo(-s+5, s); ctx.fill();
-            ctx.beginPath(); ctx.moveTo(-s-5, 0); ctx.lineTo(-s-20, 0); ctx.lineTo(-s-5, 5); ctx.fill();
+            // Multiple glowing eyes facing forward
+            ctx.fillStyle = eyeColor;
+            ctx.shadowColor = eyeColor;
+            ctx.shadowBlur = 10;
+            let eyeSize = this.isUltimateBoss ? 8 : 5;
+            let eyeSpread = this.isUltimateBoss ? 20 : 12;
+            ctx.beginPath(); ctx.arc(s*0.7, 0, eyeSize*1.2, 0, Math.PI*2); ctx.fill();
+            ctx.beginPath(); ctx.arc(s*0.6, -eyeSpread, eyeSize, 0, Math.PI*2); ctx.fill();
+            ctx.beginPath(); ctx.arc(s*0.6, eyeSpread, eyeSize, 0, Math.PI*2); ctx.fill();
+            if(this.isUltimateBoss) {
+                ctx.beginPath(); ctx.arc(s*0.4, -eyeSpread*1.8, eyeSize*0.8, 0, Math.PI*2); ctx.fill();
+                ctx.beginPath(); ctx.arc(s*0.4, eyeSpread*1.8, eyeSize*0.8, 0, Math.PI*2); ctx.fill();
+            }
+            ctx.shadowBlur = 0;
+
+        } else {
+            // Normal Zombie Body (Pixel style)
+            ctx.fillStyle = this.color; 
+            ctx.fillRect(-s+4, -s+4, s*2-8, s*2-8);
+            
+            // Shoulders
+            ctx.fillStyle = '#1A3300';
+            ctx.fillRect(-s, -s, 10, s*2);
+
+            // Arms (Reaching forward)
+            ctx.fillStyle = '#2d5700'; 
+            ctx.fillRect(0, -s-2, s + 10 + armSway, 6); 
+            ctx.fillRect(0, s-4, s + 10 - armSway, 6); 
+            
+            // Bloody Hands
+            ctx.fillStyle = '#800000';
+            ctx.fillRect(s + 10 + armSway, -s-2, 4, 6);
+            ctx.fillRect(s + 10 - armSway, s-4, 4, 6);
+
+            // Head
+            ctx.fillStyle = this.color;
+            ctx.beginPath();
+            ctx.arc(0, 0, s*0.6, 0, Math.PI*2);
+            ctx.fill();
+
+            // Eyes (Red glowing pixels)
+            ctx.fillStyle = '#ff0000';
+            ctx.fillRect(s*0.2, -s*0.3, 4, 4);
+            ctx.fillRect(s*0.2, s*0.3-4, 4, 4);
         }
 
         ctx.restore();
