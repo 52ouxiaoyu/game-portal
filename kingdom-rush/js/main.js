@@ -231,13 +231,17 @@ class Game {
             let vx_straight = 0;
             if (actualArrows > 1) vx_straight = ((i / (actualArrows - 1)) - 0.5) * 4;
 
+            let dmg = weapon.damage;
+            let pSize = 1;
+            if (hero.buffs.giantTimer > 0) { dmg *= 3; pSize = 3; }
             this.projectiles.push({
                 heroOwner: hero,
                 x: targetX,
                 y: hero.y - 20,
                 vx: vx_straight,
                 vy: -weapon.speed,
-                damage: weapon.damage,
+                damage: dmg,
+                pScale: pSize,
                 color: weapon.color,
                 sprite: weapon.sprite,
                 homing: weapon.homing,
@@ -297,13 +301,17 @@ class Game {
         if (this.state !== 'playing' || this.paused) return;
 
         this.gameTimer += deltaTime;
+        if (this.reverseTimer > 0) this.reverseTimer -= deltaTime;
+        if (this.blindTimer > 0) this.blindTimer -= deltaTime;
         this.waveMultiplier = 1 + Math.floor(this.gameTimer / 30000) * 0.2;
 
         this.heroes.forEach(hero => {
             if (hero.buffs.rapidTimer > 0) hero.buffs.rapidTimer -= deltaTime;
+            if (hero.buffs.rapidTimer > 0) hero.buffs.rapidTimer -= deltaTime;
             if (hero.buffs.multiTimer > 0) hero.buffs.multiTimer -= deltaTime;
             if (hero.buffs.slowTimer > 0) hero.buffs.slowTimer -= deltaTime;
             if (hero.buffs.disarmTimer > 0) hero.buffs.disarmTimer -= deltaTime;
+            if (hero.buffs.giantTimer > 0) hero.buffs.giantTimer -= deltaTime;
 
             let currentFireRate = hero.fireRate;
             if (hero.buffs.rapidTimer > 0) currentFireRate = 80; // 机枪射速
@@ -510,30 +518,63 @@ class Game {
     }
     
     applyItem(itemType, heroOwner, x, y) {
-        if (itemType.id === 'bomb') {
+        const id = itemType.id;
+        
+        if (id === 'bomb') {
             this.triggerShake(15, 400);
             this.enemies.forEach(e => {
                 e.hp -= 200;
                 e.hitTimer = 100;
-                if(e.hp <= 0 && heroOwner) {
-                    heroOwner.score += e.type.reward * 10;
-                    heroOwner.gold += e.type.reward;
-                    this.spawnParticles(e.x, e.y, '#FF4500', 10);
-                } else if (e.hp > 0) {
-                    this.spawnFloatingText("-200", e.x, e.y - e.type.size, '#FF0000', 16);
-                }
             });
             this.spawnFloatingText("全屏轰炸!", x, y, '#FF4500');
-        } else if (itemType.id === 'freeze') {
+        } else if (id === 'freeze') {
             this.enemies.forEach(e => e.frozenTimer = 3000);
             this.spawnFloatingText("时间冻结!", x, y, '#00FFFF');
-        } else if (itemType.id === 'heal') {
+        } else if (id === 'heal') {
             if(heroOwner) heroOwner.gold += 150; 
-            this.spawnFloatingText("+150G!", x, y, '#FFD700');
-            if (this.castleHp < this.maxCastleHp) {
-                this.castleHp++;
-                this.spawnFloatingText("城墙修复!", x, y - 20, '#32CD32');
+            if (this.castleHp < this.maxCastleHp) this.castleHp++;
+            this.spawnFloatingText("城墙修复!", x, y, '#32CD32');
+        } else if (id === 'rapid' && heroOwner) {
+            heroOwner.buffs.rapidTimer = 5000;
+            this.spawnFloatingText("攻速拉满!", x, y, '#FF00FF');
+        } else if (id === 'knockback') {
+            this.enemies.forEach(e => e.y = Math.max(100, e.y - 150));
+            this.spawnFloatingText("全体击退!", x, y, '#FFFFFF');
+        } else if (id === 'rich' && heroOwner) {
+            heroOwner.gold += 500;
+            this.spawnFloatingText("+500G!", x, y, '#FFD700');
+        } else if (id === 'multishot' && heroOwner) {
+            heroOwner.buffs.multiTimer = 5000;
+            this.spawnFloatingText("万箭齐发!", x, y, '#00FF00');
+        } else if (id === 'poison' && heroOwner) {
+            heroOwner.gold = Math.max(0, heroOwner.gold - 200);
+            this.spawnFloatingText("毒酒扣钱!", x, y, '#8B0000');
+        } else if (id === 'slow' && heroOwner) {
+            heroOwner.buffs.slowTimer = 5000;
+            this.spawnFloatingText("深陷泥沼!", x, y, '#808080');
+        } else if (id === 'disarm' && heroOwner) {
+            heroOwner.buffs.disarmTimer = 3000;
+            this.spawnFloatingText("妖风大作!", x, y, '#000000');
+        } else if (id === 'empty_city') {
+            this.enemies.forEach(e => e.y = -50);
+            this.spawnFloatingText("空城计!", x, y, '#DAA520');
+        } else if (id === 'reverse') {
+            this.reverseTimer = 3000;
+            this.spawnFloatingText("反间计!", x, y, '#8A2BE2');
+        } else if (id === 'giant' && heroOwner) {
+            heroOwner.buffs.giantTimer = 5000;
+            this.spawnFloatingText("武神附体!", x, y, '#FF4500');
+        } else if (id === 'gamble') {
+            if (Math.random() < 0.5) {
+                this.castleHp = this.maxCastleHp;
+                this.spawnFloatingText("七星续命!", x, y, '#FFD700');
+            } else {
+                this.castleHp = 1;
+                this.spawnFloatingText("七星灯灭!", x, y, '#FF0000');
             }
+        } else if (id === 'blind') {
+            this.blindTimer = 5000;
+            this.spawnFloatingText("大雾漫江!", x, y, '#2F4F4F');
         }
     }
 
@@ -742,7 +783,8 @@ class Game {
         });
 
         this.projectiles.forEach(p => {
-            const size = (p.sprite === 'BOMB_WEAPON') ? 4 : (p.sprite === 'ROCK' || p.sprite === 'DRAGON' || p.sprite === 'SHOCKWAVE') ? 3 : 2;
+            let size = (p.sprite === 'BOMB_WEAPON') ? 4 : (p.sprite === 'ROCK' || p.sprite === 'DRAGON' || p.sprite === 'SHOCKWAVE') ? 3 : 2;
+            if (p.pScale) size *= p.pScale;
             ctx.save();
             ctx.translate(p.x, p.y);
             if (p.sprite === 'AXE') {

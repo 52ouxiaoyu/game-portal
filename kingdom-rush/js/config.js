@@ -44,6 +44,11 @@ const CONFIG = {
         MULTISHOT: { id: 'multishot', color: '#00FF00', size: 15, text: '🏹', name: '草船借箭(弓弩暴走)' },
         POISON: { id: 'poison', color: '#8B0000', size: 15, text: '🍷', name: '鸩酒(扣除200G)' },
         SLOW: { id: 'slow', color: '#808080', size: 15, text: '🐢', name: '深陷泥沼(攻速骤降)' },
-        DISARM: { id: 'disarm', color: '#000000', size: 15, text: '💨', name: '妖风大作(缴械三秒)' }
+        DISARM: { id: 'disarm', color: '#000000', size: 15, text: '💨', name: '妖风大作(缴械三秒)' },
+        EMPTY_CITY: { id: 'empty_city', color: '#DAA520', size: 15, text: '🪕', name: '空城计(全体退退退)' },
+        REVERSE: { id: 'reverse', color: '#8A2BE2', size: 15, text: '🎭', name: '反间计(敌军倒戈)' },
+        GIANT: { id: 'giant', color: '#FF4500', size: 15, text: '👹', name: '武神附体(巨型投射物)' },
+        GAMBLE: { id: 'gamble', color: '#FFD700', size: 15, text: '🏮', name: '七星灯(非神即鬼)' },
+        BLIND: { id: 'blind', color: '#2F4F4F', size: 15, text: '🌫️', name: '大雾漫江(视野受阻)' }
     }
 };
