@@ -178,6 +178,7 @@ class Game {
                 fireRate: CONFIG.HERO.fireRate,
                 arrows: 1,
                 upgradeLevels: [0, 0, 0],
+                weaponTier: 0,
                 buffs: { rapidTimer: 0, multiTimer: 0, slowTimer: 0, disarmTimer: 0 }
             });
         }
@@ -366,14 +367,57 @@ class Game {
             let lastHitter = null;
             for (let j = this.projectiles.length - 1; j >= 0; j--) {
                 const p = this.projectiles[j];
+                
+                if (p.homing) {
+                    let closest = null, minD = Infinity;
+                    this.enemies.forEach(eTarget => {
+                        if (eTarget.y < p.y) { // only target enemies ahead
+                            let d = Math.hypot(eTarget.x - p.x, eTarget.y - p.y);
+                            if (d < minD) { minD = d; closest = eTarget; }
+                        }
+                    });
+                    if (closest) {
+                        const dx = closest.x - p.x, dy = closest.y - p.y;
+                        const len = Math.hypot(dx, dy);
+                        p.vx += (dx/len * 0.8) * ts; p.vy += (dy/len * 0.8) * ts;
+                        const vlen = Math.hypot(p.vx, p.vy);
+                        if (vlen > p.speedMultiplier) { p.vx = (p.vx/vlen) * p.speedMultiplier; p.vy = (p.vy/vlen) * p.speedMultiplier; }
+                    }
+                }
+
                 if (Math.hypot(e.x - p.x, e.y - p.y) < e.type.size * 2) {
+                    if (p.pierce) {
+                        if (p.piercedEnemies.has(e)) continue;
+                        p.piercedEnemies.add(e);
+                    }
+                    
                     e.hp -= p.damage;
                     e.hitTimer = 100;
                     lastHitter = p.heroOwner;
-                    this.spawnParticles(p.x, p.y, p.color, 3);
-                    this.spawnFloatingText(`-${p.damage}`, e.x, e.y - e.type.size, '#FF6347', 14);
-                    this.projectiles.splice(j, 1);
+                    this.spawnParticles(p.x, p.y, p.color, 5);
+                    this.spawnFloatingText(`-${p.damage}`, e.x, e.y - e.type.size, p.color, 14);
                     Audio.playHit();
+                    
+                    if (p.splash) {
+                        this.triggerShake(p.splash/20, 200);
+                        Audio.playExplosion();
+                        this.spawnParticles(p.x, p.y, '#FF4500', p.splash/10);
+                        this.enemies.forEach(e2 => {
+                            if (e !== e2 && Math.hypot(e2.x - p.x, e2.y - p.y) < p.splash) {
+                                e2.hp -= p.damage / 2;
+                                e2.hitTimer = 100;
+                                this.spawnFloatingText(`-${Math.floor(p.damage/2)}`, e2.x, e2.y - e2.type.size, '#FFA500', 12);
+                                if(e2.hp <= 0 && lastHitter) {
+                                    lastHitter.score += e2.type.reward * 10;
+                                    lastHitter.gold += e2.type.reward;
+                                }
+                            }
+                        });
+                    }
+
+                    if (!p.pierce) {
+                        this.projectiles.splice(j, 1);
+                    }
                     hit = true;
                 }
             }

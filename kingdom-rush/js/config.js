@@ -6,17 +6,19 @@ const CONFIG = {
     
     STARTING_GOLD: 0,
     
-    HERO: {
-        baseDamage: 20,
-        fireRate: 500, // ms
-        projectileSpeed: 10,
-        size: 20
-    },
+    WEAPON_TIERS: [
+        { id: 'bow', name: '木弓', damage: 20, speed: 10, fireRate: 500, sprite: 'ARROW', color: '#FFFFFF' },
+        { id: 'gun', name: '火铳', damage: 45, speed: 15, fireRate: 350, sprite: 'BULLET', color: '#FFD700' },
+        { id: 'cannon', name: '红衣大炮', damage: 120, speed: 8, fireRate: 800, sprite: 'CANNONBALL', color: '#A9A9A9', splash: 80 },
+        { id: 'laser', name: '天基激光', damage: 60, speed: 30, fireRate: 150, sprite: 'LASER', color: '#00FFFF', pierce: true },
+        { id: 'missile', name: '东风导弹', damage: 400, speed: 12, fireRate: 1000, sprite: 'MISSILE', color: '#FF4500', homing: true, splash: 150 },
+        { id: 'nuke', name: '核爆(终极)', damage: 3000, speed: 5, fireRate: 2500, sprite: 'NUKE', color: '#32CD32', splash: 600 }
+    ],
 
     UPGRADES: [
-        { name: '攻击+', cost: 50, damageInc: 10, costMult: 1.5, type: 'damage' },
-        { name: '射速+', cost: 100, fireRateMult: 0.85, costMult: 1.6, type: 'speed' },
-        { name: '连弩', cost: 300, arrows: 1, costMult: 2.0, type: 'arrows' }
+        { name: '武器进化', cost: 150, costMult: 2.5, type: 'weapon' },
+        { name: '射速强化', cost: 100, fireRateMult: 0.85, costMult: 1.5, type: 'speed' },
+        { name: '多重散射', cost: 300, arrows: 1, costMult: 2.0, type: 'arrows' }
     ],
     
     ENEMY_TYPES: {
