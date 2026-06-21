@@ -1239,12 +1239,24 @@ class Zombie {
 
         ctx.restore();
         
-        // Boss HP Bar
-        if(this.isBoss && this.hp < this.maxHp) {
+        // Boss HP Bar and Text
+        if(this.isBoss) {
+            let barW = this.isUltimateBoss ? 120 : 60;
+            let barH = this.isUltimateBoss ? 10 : 6;
+            let offsetY = -this.size - 25; // Above the head
+            
+            // Red background
             ctx.fillStyle = '#f00';
-            ctx.fillRect(this.x - 30, this.y + this.size + 10, 60, 6);
+            ctx.fillRect(this.x - barW/2, this.y + offsetY, barW, barH);
+            // Green foreground
             ctx.fillStyle = '#0f0';
-            ctx.fillRect(this.x - 30, this.y + this.size + 10, 60 * (this.hp/this.maxHp), 6);
+            ctx.fillRect(this.x - barW/2, this.y + offsetY, barW * Math.max(0, this.hp/this.maxHp), barH);
+            
+            // Text representation
+            ctx.fillStyle = '#fff';
+            ctx.font = this.isUltimateBoss ? 'bold 16px Arial' : 'bold 12px Arial';
+            ctx.textAlign = 'center';
+            ctx.fillText(`${Math.ceil(this.hp)} / ${this.maxHp}`, this.x, this.y + offsetY - 8);
         }
     }
 }
