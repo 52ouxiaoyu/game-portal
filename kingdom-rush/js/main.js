@@ -261,8 +261,8 @@ class Game {
     }
 
     triggerShake(magnitude, time) {
-        this.screenShakeMagnitude = magnitude;
-        this.screenShakeTime = time;
+        // We now rely on natural decay rather than a strict timer
+        this.screenShakeMagnitude = Math.max(this.screenShakeMagnitude, magnitude);
     }
 
     update(currentTime, deltaTime) {
@@ -273,7 +273,11 @@ class Game {
         this.gameTimer += deltaTime;
         this.waveMultiplier = 1 + Math.floor(this.gameTimer / 30000) * 0.2;
 
-        if (this.screenShakeTime > 0) this.screenShakeTime -= deltaTime;
+        if (this.screenShakeMagnitude > 0.5) {
+            this.screenShakeMagnitude *= 0.9; // Smooth spring decay
+        } else {
+            this.screenShakeMagnitude = 0;
+        }
 
         this.heroes.forEach(hero => {
             if (currentTime - hero.lastShotTime > hero.fireRate) {
@@ -454,7 +458,7 @@ class Game {
         const ctx = this.renderer.ctx;
         ctx.save();
 
-        if (this.screenShakeTime > 0) {
+        if (this.screenShakeMagnitude > 0) {
             const dx = (Math.random() - 0.5) * this.screenShakeMagnitude;
             const dy = (Math.random() - 0.5) * this.screenShakeMagnitude;
             ctx.translate(dx, dy);
@@ -522,7 +526,7 @@ class Game {
         });
 
         const castleY = CONFIG.CANVAS_HEIGHT - 100;
-        if (this.screenShakeTime > 0 && this.castleHp < this.maxCastleHp) {
+        if (this.screenShakeMagnitude > 2 && this.castleHp < this.maxCastleHp) {
             ctx.fillStyle = '#8e3c3c';
         } else {
             ctx.fillStyle = '#5c5c5c'; 
