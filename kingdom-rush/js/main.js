@@ -249,14 +249,15 @@ class Game {
         }
     }
 
-    spawnFloatingText(text, x, y, color) {
+    spawnFloatingText(text, x, y, color, size=16) {
         this.floatingTexts.push({
             text: text,
             x: x + (Math.random()-0.5)*20,
             y: y,
             vy: -1,
             life: 1.0,
-            color: color
+            color: color,
+            size: size
         });
     }
 
@@ -351,6 +352,7 @@ class Game {
                     e.hitTimer = 100;
                     lastHitter = p.heroOwner;
                     this.spawnParticles(p.x, p.y, p.color, 3);
+                    this.spawnFloatingText(`-${p.damage}`, e.x, e.y - e.type.size, '#FF6347', 14);
                     this.projectiles.splice(j, 1);
                     hit = true;
                 }
@@ -411,6 +413,8 @@ class Game {
                     heroOwner.score += e.type.reward * 10;
                     heroOwner.gold += e.type.reward;
                     this.spawnParticles(e.x, e.y, '#FF4500', 10);
+                } else if (e.hp > 0) {
+                    this.spawnFloatingText("-200", e.x, e.y - e.type.size, '#FF0000', 16);
                 }
             });
             this.spawnFloatingText("全屏轰炸!", x, y, '#FF4500');
@@ -589,13 +593,34 @@ class Game {
             ctx.restore();
             
             if (e.frozenTimer > 0) {
-                ctx.fillStyle = 'rgba(0, 255, 255, 0.4)';
+                ctx.fillStyle = 'rgba(173, 216, 230, 0.6)';
                 ctx.fillRect(e.x - e.type.size, e.y - e.type.size, e.type.size*2, e.type.size*2);
             }
             
-            ctx.fillStyle = '#000'; ctx.fillRect(e.x - 20, e.y - e.type.size*2 - 10, 40, 8);
-            ctx.fillStyle = 'red'; ctx.fillRect(e.x - 18, e.y - e.type.size*2 - 8, 36, 4);
-            ctx.fillStyle = '#32CD32'; ctx.fillRect(e.x - 18, e.y - e.type.size*2 - 8, 36 * (Math.max(0, e.hp) / e.maxHp), 4);
+            // Redesigned Health Bar (Only visible when damaged)
+            if (e.hp < e.maxHp) {
+                const hpPercent = Math.max(0, e.hp) / e.maxHp;
+                const barW = 32;
+                const barH = 4;
+                const barX = e.x - barW / 2;
+                const barY = e.y - e.type.size*2 - 8;
+                
+                // Dark background
+                ctx.fillStyle = '#222';
+                ctx.fillRect(barX, barY, barW, barH);
+                
+                // Dynamic health color
+                if (hpPercent > 0.5) ctx.fillStyle = '#00FF00';
+                else if (hpPercent > 0.2) ctx.fillStyle = '#FFD700';
+                else ctx.fillStyle = '#FF4500';
+                
+                ctx.fillRect(barX, barY, barW * hpPercent, barH);
+                
+                // Thin Gold Border
+                ctx.strokeStyle = '#D4AF37';
+                ctx.lineWidth = 1;
+                ctx.strokeRect(barX - 1, barY - 1, barW + 2, barH + 2);
+            }
         });
 
         this.heroes.forEach(hero => {
@@ -619,7 +644,7 @@ class Game {
 
         this.floatingTexts.forEach(ft => {
             ctx.globalAlpha = ft.life;
-            this.drawPixelText(ctx, ft.text, ft.x, ft.y, 16, ft.color, 'center');
+            this.drawPixelText(ctx, ft.text, ft.x, ft.y, ft.size || 16, ft.color, 'center');
             ctx.globalAlpha = 1.0;
         });
 
