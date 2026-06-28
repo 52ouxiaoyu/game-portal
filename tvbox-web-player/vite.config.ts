@@ -1,10 +1,8 @@
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
-import http from 'http'
-import https from 'https'
 
 export default defineConfig({
-  base: './', // Use relative paths for assets
+  base: './',
   build: {
     outDir: '../tvbox',
     emptyOutDir: true,
@@ -14,7 +12,7 @@ export default defineConfig({
     {
       name: 'cors-proxy',
       configureServer(server) {
-        server.middlewares.use('/api/proxy', (req, res) => {
+        server.middlewares.use('/api/proxy', async (req, res) => {
           try {
             const urlStr = new URL(req.url || '', `http://${req.headers.host}`).searchParams.get('url')
             if (!urlStr) {
@@ -22,24 +20,23 @@ export default defineConfig({
               res.end('Missing url')
               return
             }
-            const protocol = urlStr.startsWith('https') ? https : http
             
-            protocol.get(urlStr, {
+            const fetchRes = await fetch(urlStr, {
               headers: {
                 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
-              }
-            }, (proxyRes) => {
-              res.writeHead(proxyRes.statusCode || 200, {
-                'Access-Control-Allow-Origin': '*',
-                'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
-                'Access-Control-Allow-Headers': 'Content-Type',
-                'Content-Type': proxyRes.headers['content-type'] || 'application/json'
-              })
-              proxyRes.pipe(res)
-            }).on('error', (e) => {
-              res.statusCode = 500
-              res.end(e.message)
+              },
+              redirect: 'follow'
             })
+            
+            const arrayBuffer = await fetchRes.arrayBuffer()
+            
+            res.writeHead(fetchRes.status, {
+              'Access-Control-Allow-Origin': '*',
+              'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
+              'Access-Control-Allow-Headers': 'Content-Type',
+              'Content-Type': fetchRes.headers.get('content-type') || 'application/json'
+            })
+            res.end(Buffer.from(arrayBuffer))
           } catch(e: any) {
             res.statusCode = 500
             res.end(e.message)
