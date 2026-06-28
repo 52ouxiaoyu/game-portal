@@ -219,7 +219,7 @@ function App() {
               <div style={{ marginTop: '24px' }}>
                 <h3>选集</h3>
                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', marginTop: '12px' }}>
-                  {activeVideo.vod_play_url?.split('$$$').map((source, sIdx) => {
+                  {(activeVideo.vod_play_url || '').split('$$$').map((source, sIdx) => {
                     const eps = source.split('#');
                     return eps.map((ep, eIdx) => {
                       const [title, url] = ep.split('$');
