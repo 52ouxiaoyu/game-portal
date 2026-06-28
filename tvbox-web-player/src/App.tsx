@@ -26,6 +26,23 @@ interface VideoDetail extends Video {
 }
 
 const PROXY_URL = '/api/proxy?url=';
+const FALLBACK_PROXY = 'https://api.allorigins.win/raw?url=';
+
+// Helper to fetch with fallback
+const fetchWithProxy = async (url: string) => {
+  try {
+    const res = await fetch(PROXY_URL + encodeURIComponent(url));
+    if (!res.ok) throw new Error('Primary proxy failed with status ' + res.status);
+    const contentType = res.headers.get('content-type') || '';
+    if (contentType.includes('text/html')) throw new Error('Primary proxy returned HTML instead of JSON (possibly blocked)');
+    return await res.json();
+  } catch (e) {
+    console.warn('Falling back to public proxy...', e);
+    const fallbackRes = await fetch(FALLBACK_PROXY + encodeURIComponent(url));
+    if (!fallbackRes.ok) throw new Error('Fallback proxy failed');
+    return await fallbackRes.json();
+  }
+};
 
 function App() {
   const [configUrl, setConfigUrl] = useState('http://tv.nxog.top');
@@ -42,13 +59,11 @@ function App() {
   const loadConfig = async () => {
     setLoading(true);
     try {
-      const res = await fetch(PROXY_URL + encodeURIComponent(configUrl));
-      const data = await res.json();
-      // Only type 1 is standard MacCMS JSON that we can easily parse in frontend
+      const data = await fetchWithProxy(configUrl);
       const type1Sites = data.sites.filter((s: Site) => s.type === 1);
       setSites(type1Sites);
     } catch (e) {
-      alert('加载配置失败，请检查线路地址或网络状态');
+      alert('加载配置失败，可能是该线路屏蔽了海外云节点，请检查网络或更换其他线路（如：饭太硬/王二小）');
     }
     setLoading(false);
   };
@@ -61,8 +76,7 @@ function App() {
     setLoading(true);
     try {
       const url = `${site.api}?ac=list`;
-      const res = await fetch(PROXY_URL + encodeURIComponent(url));
-      const data = await res.json();
+      const data = await fetchWithProxy(url);
       setCategories(data.class || []);
       setVideos(data.list || []);
       if (data.class && data.class.length > 0) {
@@ -82,8 +96,7 @@ function App() {
     setLoading(true);
     try {
       const url = `${activeSite.api}?ac=detail&t=${type_id}&pg=1`;
-      const res = await fetch(PROXY_URL + encodeURIComponent(url));
-      const data = await res.json();
+      const data = await fetchWithProxy(url);
       setVideos(data.list || []);
     } catch (e) {
       console.error(e);
@@ -97,11 +110,9 @@ function App() {
     setLoading(true);
     try {
       const url = `${activeSite.api}?ac=detail&ids=${vod_id}`;
-      const res = await fetch(PROXY_URL + encodeURIComponent(url));
-      const data = await res.json();
+      const data = await fetchWithProxy(url);
       if (data.list && data.list.length > 0) {
         setActiveVideo(data.list[0]);
-        // Simple parse for first play url
         const urls = data.list[0].vod_play_url;
         if (urls) {
           const firstUrl = urls.split('#')[0].split('$')[1];
