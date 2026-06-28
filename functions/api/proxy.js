@@ -9,7 +9,7 @@ export async function onRequest(context) {
   try {
     const fetchRes = await fetch(targetUrl, {
       headers: {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
+        'User-Agent': 'okhttp/4.12.0'
       },
       redirect: 'follow'
     });

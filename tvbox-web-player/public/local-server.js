@@ -23,13 +23,13 @@ const server = http.createServer((req, res) => {
     }
     const client = targetUrl.startsWith('https') ? https : http;
     client.get(targetUrl, {
-      headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36' }
+      headers: { 'User-Agent': 'okhttp/4.12.0' }
     }, (proxyRes) => {
       if ([301, 302, 303, 307, 308].includes(proxyRes.statusCode) && proxyRes.headers.location) {
-        const redirectUrl = proxyRes.headers.location;
+        const redirectUrl = new URL(proxyRes.headers.location, targetUrl).toString();
         const redClient = redirectUrl.startsWith('https') ? https : http;
         redClient.get(redirectUrl, {
-           headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36' }
+           headers: { 'User-Agent': 'okhttp/4.12.0' }
         }, (redRes) => {
            res.writeHead(redRes.statusCode, {
              'Access-Control-Allow-Origin': '*',
