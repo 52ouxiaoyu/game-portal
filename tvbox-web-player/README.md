@@ -1,32 +1,71 @@
-# React + TypeScript + Vite
+# 📺 TVBox Web Player (纯网页版 TVBox 播放器)
 
-This template provides a minimal setup to get React working in Vite with HMR and some Oxlint rules.
+这是一个基于 React 和 Vite 构建的 **纯网页端 (Web) TVBox 影视播放器**。
+它旨在打破安卓设备和特定 APP 的限制，让你**仅仅通过一个浏览器**（无论是 Mac、PC、iPad 还是手机），就能随时随地载入你收藏的 TVBox 配置接口，畅享全网影视资源！
 
-Currently, two official plugins are available:
+---
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+## ✨ 核心特性 (Features)
 
-## React Compiler
+*   🚀 **无需安装，开箱即用**：完全基于 HTML5 和现代前端技术构建，无需下载任何安卓模拟器或专属 APP，有浏览器就能看。
+*   🔗 **强大的双擎代理系统**：
+    *   自带微型 Node.js 跨域代理服务器（本地模式）。
+    *   同时兼容 Cloudflare Pages / Vercel Serverless Functions。
+    *   底层自动伪装成 `okhttp/4.12.0` (安卓电视盒子) 发送请求，**完美突破**各大影视源站对浏览器的反爬虫重定向与拦截。
+*   🛡️ **强力污点清洗引擎 (JSON Purifier)**：
+    *   TVBox 接口圈子里的配置往往极其不规范（混杂 `//jar` 等注释、多余逗号）。
+    *   本播放器内置了强大的正则清洗器与松散 JSON 解析器，能自动修复并解析各种“脏数据”，杜绝报错。
+*   💾 **多配置管理与自动记忆**：
+    *   自动记忆你最后一次使用的影视配置，下次打开网页**静默秒开**。
+    *   支持保存多个历史接口地址，通过顶部下拉菜单实现**一键无缝切换**。
+    *   支持删除失效配置，管理更清爽。
+*   ⏱️ **智能断点续播 (Playback History)**：
+    *   浏览器本地自动实时记录你最后观看的影片、集数以及精确到秒的进度。
+    *   下次打开网页，顶部出现显眼的“▶ 继续播放”按钮，点击瞬间跳回之前的进度继续观看，追剧不断档。
+*   📱 **响应式玻璃拟态 UI (Glassmorphism)**：
+    *   采用现代且极简的毛玻璃 UI 设计。
+    *   完美适配桌面宽屏和移动端窄屏。
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+---
 
-## Expanding the Oxlint configuration
+## 🛠️ 支持的线路类型
 
-If you are developing a production application, we recommend enabling type-aware lint rules by installing `oxlint-tsgolint` and editing `.oxlintrc.json`:
+TVBox 生态中主要分为 3 种线路类型：
+*   ✅ **Type 1 (JSON 标准 CMS 接口)**：**完美支持**。本播放器核心放行并渲染的影视数据格式。
+*   ✅ **Type 0 (XML 标准 CMS 接口)**：**支持兼容显示**。
+*   ❌ **Type 3 (Spider / 爬虫脚本)**：**不支持**。由于此类线路依赖原生 Java 和安卓内置 JS 引擎（QuickJS），存在安全风险且无法在纯浏览器端沙盒中运行，本播放器会自动将其屏蔽，以保证系统的纯净与稳定。
 
-```json
-{
-  "$schema": "./node_modules/oxlint/configuration_schema.json",
-  "plugins": ["react", "typescript", "oxc"],
-  "options": {
-    "typeAware": true
-  },
-  "rules": {
-    "react/rules-of-hooks": "error",
-    "react/only-export-components": ["warn", { "allowConstantExport": true }]
-  }
-}
-```
+> **💡 提示**：当你载入如 `饭太硬`、`王二小`、`欧歌` 等知名配置时，系统会自动在后台抓取所有的线路，但左侧列表只会为你展示纯净且受支持的 `Type 1 / Type 0` 线路。
 
-See the [Oxlint rules documentation](https://oxc.rs/docs/guide/usage/linter/rules) for the full list of rules and categories.
+---
+
+## 🚀 如何运行 (How to Run)
+
+### 方案 A：本地 Mac/PC 一键启动（最推荐的私人独享模式）
+我们在根目录下提供了一个快捷启动脚本。
+1. 双击桌面上的 `启动TVBox播放器.command`。
+2. 脚本会自动清理端口冲突，并在后台启动 Node.js 双擎代理。
+3. 浏览器将自动打开 `http://localhost:8080`，即可流畅观看所有资源。
+*(看完后，直接关闭终端黑窗口即可自动结束所有进程，干净利落)*
+
+### 方案 B：云端部署 (Cloudflare Pages)
+本代码已经过深度优化，支持无缝推送到 GitHub 并使用 Cloudflare Pages 部署。
+*   **前端代码**：位于 `tvbox-web-player/`，需配置构建命令为 `npm run build`，输出目录为 `tvbox/`。
+*   **云端代理**：位于 `functions/api/proxy.js`，Cloudflare Pages 会自动将其部署为 Serverless 代理边缘节点，彻底解决跨域烦恼。
+
+---
+
+## 💻 技术栈 (Tech Stack)
+
+*   **框架**: React 18 + TypeScript + Vite
+*   **样式**: 纯 Vanilla CSS (原生自定义变量 + 毛玻璃特效)
+*   **视频内核**: `hls.js` (支持 m3u8 等流媒体协议的智能解析与降级处理)
+*   **代理层**: Node.js `http` 模块 (本地) / Cloudflare Workers (云端)
+
+---
+
+## ⚠️ 免责声明 (Disclaimer)
+
+本项目仅作为一个“通用的 m3u8/JSON 播放器和解析器”进行技术交流与展示。
+*   本项目**不自带、不存储、不提供、不分发**任何影视资源。
+*   用户自行填写的任何第三方配置接口 (Config URL) 均与本软件无关，请务必遵守当地法律法规，支持正版，切勿将本播放器用于非法或侵权用途。

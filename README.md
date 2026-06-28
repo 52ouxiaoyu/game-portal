@@ -52,3 +52,10 @@
 
 ---
 Enjoy the games and have fun! 祝您游戏愉快！
+
+---
+
+## 📺 TVBox Web Player (纯网页版 TVBox 播放器) 🔥 *全新加入*
+除了游戏大厅，本项目现在还包含了一个极其强大的 **纯网页版 TVBox 影视播放器**！
+它能让你直接在浏览器里加载各大 TVBox 接口，突破防盗链限制，畅享全网影视。
+👉 **[点击这里查看 TVBox 播放器的详细介绍和使用说明](./tvbox-web-player/README.md)**
