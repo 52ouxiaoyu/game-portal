@@ -237,15 +237,18 @@ function App() {
   };
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', height: '100vh', overflow: 'hidden' }}>
+    <div className="app-container" style={{ display: 'flex', flexDirection: 'column', height: '100vh', overflow: 'hidden' }}>
       
       {/* Header */}
-      <header className="glass-panel" style={{ margin: '16px', padding: '16px', display: 'flex', gap: '16px', alignItems: 'center' }}>
-        <Film size={24} color="var(--accent)" />
-        <h1 style={{ fontSize: '20px', fontWeight: 600 }}>TVBox Web Player</h1>
+      <header className="glass-panel layout-header" style={{ margin: '16px', padding: '16px', display: 'flex', gap: '16px', alignItems: 'center' }}>
+        <div className="header-top" style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+          <Film size={24} color="var(--accent)" />
+          <h1 style={{ fontSize: '20px', fontWeight: 600 }}>TVBox Web Player</h1>
+        </div>
         
-        <div style={{ flex: 1 }} />
+        <div style={{ flex: 1 }} className="spacer" />
         
+        <div className="header-controls">
         {history && (
           <button 
             className="btn" 
@@ -278,19 +281,22 @@ function App() {
           <option value="ADD_NEW">+ 添加新配置...</option>
         </select>
         
-        <button className="btn primary" onClick={() => loadConfig(configUrl)} disabled={loading}>
-          <Settings2 size={16} /> 刷新
-        </button>
-        <button className="btn" onClick={deleteConfig} disabled={!configUrl || savedConfigs.length === 0}>
-          删除
-        </button>
+        <div className="header-buttons">
+          <button className="btn primary" onClick={() => loadConfig(configUrl)} disabled={loading}>
+            <Settings2 size={16} /> 刷新
+          </button>
+          <button className="btn" onClick={deleteConfig} disabled={!configUrl || savedConfigs.length === 0}>
+            删除
+          </button>
+        </div>
+        </div>
       </header>
 
       {/* Main Layout */}
-      <div style={{ display: 'flex', flex: 1, overflow: 'hidden', padding: '0 16px 16px 16px', gap: '16px' }}>
+      <div className="layout-main" style={{ display: 'flex', flex: 1, overflow: 'hidden', padding: '0 16px 16px 16px', gap: '16px' }}>
         
         {/* Sidebar - Sites */}
-        <div className="glass-panel" style={{ width: '250px', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+        <div className="glass-panel sidebar-sites" style={{ width: '250px', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
           <div style={{ padding: '16px', borderBottom: '1px solid var(--glass-border)', fontWeight: 600 }}>
             可用线路 (Type 1)
           </div>
@@ -321,7 +327,7 @@ function App() {
         </div>
 
         {/* Content Area */}
-        <div className="glass-panel" style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+        <div className="glass-panel content-area" style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
           
           {activeVideo ? (
             // Video Player View
@@ -389,7 +395,7 @@ function App() {
               )}
               
               {/* Grid */}
-              <div style={{ flex: 1, overflowY: 'auto', padding: '16px', display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(160px, 1fr))', gap: '16px', alignContent: 'start' }}>
+              <div className="video-grid" style={{ flex: 1, overflowY: 'auto', padding: '16px', display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(160px, 1fr))', gap: '16px', alignContent: 'start' }}>
                 {videos.map(video => (
                   <div 
                     key={video.vod_id} 
