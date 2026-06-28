@@ -50,9 +50,9 @@ const fetchWithProxy = async (url: string) => {
   try {
     const res = await fetch(PROXY_URL + encodeURIComponent(url));
     if (!res.ok) throw new Error('Primary proxy failed with status ' + res.status);
-    const contentType = res.headers.get('content-type') || '';
-    if (contentType.includes('text/html')) throw new Error('Primary proxy returned HTML instead of JSON (possibly blocked)');
     const text = await res.text();
+    // Try parsing. If it's an actual HTML block page, parseRelaxedJSON will throw,
+    // and we will automatically fall back to the public proxy.
     return parseRelaxedJSON(text);
   } catch (e) {
     console.warn('Falling back to public proxy...', e);
