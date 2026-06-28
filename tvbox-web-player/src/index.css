@@ -148,3 +148,11 @@ body {
     padding: 8px !important;
   }
 }
+
+/* Scroll improvements */
+.app-container {
+  -webkit-overflow-scrolling: touch;
+}
+.video-grid {
+  -webkit-overflow-scrolling: touch;
+}

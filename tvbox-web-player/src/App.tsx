@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Settings2, Film, ChevronLeft, Play } from 'lucide-react';
+import { Settings2, Film, ChevronLeft, Play, Search } from 'lucide-react';
 import { HlsPlayer } from './HlsPlayer';
 
 interface Site {
@@ -105,6 +105,7 @@ function App() {
   const [activeVideo, setActiveVideo] = useState<VideoDetail | null>(null);
   const [playingUrl, setPlayingUrl] = useState<string>('');
   const [loading, setLoading] = useState(false);
+  const [searchKeyword, setSearchKeyword] = useState('');
   const [history, setHistory] = useState<PlaybackHistory | null>(() => {
     try {
       const saved = localStorage.getItem('tvbox_history');
@@ -204,6 +205,7 @@ function App() {
   const loadCategory = async (type_id: string) => {
     if (!activeSite) return;
     setActiveCategory(type_id);
+    setSearchKeyword('');
     setLoading(true);
     try {
       const url = buildApiUrl(activeSite.api, { ac: 'detail', t: type_id, pg: '1' });
@@ -211,6 +213,23 @@ function App() {
       setVideos(data.list || []);
     } catch (e) {
       console.error(e);
+    }
+    setLoading(false);
+  };
+
+  // Search Video
+  const handleSearch = async (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
+    if (!activeSite || !searchKeyword.trim()) return;
+    setActiveCategory('');
+    setLoading(true);
+    try {
+      const url = buildApiUrl(activeSite.api, { ac: 'detail', wd: searchKeyword.trim() });
+      const data = await fetchWithProxy(url);
+      setVideos(data.list || []);
+    } catch (err) {
+      console.error(err);
+      alert('搜索失败，可能是该线路不支持搜索或格式不兼容。');
     }
     setLoading(false);
   };
@@ -229,9 +248,12 @@ function App() {
           const firstUrl = urls.split('#')[0].split('$')[1];
           if (firstUrl) setPlayingUrl(firstUrl);
         }
+      } else {
+        alert('该视频没有可用的播放数据，可能是线路格式(XML)不兼容。');
       }
     } catch (e) {
       console.error(e);
+      alert('获取视频详情失败，此线路可能不兼容网页版(如 XML 格式)。');
     }
     setLoading(false);
   };
@@ -378,6 +400,22 @@ function App() {
           ) : (
             // Video List View
             <>
+              {/* Search Bar */}
+              <div style={{ padding: '16px', borderBottom: '1px solid var(--glass-border)' }}>
+                <form onSubmit={handleSearch} style={{ display: 'flex', gap: '8px' }}>
+                  <input 
+                    className="input" 
+                    value={searchKeyword}
+                    onChange={(e) => setSearchKeyword(e.target.value)}
+                    placeholder="在此线路中搜索视频..."
+                    style={{ flex: 1 }}
+                  />
+                  <button type="submit" className="btn primary" disabled={loading || !searchKeyword.trim()}>
+                    <Search size={16} /> 搜索
+                  </button>
+                </form>
+              </div>
+
               {/* Categories */}
               {categories.length > 0 && (
                 <div style={{ padding: '16px', borderBottom: '1px solid var(--glass-border)', display: 'flex', gap: '8px', overflowX: 'auto', whiteSpace: 'nowrap' }}>
