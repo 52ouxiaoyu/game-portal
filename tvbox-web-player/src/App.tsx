@@ -44,6 +44,18 @@ const fetchWithProxy = async (url: string) => {
   }
 };
 
+const buildApiUrl = (api: string, params: Record<string, string>) => {
+  try {
+    const url = new URL(api);
+    Object.entries(params).forEach(([k, v]) => url.searchParams.set(k, v));
+    return url.toString();
+  } catch {
+    const base = api.split('?')[0];
+    const query = new URLSearchParams(params).toString();
+    return `${base}?${query}`;
+  }
+};
+
 function App() {
   const [configUrl, setConfigUrl] = useState('http://tv.nxog.top');
   const [sites, setSites] = useState<Site[]>([]);
@@ -75,7 +87,7 @@ function App() {
     setVideos([]);
     setLoading(true);
     try {
-      const url = `${site.api}?ac=list`;
+      const url = buildApiUrl(site.api, { ac: 'list' });
       const data = await fetchWithProxy(url);
       setCategories(data.class || []);
       setVideos(data.list || []);
@@ -95,7 +107,7 @@ function App() {
     setActiveCategory(type_id);
     setLoading(true);
     try {
-      const url = `${activeSite.api}?ac=detail&t=${type_id}&pg=1`;
+      const url = buildApiUrl(activeSite.api, { ac: 'detail', t: type_id, pg: '1' });
       const data = await fetchWithProxy(url);
       setVideos(data.list || []);
     } catch (e) {
@@ -109,7 +121,7 @@ function App() {
     if (!activeSite) return;
     setLoading(true);
     try {
-      const url = `${activeSite.api}?ac=detail&ids=${vod_id}`;
+      const url = buildApiUrl(activeSite.api, { ac: 'detail', ids: vod_id });
       const data = await fetchWithProxy(url);
       if (data.list && data.list.length > 0) {
         setActiveVideo(data.list[0]);

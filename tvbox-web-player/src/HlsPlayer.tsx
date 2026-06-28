@@ -13,8 +13,9 @@ export const HlsPlayer: React.FC<HlsPlayerProps> = ({ src }) => {
     if (!video) return;
 
     let hls: Hls | null = null;
+    const isMp4 = src.toLowerCase().includes('.mp4');
 
-    if (Hls.isSupported()) {
+    if (!isMp4 && Hls.isSupported()) {
       hls = new Hls({
         debug: false,
         enableWorker: true
@@ -24,8 +25,13 @@ export const HlsPlayer: React.FC<HlsPlayerProps> = ({ src }) => {
       hls.on(Hls.Events.MANIFEST_PARSED, () => {
         video.play().catch(e => console.log('Auto-play prevented:', e));
       });
-    } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
-      // For Safari
+      hls.on(Hls.Events.ERROR, (_event, data) => {
+        if (data.fatal) {
+          console.warn('HLS error, trying native playback...');
+          video.src = src;
+        }
+      });
+    } else {
       video.src = src;
       video.addEventListener('loadedmetadata', () => {
         video.play().catch(e => console.log('Auto-play prevented:', e));
