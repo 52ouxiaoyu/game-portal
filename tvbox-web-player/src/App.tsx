@@ -136,7 +136,7 @@ function App() {
     setLoading(true);
     try {
       const data = await fetchWithProxy(urlToLoad);
-      const type1Sites = data.sites.filter((s: Site) => s.type === 1);
+      const type1Sites = data.sites.filter((s: Site) => s.type === 0 || s.type === 1);
       setSites(type1Sites);
       
       // Save config to history if successful
