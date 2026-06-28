@@ -28,6 +28,23 @@ interface VideoDetail extends Video {
 const PROXY_URL = '/api/proxy?url=';
 const FALLBACK_PROXY = 'https://api.allorigins.win/raw?url=';
 
+// Helper to parse relaxed JSON (TVBox configs often have // comments)
+const parseRelaxedJSON = (text: string) => {
+  const clean = text.replace(/\\"|"(?:\\"|[^"])*"|(\/\/.*|\/\*[\s\S]*?\*\/)/g, (m, g) => g ? "" : m);
+  try {
+    return JSON.parse(clean);
+  } catch (e) {
+    const noTrailing = clean.replace(/,\s*([\]}])/g, '$1');
+    try {
+      return JSON.parse(noTrailing);
+    } catch(err2) {
+      console.warn("Still failing to parse JSON. Attempting loose evaluation.");
+      // Last resort fallback for completely malformed JSON from TVBox sources
+      return new Function('return ' + noTrailing)();
+    }
+  }
+};
+
 // Helper to fetch with fallback
 const fetchWithProxy = async (url: string) => {
   try {
@@ -35,12 +52,14 @@ const fetchWithProxy = async (url: string) => {
     if (!res.ok) throw new Error('Primary proxy failed with status ' + res.status);
     const contentType = res.headers.get('content-type') || '';
     if (contentType.includes('text/html')) throw new Error('Primary proxy returned HTML instead of JSON (possibly blocked)');
-    return await res.json();
+    const text = await res.text();
+    return parseRelaxedJSON(text);
   } catch (e) {
     console.warn('Falling back to public proxy...', e);
     const fallbackRes = await fetch(FALLBACK_PROXY + encodeURIComponent(url));
     if (!fallbackRes.ok) throw new Error('Fallback proxy failed');
-    return await fallbackRes.json();
+    const text = await fallbackRes.text();
+    return parseRelaxedJSON(text);
   }
 };
 
