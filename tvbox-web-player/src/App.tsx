@@ -87,7 +87,11 @@ function App() {
   const [savedConfigs, setSavedConfigs] = useState<string[]>(() => {
     try {
       const saved = localStorage.getItem('tvbox_configs');
-      return saved ? JSON.parse(saved) : ['http://tv.nxog.top'];
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed)) return parsed;
+      }
+      return ['http://tv.nxog.top'];
     } catch { return ['http://tv.nxog.top']; }
   });
   const [configUrl, setConfigUrl] = useState<string>(() => {
