@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Settings2, Film, ChevronLeft, Play } from 'lucide-react';
 import { HlsPlayer } from './HlsPlayer';
 
@@ -84,7 +84,15 @@ const buildApiUrl = (api: string, params: Record<string, string>) => {
 };
 
 function App() {
-  const [configUrl, setConfigUrl] = useState('http://tv.nxog.top');
+  const [savedConfigs, setSavedConfigs] = useState<string[]>(() => {
+    try {
+      const saved = localStorage.getItem('tvbox_configs');
+      return saved ? JSON.parse(saved) : ['http://tv.nxog.top'];
+    } catch { return ['http://tv.nxog.top']; }
+  });
+  const [configUrl, setConfigUrl] = useState<string>(() => {
+    return localStorage.getItem('tvbox_last_config') || savedConfigs[0] || '';
+  });
   const [sites, setSites] = useState<Site[]>([]);
   const [activeSite, setActiveSite] = useState<Site | null>(null);
   const [categories, setCategories] = useState<Category[]>([]);
@@ -123,16 +131,48 @@ function App() {
   };
 
   // Parse TVBox Config
-  const loadConfig = async () => {
+  const loadConfig = async (urlToLoad: string = configUrl) => {
+    if (!urlToLoad) return;
     setLoading(true);
     try {
-      const data = await fetchWithProxy(configUrl);
+      const data = await fetchWithProxy(urlToLoad);
       const type1Sites = data.sites.filter((s: Site) => s.type === 1);
       setSites(type1Sites);
+      
+      // Save config to history if successful
+      if (!savedConfigs.includes(urlToLoad)) {
+        const newConfigs = [...savedConfigs, urlToLoad];
+        setSavedConfigs(newConfigs);
+        localStorage.setItem('tvbox_configs', JSON.stringify(newConfigs));
+      }
+      localStorage.setItem('tvbox_last_config', urlToLoad);
+      setConfigUrl(urlToLoad);
     } catch (e) {
       alert('加载配置失败，可能是该线路屏蔽了海外云节点，请检查网络或更换其他线路（如：饭太硬/王二小）');
     }
     setLoading(false);
+  };
+
+  // Auto load config on mount
+  useEffect(() => {
+    if (configUrl) {
+      loadConfig(configUrl);
+    }
+  }, []);
+
+  const deleteConfig = () => {
+    const newConfigs = savedConfigs.filter(c => c !== configUrl);
+    setSavedConfigs(newConfigs);
+    localStorage.setItem('tvbox_configs', JSON.stringify(newConfigs));
+    if (newConfigs.length > 0) {
+      const nextUrl = newConfigs[0];
+      setConfigUrl(nextUrl);
+      loadConfig(nextUrl);
+    } else {
+      setConfigUrl('');
+      setSites([]);
+      localStorage.removeItem('tvbox_last_config');
+    }
   };
 
   // Load Categories for Site
@@ -213,15 +253,32 @@ function App() {
           </button>
         )}
         
-        <input 
+        <select 
           className="input" 
-          style={{ maxWidth: '400px' }}
+          style={{ maxWidth: '400px', flex: 1 }}
           value={configUrl}
-          onChange={(e) => setConfigUrl(e.target.value)}
-          placeholder="TVBox 接口地址"
-        />
-        <button className="btn primary" onClick={loadConfig} disabled={loading}>
-          <Settings2 size={16} /> 载入配置
+          onChange={(e) => {
+            if (e.target.value === 'ADD_NEW') {
+              const newUrl = prompt('请输入新的 TVBox 接口地址:');
+              if (newUrl) {
+                setConfigUrl(newUrl);
+                loadConfig(newUrl);
+              }
+            } else {
+              setConfigUrl(e.target.value);
+              loadConfig(e.target.value);
+            }
+          }}
+        >
+          {savedConfigs.map(c => <option key={c} value={c}>{c}</option>)}
+          <option value="ADD_NEW">+ 添加新配置...</option>
+        </select>
+        
+        <button className="btn primary" onClick={() => loadConfig(configUrl)} disabled={loading}>
+          <Settings2 size={16} /> 刷新
+        </button>
+        <button className="btn" onClick={deleteConfig} disabled={!configUrl || savedConfigs.length === 0}>
+          删除
         </button>
       </header>
 
