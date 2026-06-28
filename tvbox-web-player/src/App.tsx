@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Settings2, Film, ChevronLeft } from 'lucide-react';
+import { Settings2, Film, ChevronLeft, Play } from 'lucide-react';
 import { HlsPlayer } from './HlsPlayer';
 
 interface Site {
@@ -23,6 +23,14 @@ interface Video {
 
 interface VideoDetail extends Video {
   vod_play_url: string;
+}
+
+interface PlaybackHistory {
+  site: Site;
+  video: VideoDetail;
+  playUrl: string;
+  time: number;
+  timestamp: number;
 }
 
 const PROXY_URL = '/api/proxy?url=';
@@ -85,6 +93,34 @@ function App() {
   const [activeVideo, setActiveVideo] = useState<VideoDetail | null>(null);
   const [playingUrl, setPlayingUrl] = useState<string>('');
   const [loading, setLoading] = useState(false);
+  const [history, setHistory] = useState<PlaybackHistory | null>(() => {
+    try {
+      const saved = localStorage.getItem('tvbox_history');
+      return saved ? JSON.parse(saved) : null;
+    } catch { return null; }
+  });
+
+  const handleTimeUpdate = (time: number) => {
+    if (activeSite && activeVideo && playingUrl) {
+      const newHistory: PlaybackHistory = {
+        site: activeSite,
+        video: activeVideo,
+        playUrl: playingUrl,
+        time,
+        timestamp: Date.now()
+      };
+      setHistory(newHistory);
+      localStorage.setItem('tvbox_history', JSON.stringify(newHistory));
+    }
+  };
+
+  const resumeHistory = () => {
+    if (history) {
+      setActiveSite(history.site);
+      setActiveVideo(history.video);
+      setPlayingUrl(history.playUrl);
+    }
+  };
 
   // Parse TVBox Config
   const loadConfig = async () => {
@@ -166,6 +202,17 @@ function App() {
         
         <div style={{ flex: 1 }} />
         
+        {history && (
+          <button 
+            className="btn" 
+            style={{ marginRight: '16px', display: 'flex', alignItems: 'center', gap: '8px', background: 'rgba(59,130,246,0.1)', color: 'var(--accent)', border: '1px solid var(--accent)' }}
+            onClick={resumeHistory}
+            title="上次播放记录"
+          >
+            <Play size={16} /> 继续播放: {history.video.vod_name}
+          </button>
+        )}
+        
         <input 
           className="input" 
           style={{ maxWidth: '400px' }}
@@ -224,7 +271,11 @@ function App() {
               
               <div style={{ width: '100%', aspectRatio: '16/9', background: '#000', borderRadius: '8px', overflow: 'hidden', marginBottom: '24px' }}>
                 {playingUrl ? (
-                  <HlsPlayer src={playingUrl} />
+                  <HlsPlayer 
+                    src={playingUrl} 
+                    initialTime={history?.playUrl === playingUrl ? history.time : 0}
+                    onTimeUpdate={handleTimeUpdate}
+                  />
                 ) : (
                   <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-muted)' }}>
                     {loading ? '解析视频流中...' : '无可用播放地址'}
