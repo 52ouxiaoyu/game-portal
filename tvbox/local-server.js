@@ -53,7 +53,9 @@ const server = http.createServer((req, res) => {
     });
     return;
   }
-  let filePath = path.join(PUBLIC_DIR, req.url === '/' ? 'index.html' : req.url);
+  const parsedUrl = new URL(req.url, `http://${req.headers.host || 'localhost'}`);
+  const pathname = parsedUrl.pathname;
+  let filePath = path.join(PUBLIC_DIR, pathname === '/' ? 'index.html' : pathname);
   const extname = String(path.extname(filePath)).toLowerCase();
   if (!fs.existsSync(filePath)) {
     res.writeHead(404);
