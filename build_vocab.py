@@ -247,9 +247,32 @@ html_content = """<!DOCTYPE html>
         #done-screen { justify-content: center; text-align: center; }
         #done-screen h1 { font-size: 4rem; margin-bottom: 1rem; }
         #done-screen p { font-size: 1.5rem; color: var(--text-muted); }
+
+        .float-back {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            z-index: 9999;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: rgba(255,255,255,0.1);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255,255,255,0.2);
+            color: white;
+            padding: 10px 20px;
+            border-radius: 30px;
+            text-decoration: none;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+        .float-back:hover {
+            background: rgba(255,255,255,0.2);
+        }
     </style>
 </head>
 <body>
+    <a href="learning.html" class="float-back">⬅️ 返回学习天地</a>
 
     <div id="setup-screen" class="screen active">
         <div class="setup-container">

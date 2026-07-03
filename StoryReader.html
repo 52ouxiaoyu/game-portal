@@ -1,0 +1,630 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI 语境阅读器 - StoryReader</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&family=Outfit:wght@500;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-gradient: linear-gradient(135deg, #0f172a, #1e1b4b, #312e81);
+            --card-bg: rgba(255, 255, 255, 0.05);
+            --card-border: rgba(255, 255, 255, 0.1);
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --accent: #6366f1;
+            --highlight: #f59e0b;
+        }
+        * { box-sizing: border-box; }
+        body {
+            margin: 0;
+            font-family: 'Inter', sans-serif;
+            background: var(--bg-gradient);
+            color: var(--text-main);
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            -webkit-font-smoothing: antialiased;
+        }
+        h1, h2, h3 { font-family: 'Outfit', sans-serif; }
+        .screen {
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            width: 100%;
+            height: 100%;
+            padding: 2rem;
+            max-width: 900px;
+            margin: 0 auto;
+        }
+        .screen.active {
+            display: flex;
+        }
+        
+        /* Setup Screen */
+        .setup-container {
+            background: var(--card-bg);
+            padding: 3rem;
+            border-radius: 24px;
+            border: 1px solid var(--card-border);
+            backdrop-filter: blur(12px);
+            box-shadow: 0 24px 48px rgba(0,0,0,0.3);
+            width: 100%;
+            max-width: 600px;
+        }
+        .setup-container h1 { font-size: 2.5rem; margin-top: 0; margin-bottom: 0.5rem; text-align: center; }
+        .setup-container p { color: var(--text-muted); text-align: center; margin-bottom: 2rem; }
+        
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+            color: #cbd5e1;
+        }
+        .form-control {
+            width: 100%;
+            background: rgba(0,0,0,0.2);
+            border: 1px solid var(--card-border);
+            color: #fff;
+            padding: 1rem;
+            border-radius: 12px;
+            font-size: 1rem;
+            font-family: 'Inter', monospace;
+            transition: border-color 0.3s;
+        }
+        .form-control:focus {
+            outline: none;
+            border-color: var(--accent);
+        }
+        
+        .file-label {
+            background: rgba(255, 255, 255, 0.05);
+            border: 2px dashed var(--text-muted);
+            padding: 1.5rem;
+            border-radius: 16px;
+            cursor: pointer;
+            font-size: 1.1rem;
+            font-weight: 500;
+            transition: all 0.2s;
+            display: block;
+            text-align: center;
+            margin-top: 1rem;
+        }
+        .file-label:hover {
+            background: rgba(255, 255, 255, 0.1);
+            border-color: #fff;
+        }
+        #file-input { display: none; }
+        
+        .btn-primary {
+            width: 100%;
+            padding: 1rem;
+            background: linear-gradient(135deg, #6366f1, #8b5cf6);
+            border: none;
+            border-radius: 12px;
+            color: #fff;
+            font-size: 1.2rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+            margin-top: 1.5rem;
+        }
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(99, 102, 241, 0.3);
+        }
+        .btn-primary:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        /* Loading Screen */
+        .loader {
+            border: 4px solid rgba(255,255,255,0.1);
+            border-top: 4px solid var(--accent);
+            border-radius: 50%;
+            width: 60px;
+            height: 60px;
+            animation: spin 1s linear infinite;
+            margin-bottom: 2rem;
+        }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+        /* Reader Screen */
+        .reader-header {
+            width: 100%;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding-bottom: 2rem;
+        }
+        .btn-back {
+            background: transparent;
+            border: 1px solid var(--card-border);
+            color: #fff;
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            cursor: pointer;
+        }
+        .btn-back:hover { background: rgba(255,255,255,0.1); }
+        .progress-text { color: var(--text-muted); font-weight: 500; font-family: monospace; font-size: 1.1rem; }
+        
+        .reader-content {
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            width: 100%;
+        }
+
+        .sentence-card {
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            backdrop-filter: blur(20px);
+            border-radius: 24px;
+            padding: 3rem;
+            width: 100%;
+            box-shadow: 0 24px 48px rgba(0,0,0,0.2);
+            transition: transform 0.3s;
+        }
+        
+        .sentence-text {
+            font-family: 'Outfit', sans-serif;
+            font-size: 2.5rem;
+            font-weight: 600;
+            line-height: 1.4;
+            margin-bottom: 2rem;
+        }
+
+        .highlight-word {
+            color: var(--highlight);
+            border-bottom: 2px dashed var(--highlight);
+            cursor: help;
+        }
+
+        .vocab-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1rem;
+            border-top: 1px solid var(--card-border);
+            padding-top: 2rem;
+        }
+
+        .vocab-item {
+            background: rgba(255,255,255,0.05);
+            padding: 0.8rem 1.2rem;
+            border-radius: 12px;
+            border: 1px solid rgba(255,255,255,0.1);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .vocab-item-word {
+            font-weight: 700;
+            color: var(--highlight);
+            font-size: 1.1rem;
+            margin-bottom: 0.2rem;
+        }
+
+        .vocab-item-meaning {
+            color: #cbd5e1;
+            font-size: 0.95rem;
+        }
+
+        .controls {
+            margin-top: 3rem;
+            display: flex;
+            justify-content: center;
+            gap: 2rem;
+            width: 100%;
+        }
+
+        .control-hint {
+            text-align: center;
+            color: var(--text-muted);
+            font-size: 1.2rem;
+            margin-top: 2rem;
+        }
+        .control-hint kbd {
+            background: rgba(255,255,255,0.1);
+            padding: 0.2rem 0.6rem;
+            border-radius: 6px;
+            font-family: monospace;
+            border: 1px solid rgba(255,255,255,0.2);
+        }
+
+        /* Float Back to Hub */
+        .float-back {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            z-index: 9999;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: rgba(255,255,255,0.1);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255,255,255,0.2);
+            color: white;
+            padding: 10px 20px;
+            border-radius: 30px;
+            text-decoration: none;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+        .float-back:hover {
+            background: rgba(255,255,255,0.2);
+        }
+    </style>
+</head>
+<body>
+
+    <a href="learning.html" class="float-back">⬅️ 返回学习天地</a>
+
+    <!-- Setup Screen -->
+    <div id="setup-screen" class="screen active">
+        <div class="setup-container">
+            <h1>AI 语境阅读器</h1>
+            <p>导入单词表，AI 自动生成自然口语文章并带读</p>
+            
+            <div class="form-group">
+                <label>API Key (必填，支持 OpenAI / DeepSeek / 阿里百炼 等兼容格式)</label>
+                <input type="password" id="api-key" class="form-control" placeholder="sk-...">
+            </div>
+            
+            <div style="display: flex; gap: 1rem;">
+                <div class="form-group" style="flex: 2;">
+                    <label>API Base URL</label>
+                    <input type="text" id="api-base" class="form-control" value="https://api.openai.com/v1">
+                </div>
+                <div class="form-group" style="flex: 1;">
+                    <label>模型名称</label>
+                    <input type="text" id="api-model" class="form-control" value="gpt-4o-mini">
+                </div>
+            </div>
+
+            <label for="file-input" class="file-label" id="file-label">
+                📂 导入 Markdown 单词表文件
+                <div style="font-size: 0.9rem; color: #94a3b8; margin-top: 0.5rem; font-weight: 400;">请选择文件 (必选)</div>
+            </label>
+            <input type="file" id="file-input" accept=".md, .txt" />
+            
+            <button id="btn-generate" class="btn-primary" disabled>✨ 立即生成专属短文</button>
+        </div>
+    </div>
+
+    <!-- Loading Screen -->
+    <div id="loading-screen" class="screen" style="justify-content: center;">
+        <div class="loader"></div>
+        <h2 style="margin: 0; color: #fff;">AI 正在创作中...</h2>
+        <p style="color: var(--text-muted); margin-top: 1rem;">这可能需要十秒钟左右，请稍候</p>
+    </div>
+
+    <!-- Reader Screen -->
+    <div id="reader-screen" class="screen">
+        <div class="reader-header">
+            <button class="btn-back" onclick="location.reload()">↺ 重新生成</button>
+            <div class="progress-text" id="progress-text">1 / 5</div>
+        </div>
+        
+        <div class="reader-content">
+            <div class="sentence-card">
+                <div class="sentence-text" id="sentence-text"></div>
+                <div class="vocab-list" id="vocab-list"></div>
+            </div>
+            
+            <div class="control-hint">
+                <p>按下 <kbd>Space 空格键</kbd> 朗读当前句子并进入下一句</p>
+                <p style="font-size: 0.9rem; margin-top: 0.5rem; opacity: 0.7;">按下 <kbd>←</kbd> 返回上一句</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Done Screen -->
+    <div id="done-screen" class="screen" style="justify-content: center; text-align: center;">
+        <h1 style="font-size: 4rem; margin-bottom: 1rem;">🎉 太棒了！</h1>
+        <p style="font-size: 1.5rem; color: var(--text-muted);">你已经读完了整段材料，词汇掌握度+1</p>
+        <button class="btn-primary" style="max-width: 300px; margin-top: 2rem;" onclick="location.reload()">再来一篇</button>
+    </div>
+
+    <script>
+        // DOM Elements
+        const setupScreen = document.getElementById('setup-screen');
+        const loadingScreen = document.getElementById('loading-screen');
+        const readerScreen = document.getElementById('reader-screen');
+        const doneScreen = document.getElementById('done-screen');
+        
+        const apiKeyInput = document.getElementById('api-key');
+        const apiBaseInput = document.getElementById('api-base');
+        const apiModelInput = document.getElementById('api-model');
+        const fileInput = document.getElementById('file-input');
+        const fileLabel = document.getElementById('file-label');
+        const btnGenerate = document.getElementById('btn-generate');
+        
+        const sentenceText = document.getElementById('sentence-text');
+        const vocabListEl = document.getElementById('vocab-list');
+        const progressText = document.getElementById('progress-text');
+
+        // State
+        let uploadedVocab = [];
+        let generatedStory = [];
+        let currentIndex = 0;
+
+        // Restore Settings
+        window.onload = () => {
+            if(localStorage.getItem('story_api_key')) apiKeyInput.value = localStorage.getItem('story_api_key');
+            if(localStorage.getItem('story_api_base')) apiBaseInput.value = localStorage.getItem('story_api_base');
+            if(localStorage.getItem('story_api_model')) apiModelInput.value = localStorage.getItem('story_api_model');
+        };
+
+        function saveSettings() {
+            localStorage.setItem('story_api_key', apiKeyInput.value.trim());
+            localStorage.setItem('story_api_base', apiBaseInput.value.trim());
+            localStorage.setItem('story_api_model', apiModelInput.value.trim());
+        }
+
+        // File Parsing
+        fileInput.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+            
+            fileLabel.innerHTML = `📂 已选择: <b>${file.name}</b>`;
+            fileLabel.style.borderColor = 'var(--accent)';
+            
+            const reader = new FileReader();
+            reader.onload = (event) => {
+                parseMarkdown(event.target.result);
+                if(uploadedVocab.length > 0) {
+                    btnGenerate.disabled = false;
+                } else {
+                    alert('未找到合适的单词格式，请确保文件包含类似 "- **word** meaning" 的行。');
+                    btnGenerate.disabled = true;
+                }
+            };
+            reader.readAsText(file);
+        });
+
+        function parseMarkdown(text) {
+            const lines = text.split('\n');
+            uploadedVocab = [];
+            for (const line of lines) {
+                if (line.trim().startsWith('- **')) {
+                    const match = line.match(/^- \*\*(.*?)\*\*(?:\s*`([^`]+)`\s*)?(.*)$/);
+                    if (match) {
+                        uploadedVocab.push({ word: match[1].trim(), meaning: match[3].trim() });
+                    } else {
+                        const fallbackWord = line.replace(/^- \*\*/, '').split('**')[0];
+                        uploadedVocab.push({ word: fallbackWord || line, meaning: line });
+                    }
+                }
+            }
+        }
+
+        // Generate Story
+        btnGenerate.addEventListener('click', async () => {
+            if(!apiKeyInput.value.trim()) return alert("请输入 API Key");
+            saveSettings();
+            
+            setupScreen.classList.remove('active');
+            loadingScreen.classList.add('active');
+            
+            try {
+                // Randomly pick 15-20 words
+                const shuffled = [...uploadedVocab].sort(() => 0.5 - Math.random());
+                const selected = shuffled.slice(0, Math.min(20, shuffled.length));
+                const vocabString = selected.map(v => `${v.word} (${v.meaning})`).join(', ');
+                
+                const prompt = `You are an expert American English teacher. 
+I have a list of vocabulary words. Please write a short, natural, conversational story or paragraph in American English using around 10-15 of these words.
+The sentences should be spoken-style, engaging, and easy to read out loud.
+
+Vocabulary pool:
+${vocabString}
+
+Return ONLY a valid JSON array containing the story broken down sentence by sentence. Do not include any markdown formatting like \`\`\`json.
+Strict JSON format:
+[
+  {
+    "sentence": "The quick brown fox jumps over the lazy dog.",
+    "vocab_used": [
+      {"word": "fox", "meaning": "狐狸"},
+      {"word": "lazy", "meaning": "懒惰的"}
+    ]
+  }
+]`;
+
+                const response = await fetch(`${apiBaseInput.value.trim()}/chat/completions`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${apiKeyInput.value.trim()}`
+                    },
+                    body: JSON.stringify({
+                        model: apiModelInput.value.trim(),
+                        messages: [{ role: 'user', content: prompt }],
+                        temperature: 0.7
+                    })
+                });
+                
+                if(!response.ok) {
+                    const err = await response.text();
+                    throw new Error(`API 请求失败: ${err}`);
+                }
+                
+                const data = await response.json();
+                let content = data.choices[0].message.content.trim();
+                if(content.startsWith('```json')) {
+                    content = content.replace(/```json/g, '').replace(/```/g, '').trim();
+                }
+                
+                generatedStory = JSON.parse(content);
+                currentIndex = 0;
+                
+                loadingScreen.classList.remove('active');
+                readerScreen.classList.add('active');
+                
+                showCurrentSentence();
+                
+            } catch(e) {
+                alert("生成出错: " + e.message);
+                loadingScreen.classList.remove('active');
+                setupScreen.classList.add('active');
+            }
+        });
+
+        // TTS setup
+        let availableVoices = [];
+        function loadVoices() { availableVoices = window.speechSynthesis.getVoices(); }
+        loadVoices();
+        if (speechSynthesis.onvoiceschanged !== undefined) {
+            speechSynthesis.onvoiceschanged = loadVoices;
+        }
+
+        function showCurrentSentence() {
+            if(currentIndex >= generatedStory.length) {
+                readerScreen.classList.remove('active');
+                doneScreen.classList.add('active');
+                return;
+            }
+            
+            const item = generatedStory[currentIndex];
+            progressText.textContent = `${currentIndex + 1} / ${generatedStory.length}`;
+            
+            // Highlight vocab in sentence
+            let displayHTML = item.sentence;
+            if(item.vocab_used && item.vocab_used.length > 0) {
+                // Sort by length descending to prevent partial replacements
+                const sortedVocab = [...item.vocab_used].sort((a,b) => b.word.length - a.word.length);
+                sortedVocab.forEach(v => {
+                    const regex = new RegExp(`\\b(${v.word})\\b`, 'gi');
+                    displayHTML = displayHTML.replace(regex, `<span class="highlight-word" title="${v.meaning}">$1</span>`);
+                });
+            }
+            sentenceText.innerHTML = displayHTML;
+            
+            // Show vocab list
+            vocabListEl.innerHTML = '';
+            if(item.vocab_used && item.vocab_used.length > 0) {
+                item.vocab_used.forEach(v => {
+                    const div = document.createElement('div');
+                    div.className = 'vocab-item';
+                    div.innerHTML = `
+                        <div class="vocab-item-word">${v.word}</div>
+                        <div class="vocab-item-meaning">${v.meaning}</div>
+                    `;
+                    vocabListEl.appendChild(div);
+                });
+            }
+        }
+
+        let isSpeaking = false;
+
+        function readAndNext() {
+            if (currentIndex >= generatedStory.length) return;
+            
+            const text = generatedStory[currentIndex].sentence;
+            window.speechSynthesis.cancel(); 
+            
+            const utterance = new SpeechSynthesisUtterance(text);
+            utterance.lang = 'en-US';
+            utterance.rate = 1.0; 
+            
+            if (availableVoices.length === 0) loadVoices();
+            let bestVoice = availableVoices.find(v => v.name === 'Samantha' || v.name === 'Alex' || v.name === 'Google US English');
+            if (!bestVoice) bestVoice = availableVoices.find(v => v.lang === 'en-US');
+            if (bestVoice) utterance.voice = bestVoice;
+            
+            utterance.onend = () => { isSpeaking = false; };
+            isSpeaking = true;
+            window.speechSynthesis.speak(utterance);
+            
+            // Move to next after triggering speech (Wait, the user said "按一下读一句话，再按一下读下一句")
+            // So pressing Space reads CURRENT sentence, and automatically we should advance the index,
+            // so NEXT Space reads the next sentence.
+            currentIndex++;
+            if(currentIndex < generatedStory.length) {
+                // Pre-render the next sentence so the user sees what is being read OR what will be read next?
+                // Actually, if we advance index, they see the NEXT sentence but hear the PREVIOUS one?
+                // Better flow: Spacebar reads current, then we wait. If they press spacebar AGAIN, it cuts off, goes to next, reads next.
+                // Let's just advance the UI immediately so they read along the NEW sentence, and speech plays the NEW sentence.
+                showCurrentSentence();
+            } else {
+                showCurrentSentence(); // Shows Done screen
+            }
+        }
+
+        document.addEventListener('keydown', (e) => {
+            if (!readerScreen.classList.contains('active') && !doneScreen.classList.contains('active')) return;
+            
+            if (e.code === 'Space') {
+                e.preventDefault();
+                // If it's done screen, do nothing or restart
+                if (doneScreen.classList.contains('active')) return;
+                
+                // Read CURRENT sentence, then immediately step UI to NEXT sentence to be ready for next press?
+                // Wait, if UI steps to next sentence immediately, the voice is reading the PREVIOUS sentence while they look at the NEXT sentence. That's bad.
+                // It should: Press Space -> reads CURRENT sentence. 
+                // Press Space again -> cuts off current, advances UI to NEXT sentence, reads NEXT sentence.
+                // Let's implement: 
+                // First press: Reads index 0.
+                // Next press: Moves to index 1, reads index 1.
+                // How to distinguish? Just move first, then read.
+                // Wait, initially they see index 0. Space should read index 0! 
+                // Then space again should move to index 1 and read index 1.
+            }
+        });
+
+        // Refined Spacebar logic
+        let hasReadCurrent = false;
+        document.addEventListener('keydown', (e) => {
+            if (!readerScreen.classList.contains('active')) return;
+            if (e.code === 'Space') {
+                e.preventDefault();
+                if (!hasReadCurrent) {
+                    // First time pressing space on this sentence
+                    playCurrentSentence();
+                    hasReadCurrent = true;
+                } else {
+                    // Move to next and play
+                    currentIndex++;
+                    if (currentIndex < generatedStory.length) {
+                        showCurrentSentence();
+                        playCurrentSentence();
+                    } else {
+                        showCurrentSentence(); // Show done screen
+                    }
+                }
+            } else if (e.key === 'ArrowLeft') {
+                if (currentIndex > 0) {
+                    currentIndex--;
+                    showCurrentSentence();
+                    playCurrentSentence();
+                    hasReadCurrent = true;
+                }
+            }
+        });
+
+        function playCurrentSentence() {
+            if (currentIndex >= generatedStory.length) return;
+            const text = generatedStory[currentIndex].sentence;
+            window.speechSynthesis.cancel(); 
+            const utterance = new SpeechSynthesisUtterance(text);
+            utterance.lang = 'en-US';
+            utterance.rate = 1.0; 
+            if (availableVoices.length === 0) loadVoices();
+            let bestVoice = availableVoices.find(v => v.name === 'Samantha' || v.name === 'Alex' || v.name === 'Google US English');
+            if (!bestVoice) bestVoice = availableVoices.find(v => v.lang === 'en-US');
+            if (bestVoice) utterance.voice = bestVoice;
+            window.speechSynthesis.speak(utterance);
+        }
+
+    </script>
+</body>
+</html>
