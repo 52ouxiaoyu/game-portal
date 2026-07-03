@@ -464,10 +464,14 @@
                 const selectedPool = shuffled.slice(0, Math.min(100, shuffled.length));
                 const vocabString = selectedPool.map(v => `${v.word} (${v.meaning})`).join(', ');
                 
-                const prompt = `You are an expert American English teacher. 
+                const prompt = `You are an expert American English teacher writing a story for an English learner.
 Here is a large pool of vocabulary words. Please CAREFULLY SELECT 10 to 15 words from this pool that share a common theme or natural correlation. 
 Using your carefully selected 10-15 words, write a short, natural, conversational story or paragraph in American English.
-Do NOT force unrelated words together. The story must flow perfectly, logically, and sound like authentic spoken English.
+
+CRITICAL INSTRUCTION:
+Except for the 10-15 vocabulary words you selected from the pool, ALL OTHER WORDS in the story MUST BE extremely simple, basic, beginner-level English (CEFR A1/A2 level). 
+Do NOT use any complex grammar or advanced words outside of the target vocabulary. The goal is to help the student focus ONLY on learning the target vocabulary without being distracted by difficult surrounding text.
+The story must flow perfectly, logically, and sound like authentic spoken English.
 
 Vocabulary pool:
 ${vocabString}
