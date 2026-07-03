@@ -490,9 +490,8 @@ Strict JSON format:
                 
                 const data = await response.json();
                 let content = data.choices[0].message.content.trim();
-                if(content.startsWith('```json')) {
-                    content = content.replace(/```json/g, '').replace(/```/g, '').trim();
-                }
+                // Strip markdown blocks robustly
+                content = content.replace(/^```[a-z]*\n?/i, '').replace(/\n?```$/i, '').trim();
                 
                 generatedStory = JSON.parse(content);
                 currentIndex = 0;
@@ -503,7 +502,14 @@ Strict JSON format:
                 showCurrentSentence();
                 
             } catch(e) {
-                alert("生成出错: " + e.message);
+                console.error(e);
+                let msg = e.message;
+                if(msg.includes("Failed to fetch")) {
+                    msg += "\n\n💡 提示：这通常是因为网络问题或 API 不支持跨域请求 (CORS)。请检查你的代理，或确认 API 服务提供商。";
+                } else if(msg.includes("not found") || msg.includes("does not exist") || msg.includes("V4 PRO")) {
+                    msg += "\n\n💡 提示：模型不存在！如果你使用的是官方 DeepSeek API，请将模型名称改为 deepseek-chat";
+                }
+                alert("生成出错:\n" + msg);
                 loadingScreen.classList.remove('active');
                 setupScreen.classList.add('active');
             }
