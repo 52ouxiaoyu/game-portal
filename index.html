@@ -3,576 +3,234 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Game Center</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <title>Nexus Hub - Personal Portal</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&family=Outfit:wght@500;700;800&display=swap" rel="stylesheet">
     <style>
         :root {
             --bg-color: #050505;
-            --surface-color: #111111;
-            --surface-hover: #1a1a1a;
-            --text-primary: #ffffff;
-            --text-secondary: #a1a1aa;
-            --accent-color: #3b82f6;
-            --border-color: rgba(255, 255, 255, 0.08);
-            --card-radius: 20px;
+            --text-main: #ffffff;
+            --text-muted: #a1a1aa;
+            --card-radius: 32px;
         }
 
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        
+
         body {
-            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'SF Pro Display', sans-serif;
+            font-family: 'Inter', sans-serif;
             background-color: var(--bg-color);
             background-image: 
-                radial-gradient(circle at 15% 50%, rgba(59, 130, 246, 0.08) 0%, transparent 50%),
-                radial-gradient(circle at 85% 30%, rgba(139, 92, 246, 0.08) 0%, transparent 50%);
-            color: var(--text-primary);
+                radial-gradient(circle at 0% 0%, rgba(59, 130, 246, 0.15) 0%, transparent 50%),
+                radial-gradient(circle at 100% 100%, rgba(139, 92, 246, 0.15) 0%, transparent 50%),
+                radial-gradient(circle at 50% 50%, rgba(16, 185, 129, 0.05) 0%, transparent 60%);
+            color: var(--text-main);
             min-height: 100vh;
-            -webkit-font-smoothing: antialiased;
-            -moz-osx-font-smoothing: grayscale;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            overflow-x: hidden;
         }
 
         .container {
-            max-width: 1100px;
-            margin: 0 auto;
-            padding: 80px 24px;
+            width: 100%;
+            max-width: 1200px;
+            padding: 40px 24px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
         }
 
         header {
             text-align: center;
             margin-bottom: 80px;
+            animation: fadeDown 1s cubic-bezier(0.16, 1, 0.3, 1);
         }
-        
-        h1.logo-title {
-            font-size: 56px;
+
+        @keyframes fadeDown {
+            from { opacity: 0; transform: translateY(-30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .logo-title {
+            font-family: 'Outfit', sans-serif;
+            font-size: 72px;
             font-weight: 800;
             letter-spacing: -2px;
             margin-bottom: 16px;
-            background: linear-gradient(135deg, #fff 0%, #a1a1aa 100%);
+            background: linear-gradient(135deg, #ffffff 0%, #a1a1aa 100%);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
         }
-        
+
         .logo-subtitle {
-            font-size: 18px;
-            color: var(--text-secondary);
+            font-size: 20px;
+            color: var(--text-muted);
             font-weight: 400;
-            letter-spacing: 0.5px;
-            margin-bottom: 48px;
-        }
-
-        .stats {
-            display: flex;
-            justify-content: center;
-            gap: 24px;
-            flex-wrap: wrap;
-        }
-
-        .stat {
-            text-align: center;
-            padding: 24px 40px;
-            background: rgba(255, 255, 255, 0.02);
-            backdrop-filter: blur(10px);
-            border-radius: var(--card-radius);
-            border: 1px solid var(--border-color);
-            min-width: 160px;
-            box-shadow: 0 4px 24px rgba(0, 0, 0, 0.2);
-            transition: transform 0.3s ease, border-color 0.3s ease;
-        }
-        
-        .stat:hover {
-            transform: translateY(-2px);
-            border-color: rgba(255, 255, 255, 0.15);
-        }
-
-        .stat-value {
-            font-size: 36px;
-            font-weight: 700;
-            color: var(--text-primary);
-            letter-spacing: -1px;
-            margin-bottom: 8px;
-            background: linear-gradient(135deg, #fff 0%, #a1a1aa 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-        }
-
-        .stat-label {
-            font-size: 12px;
-            color: var(--text-secondary);
+            letter-spacing: 2px;
             text-transform: uppercase;
-            letter-spacing: 1.5px;
-            font-weight: 500;
         }
 
-        .games-grid {
+        .cards-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
-            gap: 24px;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 40px;
+            width: 100%;
+            animation: fadeUp 1s cubic-bezier(0.16, 1, 0.3, 1) 0.2s backwards;
         }
 
-        .game-card {
-            background: var(--surface-color);
-            border-radius: var(--card-radius);
-            padding: 32px;
-            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-            border: 1px solid var(--border-color);
-            cursor: pointer;
+        @keyframes fadeUp {
+            from { opacity: 0; transform: translateY(40px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .portal-card {
             position: relative;
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            backdrop-filter: blur(20px);
+            border-radius: var(--card-radius);
+            padding: 60px 40px;
+            text-align: center;
+            text-decoration: none;
+            color: var(--text-main);
+            transition: all 0.5s cubic-bezier(0.16, 1, 0.3, 1);
             overflow: hidden;
             display: flex;
             flex-direction: column;
-            height: 100%;
+            align-items: center;
+            min-height: 360px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.2);
         }
 
-        .game-card::before {
+        .portal-card::before {
             content: '';
             position: absolute;
-            top: 0; left: 0; right: 0; bottom: 0;
-            background: radial-gradient(800px circle at var(--mouse-x, 50%) var(--mouse-y, 50%), rgba(255,255,255,0.06), transparent 40%);
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: var(--hover-grad);
             opacity: 0;
-            transition: opacity 0.3s ease;
-            pointer-events: none;
+            transition: opacity 0.5s ease;
+            z-index: 0;
         }
 
-        .game-card:hover {
-            transform: translateY(-6px);
+        .portal-card > * {
+            position: relative;
+            z-index: 1;
+        }
+
+        .portal-card.games { --hover-grad: radial-gradient(circle at top right, rgba(239, 68, 68, 0.15), transparent 70%); border-top-color: rgba(239, 68, 68, 0.3); }
+        .portal-card.learn { --hover-grad: radial-gradient(circle at top right, rgba(16, 185, 129, 0.15), transparent 70%); border-top-color: rgba(16, 185, 129, 0.3); }
+        .portal-card.video { --hover-grad: radial-gradient(circle at top right, rgba(59, 130, 246, 0.15), transparent 70%); border-top-color: rgba(59, 130, 246, 0.3); }
+
+        .portal-card:hover {
+            transform: translateY(-12px) scale(1.02);
             border-color: rgba(255, 255, 255, 0.2);
-            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4), 0 0 40px var(--card-color-alpha);
-            background: var(--surface-hover);
+            box-shadow: 0 30px 60px rgba(0,0,0,0.4);
         }
 
-        .game-card:hover::before {
+        .portal-card:hover::before {
             opacity: 1;
         }
 
-        .game-header {
-            display: flex;
-            align-items: center;
-            gap: 16px;
-            margin-bottom: 20px;
+        .card-icon {
+            font-size: 72px;
+            margin-bottom: 32px;
+            filter: drop-shadow(0 10px 20px rgba(0,0,0,0.3));
+            transition: transform 0.5s cubic-bezier(0.16, 1, 0.3, 1);
         }
 
-        .game-icon {
-            width: 64px;
-            height: 64px;
-            border-radius: 16px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
+        .portal-card:hover .card-icon {
+            transform: scale(1.1) translateY(-10px);
+        }
+
+        .card-title {
+            font-family: 'Outfit', sans-serif;
             font-size: 32px;
-            flex-shrink: 0;
-            background: linear-gradient(135deg, rgba(255,255,255,0.05), rgba(255,255,255,0.01));
-            border: 1px solid rgba(255,255,255,0.05);
-            box-shadow: inset 0 0 20px var(--card-color-alpha);
-            transition: transform 0.3s ease;
-        }
-        
-        .game-card:hover .game-icon {
-            transform: scale(1.05) rotate(-5deg);
-        }
-
-        .game-title {
-            font-size: 20px;
-            font-weight: 600;
-            color: var(--text-primary);
-            letter-spacing: -0.5px;
-            line-height: 1.2;
-        }
-
-        .game-stats {
-            display: flex;
-            gap: 16px;
-            margin-top: 8px;
-            font-size: 13px;
-            color: var(--text-secondary);
-            font-variant-numeric: tabular-nums;
-        }
-
-        .game-desc {
-            font-size: 14px;
-            color: var(--text-secondary);
-            line-height: 1.6;
-            margin-bottom: 24px;
-            flex-grow: 1;
-        }
-
-        .game-tags {
-            display: flex;
-            gap: 8px;
-            margin-bottom: 24px;
-            flex-wrap: wrap;
-        }
-
-        .tag {
-            padding: 4px 12px;
-            background: rgba(255, 255, 255, 0.05);
-            border: 1px solid rgba(255, 255, 255, 0.05);
-            border-radius: 20px;
-            font-size: 11px;
-            color: var(--text-secondary);
-            font-weight: 500;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            transition: all 0.2s ease;
-        }
-        
-        .game-card:hover .tag {
-            background: var(--card-color-alpha);
-            color: #fff;
-            border-color: transparent;
-        }
-
-        .play-btn {
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            gap: 8px;
-            width: 100%;
-            padding: 14px 24px;
-            background: rgba(255, 255, 255, 0.05);
-            color: var(--text-primary);
-            text-decoration: none;
-            border-radius: 12px;
-            font-size: 14px;
-            font-weight: 600;
-            transition: all 0.3s ease;
-            letter-spacing: 0.5px;
-            border: 1px solid rgba(255, 255, 255, 0.1);
-        }
-
-        .game-card:hover .play-btn {
-            background: var(--text-primary);
-            color: #000;
-            box-shadow: 0 4px 15px rgba(255,255,255,0.2);
-        }
-
-        .play-btn:active {
-            transform: scale(0.96);
-        }
-
-        .play-btn svg {
-            width: 16px;
-            height: 16px;
-            transition: transform 0.3s ease;
-        }
-
-        .game-card:hover .play-btn svg {
-            transform: translateX(4px);
-        }
-
-        .footer {
-            text-align: center;
-            padding: 64px 24px 32px;
-            color: var(--text-secondary);
-            font-size: 13px;
-            letter-spacing: 0.5px;
-        }
-
-        .coffee-btn {
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            gap: 10px;
-            padding: 14px 32px;
-            background: linear-gradient(135deg, #FFDD00 0%, #F5B700 100%);
-            color: #000000;
-            text-decoration: none;
-            border-radius: 100px;
-            font-size: 15px;
             font-weight: 700;
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            box-shadow: 0 8px 24px rgba(255, 221, 0, 0.2);
-            border: none;
-            cursor: pointer;
-            font-family: inherit;
+            margin-bottom: 16px;
+            letter-spacing: -0.5px;
         }
 
-        .coffee-btn:hover {
-            transform: translateY(-3px) scale(1.02);
-            box-shadow: 0 12px 32px rgba(255, 221, 0, 0.4);
+        .card-desc {
+            font-size: 16px;
+            color: var(--text-muted);
+            line-height: 1.6;
+            opacity: 0.8;
+            transition: opacity 0.3s;
+        }
+        
+        .portal-card:hover .card-desc {
+            opacity: 1;
+            color: #fff;
         }
 
-        .coffee-btn:active {
-            transform: translateY(0) scale(0.98);
-        }
-
-        /* Donate Modal */
-        .donate-modal {
-            display: none;
-            position: fixed;
-            top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.8);
-            z-index: 999;
-            align-items: center;
-            justify-content: center;
-            backdrop-filter: blur(8px);
-        }
-        .donate-content {
-            background: #111;
-            padding: 40px;
-            border-radius: 24px;
-            text-align: center;
-            position: relative;
-            max-width: 440px;
-            width: 90%;
-            box-shadow: 0 24px 48px rgba(0,0,0,0.5);
+        .enter-btn {
+            margin-top: auto;
+            padding: 12px 32px;
+            border-radius: 100px;
+            background: rgba(255,255,255,0.05);
             border: 1px solid rgba(255,255,255,0.1);
-            animation: modalFadeIn 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+            color: #fff;
+            font-weight: 600;
+            letter-spacing: 1px;
+            transition: all 0.3s;
+            opacity: 0;
+            transform: translateY(20px);
         }
-        @keyframes modalFadeIn {
-            from { opacity: 0; transform: translateY(40px) scale(0.95); }
-            to { opacity: 1; transform: translateY(0) scale(1); }
+
+        .portal-card:hover .enter-btn {
+            opacity: 1;
+            transform: translateY(0);
+            background: #fff;
+            color: #000;
         }
-        .donate-close {
-            position: absolute;
-            top: 20px; right: 24px;
-            cursor: pointer;
-            font-size: 32px;
-            color: var(--text-secondary);
-            line-height: 1;
-            transition: color 0.2s;
-        }
-        .donate-close:hover { color: #fff; }
-        .donate-qr {
-            width: 180px; height: 180px;
-            margin: 16px auto 12px;
-            border-radius: 12px;
-            object-fit: cover;
-            object-position: top center;
-            display: block;
-            border: 2px solid rgba(255,255,255,0.1);
-            transition: transform 0.3s;
-        }
-        .donate-qr:hover {
-            transform: scale(1.05);
+
+        @media (max-width: 992px) {
+            .cards-grid { grid-template-columns: repeat(2, 1fr); }
+            .portal-card:last-child { grid-column: span 2; }
         }
 
         @media (max-width: 768px) {
-            .container { padding: 40px 16px; }
-            h1.logo-title { font-size: 40px; }
-            .stats { gap: 16px; }
-            .stat { padding: 16px 20px; min-width: 120px; }
-            .stat-value { font-size: 28px; }
-            .games-grid { grid-template-columns: 1fr; }
-            .game-card { padding: 24px; }
+            .logo-title { font-size: 48px; }
+            .cards-grid { grid-template-columns: 1fr; gap: 24px; }
+            .portal-card:last-child { grid-column: auto; }
+            .portal-card { min-height: 280px; padding: 40px 24px; }
+            .enter-btn { opacity: 1; transform: translateY(0); margin-top: 32px; }
         }
     </style>
 </head>
 <body>
+
     <div class="container">
         <header>
-            <h1 class="logo-title">ARCADE NEXUS</h1>
-            <div class="logo-subtitle">Next-Generation HTML5 Gaming Experience</div>
-            <div class="stats">
-                <div class="stat">
-                    <div class="stat-value">5</div>
-                    <div class="stat-label">款游戏 (Games)</div>
-                </div>
-                <div class="stat">
-                    <div class="stat-value" id="total-plays">0</div>
-                    <div class="stat-label">总游玩 (Plays)</div>
-                </div>
-                <div class="stat">
-                    <div class="stat-value" id="total-time">0</div>
-                    <div class="stat-label">总时长 (Time)</div>
-                </div>
-            </div>
-            <div style="margin-top: 32px;">
-                <button onclick="openDonateModal()" class="coffee-btn" title="Buy me a coffee!">
-                    ☕ 请我喝杯咖啡 (Buy Me a Coffee)
-                </button>
-            </div>
+            <h1 class="logo-title">NEXUS HUB</h1>
+            <div class="logo-subtitle">Select Your Destination</div>
         </header>
 
-        <!-- Donate Modal -->
-        <div id="donate-modal" class="donate-modal" onclick="closeDonateModal(event)">
-            <div class="donate-content" onclick="event.stopPropagation()">
-                <div class="donate-close" onclick="closeDonateModal()">×</div>
-                <h2>感谢您的支持！💖</h2>
-                <p style="color: #666; margin-top: 8px; font-size: 14px;">您的打赏是我开发更多好游戏的最大动力</p>
-                
-                <h4 style="margin-top: 24px; color: #333;">支持作者 / Support Creator</h4>
-                
-                <div style="display: flex; gap: 20px; margin-top: 20px; flex-wrap: wrap; justify-content: center;">
-                    <div style="flex: 1; min-width: 150px;">
-                        <div style="font-size: 14px; color: #333; font-weight: bold;">🇨🇳 微信赞赏</div>
-                        <img src="donate.png?v=4" alt="微信赞赏码" class="donate-qr">
-                        <div style="font-size: 12px; color: #999;">(WeChat Pay)</div>
-                    </div>
-                    <div style="flex: 1; min-width: 150px; display: flex; flex-direction: column; justify-content: center; align-items: center;">
-                        <div style="font-size: 14px; color: #333; font-weight: bold; margin-bottom: 16px;">🌍 PayPal</div>
-                        <a href="https://www.paypal.me/WuJohn666" target="_blank" style="display: inline-block; padding: 14px 28px; background: #003087; color: #fff; text-decoration: none; border-radius: 8px; font-weight: bold; font-size: 15px; transition: background 0.2s; box-shadow: 0 4px 12px rgba(0,48,135,0.3);">
-                            💳 Click to Support
-                        </a>
-                        <div style="font-size: 12px; color: #999; margin-top: 16px;">(Fast & Secure)</div>
-                    </div>
-                </div>
-            </div>
+        <div class="cards-grid">
+            
+            <a href="games.html" class="portal-card games">
+                <div class="card-icon">🎮</div>
+                <h2 class="card-title">游戏中心</h2>
+                <p class="card-desc">探索各类网页小游戏，支持双人联机与键盘操作，随时享受街机乐趣。</p>
+                <div class="enter-btn">ENTER GAMES</div>
+            </a>
+
+            <a href="VocabSwipe.html" class="portal-card learn">
+                <div class="card-icon">📚</div>
+                <h2 class="card-title">学习天地</h2>
+                <p class="card-desc">专属你的极速背词神器，内置中高考核心词汇，智能过滤，高效记忆。</p>
+                <div class="enter-btn">ENTER LEARNING</div>
+            </a>
+
+            <a href="tvbox/index.html" class="portal-card video">
+                <div class="card-icon">🍿</div>
+                <h2 class="card-title">影视专区</h2>
+                <p class="card-desc">打开 TVBox Player，直接解析全网高清影视资源，畅享家庭影院体验。</p>
+                <div class="enter-btn">ENTER CINEMA</div>
+            </a>
+
         </div>
-
-        <div class="games-grid" id="games-grid"></div>
-
-        <div class="footer">© 2026 Game Center</div>
     </div>
 
-    <script>
-        const games = [
-            {
-                id: 'zombie', title: '末日枪手<br><span style="font-size:12px;color:#888;">Mech Shooter</span>', emoji: '🔫', color: '#ff4500',
-                url: 'zombie-shooter/index.html',
-                tags: ['射击', '生存', 'Shooter'],
-                desc: '抵御源源不断的机械狂潮，坚持下去！<br>Survive the endless robot swarms!'
-            },
-            {
-                id: 'tank', title: '坦克大战<br><span style="font-size:12px;color:#888;">Tank Battle</span>', emoji: '🪖', color: '#E7E721',
-                url: 'tank-battle/index.html',
-                tags: ['双人', '射击', 'Co-op'],
-                desc: '经典坦克大战，支持双人对战<br>Classic tank battle, co-op supported'
-            },
-            {
-                id: 'snake', title: '贪吃蛇<br><span style="font-size:12px;color:#888;">Snake</span>', emoji: '🐍', color: '#34C759',
-                url: 'snake/index.html',
-                tags: ['经典', '休闲', 'Casual'],
-                desc: '流畅操作，经典贪吃蛇<br>Classic snake game'
-            },
-            {
-                id: 'kingdom', title: '王国保卫战<br><span style="font-size:12px;color:#888;">Kingdom Rush</span>', emoji: '🏰', color: '#FF9500',
-                url: 'kingdom-rush/index.html',
-                tags: ['双人', '射击', 'Defender'],
-                desc: '化身将军，弓箭保卫城堡<br>Archery to defend the castle'
-            },
-            {
-                id: 'calabash', title: '葫芦兄弟<br><span style="font-size:12px;color:#888;">Calabash Bros</span>', emoji: '🎃', color: '#007AFF',
-                url: 'calabash-brothers/index.html',
-                tags: ['冒险', '经典', 'Adventure'],
-                desc: '七兄弟拯救爷爷<br>Rescue grandpa'
-            }
-        ];
-
-        const BASE_STATS = {
-            'tank': { plays: 1245, time: 1245 * 8 * 60 },
-            'calabash': { plays: 156, time: 156 * 15 * 60 },
-            'snake': { plays: 2314, time: 2314 * 5 * 60 },
-            'zombie': { plays: 54, time: 54 * 20 * 60 },
-            'kingdom': { plays: 832, time: 832 * 25 * 60 }
-        };
-
-        function loadStats() {
-            const stats = localStorage.getItem('gamePortalStats');
-            return stats ? JSON.parse(stats) : {};
-        }
-
-        function getDisplayStats() {
-            const realStats = loadStats();
-            let displayStats = {};
-            for (const game of games) {
-                const id = game.id;
-                const base = BASE_STATS[id] || { plays: 0, time: 0 };
-                const real = realStats[id] || { plays: 0, time: 0 };
-                displayStats[id] = {
-                    plays: base.plays + real.plays,
-                    time: base.time + real.time
-                };
-            }
-            return displayStats;
-        }
-
-        function saveStats(stats) {
-            localStorage.setItem('gamePortalStats', JSON.stringify(stats));
-        }
-
-        function trackGame(gameId) {
-            const stats = loadStats();
-            if (!stats[gameId]) stats[gameId] = { plays: 0, time: 0 };
-            stats[gameId].plays++;
-            saveStats(stats);
-            const startTime = Date.now();
-            window.onbeforeunload = () => {
-                const elapsed = Math.floor((Date.now() - startTime) / 1000);
-                const currentStats = loadStats();
-                if (currentStats[gameId]) {
-                    currentStats[gameId].time += elapsed;
-                    saveStats(currentStats);
-                }
-            };
-        }
-
-        function formatTime(seconds) {
-            if (seconds < 60) return seconds + '秒';
-            if (seconds < 3600) return Math.floor(seconds / 60) + '分';
-            return Math.floor(seconds / 3600) + '时' + Math.floor((seconds % 3600) / 60) + '分';
-        }
-
-        function getTotalStats() {
-            const stats = getDisplayStats();
-            let totalPlays = 0, totalTime = 0;
-            for (const key in stats) {
-                totalPlays += stats[key].plays || 0;
-                totalTime += stats[key].time || 0;
-            }
-            return { plays: totalPlays, time: totalTime };
-        }
-
-        function renderGames() {
-            const stats = getDisplayStats();
-            const grid = document.getElementById('games-grid');
-            const sortedGames = [...games].sort((a, b) => (stats[b.id]?.plays || 0) - (stats[a.id]?.plays || 0));
-
-            grid.innerHTML = sortedGames.map(game => {
-                const gameStats = stats[game.id] || { plays: 0, time: 0 };
-                return `
-                    <div class="game-card" style="--card-color: ${game.color}; --card-color-alpha: ${game.color}15;" onclick="window.open('${game.url}', '_blank')">
-                        <div class="game-header">
-                            <div class="game-icon" style="background: ${game.color}15">${game.emoji}</div>
-                            <div>
-                                <div class="game-title">${game.title}</div>
-                                <div class="game-stats">
-                                    <span>${gameStats.plays} 次(plays)</span>
-                                    <span>${formatTime(gameStats.time)}</span>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="game-desc">${game.desc}</div>
-                        <div class="game-tags">
-                            ${game.tags.map(tag => `<span class="tag">${tag}</span>`).join('')}
-                        </div>
-                        <a href="${game.url}" class="play-btn" target="_blank" onclick="event.stopPropagation(); trackGame('${game.id}')">
-                            开始游戏 / PLAY
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <path d="M5 12h14M12 5l7 7-7 7"/>
-                            </svg>
-                        </a>
-                    </div>
-                `;
-            }).join('');
-        }
-            // Initialize
-        const totalStats = getTotalStats();
-        document.getElementById('total-plays').innerText = totalStats.plays;
-        document.getElementById('total-time').innerText = formatTime(totalStats.time);
-        renderGames();
-
-        document.getElementById('games-grid').onmousemove = e => {
-            for(const card of document.getElementsByClassName('game-card')) {
-                const rect = card.getBoundingClientRect(),
-                      x = e.clientX - rect.left,
-                      y = e.clientY - rect.top;
-                card.style.setProperty('--mouse-x', `${x}px`);
-                card.style.setProperty('--mouse-y', `${y}px`);
-            }
-        };
-
-
-        function openDonateModal() {
-            document.getElementById('donate-modal').style.display = 'flex';
-        }
-
-        function closeDonateModal(e) {
-            // Close if clicking the background or the X button
-            if (!e || e.target.id === 'donate-modal' || !e.target.id) {
-                document.getElementById('donate-modal').style.display = 'none';
-            }
-        }
-    </script>
-<div style="position:fixed;bottom:20px;right:20px;z-index:9999;"><a href="tvbox/index.html" style="background:#3b82f6;color:white;padding:10px 20px;border-radius:20px;text-decoration:none;font-weight:bold;box-shadow:0 4px 10px rgba(0,0,0,0.3);">📺 TVBox Player</a></div></body>
+</body>
 </html>
