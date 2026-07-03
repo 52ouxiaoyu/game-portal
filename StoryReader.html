@@ -370,7 +370,10 @@
         window.onload = () => {
             if(localStorage.getItem('story_api_key')) apiKeyInput.value = localStorage.getItem('story_api_key');
             if(localStorage.getItem('story_api_base')) apiBaseInput.value = localStorage.getItem('story_api_base');
-            if(localStorage.getItem('story_api_model')) apiModelInput.value = localStorage.getItem('story_api_model');
+            
+            let savedModel = localStorage.getItem('story_api_model');
+            if (savedModel === 'V4 PRO') savedModel = 'deepseek-v4-pro'; // 自动修复旧的错误缓存
+            if(savedModel) apiModelInput.value = savedModel;
         };
 
         function saveSettings() {
