@@ -1,12 +1,16 @@
 import base64
 import os
 
-md_path = '/Users/clawbox/obsidian/wiki/高考_3500_核心词汇.md'
+md_3500_path = '/Users/clawbox/obsidian/wiki/高考_3500_核心词汇.md'
+md_1600_path = '/Users/clawbox/obsidian/wiki/初中英语 1600 核心词汇.md'
 html_path = '/Users/clawbox/game-portal/VocabSwipe.html'
 local_html_path = '/Users/clawbox/obsidian/VocabSwipe.html'
 
-with open(md_path, 'r', encoding='utf-8') as f:
-    b64_str = base64.b64encode(f.read().encode('utf-8')).decode('utf-8')
+with open(md_3500_path, 'r', encoding='utf-8') as f:
+    b64_3500 = base64.b64encode(f.read().encode('utf-8')).decode('utf-8')
+
+with open(md_1600_path, 'r', encoding='utf-8') as f:
+    b64_1600 = base64.b64encode(f.read().encode('utf-8')).decode('utf-8')
 
 html_content = """<!DOCTYPE html>
 <html lang="zh-CN">
@@ -260,9 +264,10 @@ html_content = """<!DOCTYPE html>
             </div>
 
             <div id="file-select-container">
-                <p>你可以直接开始刷内置的 <b>高考 3500 词</b>，<br>或者导入自定义的 Markdown 笔记。</p>
+                <p>你可以选择内置的词库，或者导入自定义的 Markdown 笔记。</p>
                 
-                <button id="btn-default-start" class="export-btn large" style="width: 100%; margin-bottom: 1.5rem;">🚀 默认：开始刷高考 3500 词</button>
+                <button id="btn-default-3500" class="export-btn large" style="width: 100%; margin-bottom: 1rem;">🚀 刷高考 3500 词</button>
+                <button id="btn-default-1600" class="export-btn large" style="width: 100%; margin-bottom: 1.5rem; background: linear-gradient(135deg, #10b981, #059669);">🎒 刷初中 1600 词</button>
                 
                 <div style="margin-bottom: 1.5rem; color: var(--text-muted); font-size: 0.9rem;">— 或者 —</div>
                 
@@ -312,10 +317,11 @@ html_content = """<!DOCTYPE html>
     </div>
 
     <script>
-        const DEFAULT_B64 = "{B64_CONTENT}";
-        function getDefaultMarkdown() {
-            // 解析 base64 的 UTF-8 字符串
-            const byteCharacters = atob(DEFAULT_B64);
+        const DEFAULT_B64_3500 = "{B64_3500}";
+        const DEFAULT_B64_1600 = "{B64_1600}";
+        
+        function decodeBase64Markdown(b64) {
+            const byteCharacters = atob(b64);
             const byteNumbers = new Array(byteCharacters.length);
             for (let i = 0; i < byteCharacters.length; i++) {
                 byteNumbers[i] = byteCharacters.charCodeAt(i);
@@ -380,7 +386,7 @@ html_content = """<!DOCTYPE html>
                             parsedData = tempParsed;
                             vocabItems = tempVocab;
                             currentIndex = tempIndex;
-                            originalFileName = localStorage.getItem('vocabSwipe_fileName') || '高考_3500_核心词汇_过滤版.md';
+                            originalFileName = localStorage.getItem('vocabSwipe_fileName') || '词汇过滤_已完成.md';
                             
                             setupScreen.classList.remove('active');
                             swipeScreen.classList.add('active');
@@ -449,9 +455,14 @@ html_content = """<!DOCTYPE html>
             }
         }
 
-        document.getElementById('btn-default-start').addEventListener('click', () => {
+        document.getElementById('btn-default-3500').addEventListener('click', () => {
             originalFileName = '高考_3500_核心词汇_已过滤.md';
-            handleMarkdownText(getDefaultMarkdown());
+            handleMarkdownText(decodeBase64Markdown(DEFAULT_B64_3500));
+        });
+
+        document.getElementById('btn-default-1600').addEventListener('click', () => {
+            originalFileName = '初中英语_1600_核心词汇_已过滤.md';
+            handleMarkdownText(decodeBase64Markdown(DEFAULT_B64_1600));
         });
 
         fileInput.addEventListener('change', (e) => {
@@ -637,7 +648,7 @@ html_content = """<!DOCTYPE html>
 </body>
 </html>"""
 
-html_content = html_content.replace("{B64_CONTENT}", b64_str)
+html_content = html_content.replace("{B64_3500}", b64_3500).replace("{B64_1600}", b64_1600)
 
 with open(html_path, 'w', encoding='utf-8') as f:
     f.write(html_content)
