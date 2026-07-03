@@ -573,11 +573,17 @@ Strict JSON format:
             
             const utterance = new SpeechSynthesisUtterance(text);
             utterance.lang = 'en-US';
-            utterance.rate = 1.0; 
+            utterance.rate = 0.82; // 降低语速，使发音更自然，适合学习
             
             if (availableVoices.length === 0) loadVoices();
-            let bestVoice = availableVoices.find(v => v.name === 'Samantha' || v.name === 'Alex' || v.name === 'Google US English');
+            
+            // 优先选择高质量拟真声音 (如 macOS 的 Siri, Premium, Enhanced) 或 Google 原生美音
+            let bestVoice = availableVoices.find(v => (v.name.includes('Siri') || v.name.includes('Premium') || v.name.includes('Enhanced')) && v.lang === 'en-US');
+            if (!bestVoice) bestVoice = availableVoices.find(v => v.name === 'Google US English');
+            if (!bestVoice) bestVoice = availableVoices.find(v => v.name === 'Samantha');
+            if (!bestVoice) bestVoice = availableVoices.find(v => v.name === 'Alex');
             if (!bestVoice) bestVoice = availableVoices.find(v => v.lang === 'en-US');
+            
             if (bestVoice) utterance.voice = bestVoice;
             
             utterance.onend = () => { isSpeaking = false; };
