@@ -218,6 +218,32 @@
             color: #d1d5db;
             line-height: 1.6;
         }
+
+        .platforms {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            justify-content: center;
+        }
+
+        .platform-btn {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: #d1d5db;
+            padding: 8px 20px;
+            border-radius: 20px;
+            text-decoration: none;
+            font-size: 14px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .platform-btn:hover {
+            background: rgba(59, 130, 246, 0.2);
+            border-color: var(--primary);
+            color: white;
+            transform: translateY(-2px);
+        }
     </style>
 </head>
 <body>
@@ -228,6 +254,15 @@
             <h1 class="logo-title">VIP 视频解析</h1>
             <p class="subtitle">打破平台限制，主流 VIP 视频无广告免费极速观看</p>
         </header>
+
+        <div class="platforms">
+            <a href="https://www.iqiyi.com/" target="_blank" class="platform-btn">爱奇艺</a>
+            <a href="https://v.qq.com/" target="_blank" class="platform-btn">腾讯视频</a>
+            <a href="https://www.youku.com/" target="_blank" class="platform-btn">优酷</a>
+            <a href="https://www.mgtv.com/" target="_blank" class="platform-btn">芒果TV</a>
+            <a href="https://www.bilibili.com/" target="_blank" class="platform-btn">哔哩哔哩</a>
+            <a href="https://tv.sohu.com/" target="_blank" class="platform-btn">搜狐视频</a>
+        </div>
 
         <div class="control-panel">
             <div class="input-group">
