@@ -416,14 +416,15 @@
             loadingScreen.classList.add('active');
             
             try {
-                // Randomly pick 15-20 words
+                // Randomly pick a larger pool of words (e.g. 100) to give the AI choices
                 const shuffled = [...uploadedVocab].sort(() => 0.5 - Math.random());
-                const selected = shuffled.slice(0, Math.min(20, shuffled.length));
-                const vocabString = selected.map(v => `${v.word} (${v.meaning})`).join(', ');
+                const selectedPool = shuffled.slice(0, Math.min(100, shuffled.length));
+                const vocabString = selectedPool.map(v => `${v.word} (${v.meaning})`).join(', ');
                 
                 const prompt = `You are an expert American English teacher. 
-I have a list of vocabulary words. Please write a short, natural, conversational story or paragraph in American English using around 10-15 of these words.
-The sentences should be spoken-style, engaging, and easy to read out loud.
+Here is a large pool of vocabulary words. Please CAREFULLY SELECT 10 to 15 words from this pool that share a common theme or natural correlation. 
+Using your carefully selected 10-15 words, write a short, natural, conversational story or paragraph in American English.
+Do NOT force unrelated words together. The story must flow perfectly, logically, and sound like authentic spoken English.
 
 Vocabulary pool:
 ${vocabString}
