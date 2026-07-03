@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>全网 VIP 视频极速解析</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&family=Outfit:wght@500;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-color: #050505;
+            --text-main: #ffffff;
+            --text-muted: #a1a1aa;
+            --primary: #3b82f6;
+            --secondary: #8b5cf6;
+            --card-bg: rgba(255, 255, 255, 0.03);
+            --card-border: rgba(255, 255, 255, 0.08);
+            --radius: 16px;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-color);
+            background-image: 
+                radial-gradient(circle at 0% 0%, rgba(59, 130, 246, 0.15) 0%, transparent 50%),
+                radial-gradient(circle at 100% 100%, rgba(139, 92, 246, 0.15) 0%, transparent 50%);
+            color: var(--text-main);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding-top: 60px;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 1000px;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 30px;
+        }
+
+        header {
+            text-align: center;
+        }
+
+        .logo-title {
+            font-family: 'Outfit', sans-serif;
+            font-size: 48px;
+            font-weight: 800;
+            margin-bottom: 12px;
+            background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .subtitle {
+            color: var(--text-muted);
+            font-size: 16px;
+        }
+
+        /* Float Back Button */
+        .float-back {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            z-index: 999;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: rgba(255,255,255,0.1);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255,255,255,0.2);
+            color: white;
+            padding: 10px 20px;
+            border-radius: 30px;
+            text-decoration: none;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+        .float-back:hover {
+            background: rgba(255,255,255,0.2);
+            transform: translateY(-2px);
+        }
+
+        /* Controls Section */
+        .control-panel {
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            backdrop-filter: blur(20px);
+            border-radius: var(--radius);
+            padding: 24px;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .input-group {
+            display: flex;
+            gap: 12px;
+            width: 100%;
+        }
+
+        @media (max-width: 600px) {
+            .input-group {
+                flex-direction: column;
+            }
+        }
+
+        .styled-select, .styled-input {
+            background: rgba(0, 0, 0, 0.5);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: white;
+            padding: 16px 20px;
+            border-radius: 12px;
+            font-size: 16px;
+            outline: none;
+            transition: border-color 0.3s;
+        }
+
+        .styled-select:focus, .styled-input:focus {
+            border-color: var(--primary);
+        }
+
+        .styled-input {
+            flex: 1;
+        }
+
+        .styled-select {
+            width: 250px;
+            max-width: 100%;
+            cursor: pointer;
+        }
+
+        .styled-select option {
+            background: #1a1a1a;
+            color: white;
+        }
+
+        .play-btn {
+            background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
+            border: none;
+            color: white;
+            padding: 16px 32px;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+            white-space: nowrap;
+        }
+
+        .play-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(139, 92, 246, 0.3);
+        }
+
+        .play-btn:active {
+            transform: translateY(0);
+        }
+
+        /* Player Section */
+        .player-wrapper {
+            position: relative;
+            width: 100%;
+            aspect-ratio: 16 / 9;
+            background: #000;
+            border-radius: var(--radius);
+            border: 1px solid var(--card-border);
+            overflow: hidden;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.5);
+        }
+
+        iframe {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            border: none;
+            display: none;
+        }
+
+        .placeholder {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-muted);
+            gap: 16px;
+        }
+
+        .placeholder-icon {
+            font-size: 64px;
+            opacity: 0.5;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(0.95); opacity: 0.5; }
+            50% { transform: scale(1.05); opacity: 0.8; }
+            100% { transform: scale(0.95); opacity: 0.5; }
+        }
+
+        .tips {
+            background: rgba(59, 130, 246, 0.1);
+            border-left: 4px solid var(--primary);
+            padding: 16px;
+            border-radius: 0 8px 8px 0;
+            font-size: 14px;
+            color: #d1d5db;
+            line-height: 1.6;
+        }
+    </style>
+</head>
+<body>
+    <a href="media.html" class="float-back">⬅️ 返回视听专区</a>
+
+    <div class="container">
+        <header>
+            <h1 class="logo-title">VIP 视频解析</h1>
+            <p class="subtitle">打破平台限制，主流 VIP 视频无广告免费极速观看</p>
+        </header>
+
+        <div class="control-panel">
+            <div class="input-group">
+                <select id="api-select" class="styled-select">
+                    <option value="https://jx.jsonplayer.com/player/?url=">⚡️ 线路一 (稳定推荐)</option>
+                    <option value="https://jx.xmflv.com/?url=">🚀 线路二 (虾米解析)</option>
+                    <option value="https://jx.yparse.com/index.php?url=">✨ 线路三 (YParse备用)</option>
+                    <option value="https://vip.bljiex.com/?v=">🌟 线路四 (BL解析备用)</option>
+                </select>
+                <input type="url" id="video-url" class="styled-input" placeholder="在此粘贴视频网址 (例如: https://v.qq.com/x/cover/...)" />
+                <button id="play-btn" class="play-btn">立即解析播放</button>
+            </div>
+        </div>
+
+        <div class="player-wrapper">
+            <div id="placeholder" class="placeholder">
+                <div class="placeholder-icon">🍿</div>
+                <p>等待视频载入，尽享极致视听...</p>
+            </div>
+            <iframe id="video-player" src="" allowfullscreen allow="autoplay; fullscreen"></iframe>
+        </div>
+
+        <div class="tips">
+            <strong>使用说明：</strong><br>
+            1. 在电脑或手机浏览器打开 爱奇艺、腾讯视频、优酷、芒果TV 等网站。<br>
+            2. 找到你想看的 VIP 视频，复制该网页的网址 (URL)。<br>
+            3. 将网址粘贴到上方的输入框中，点击【立即解析播放】即可。<br>
+            4. 如果某个视频无法播放或者卡顿，请在左侧切换不同的【线路】重新解析。
+        </div>
+    </div>
+
+    <script>
+        const playBtn = document.getElementById('play-btn');
+        const urlInput = document.getElementById('video-url');
+        const apiSelect = document.getElementById('api-select');
+        const iframe = document.getElementById('video-player');
+        const placeholder = document.getElementById('placeholder');
+
+        playBtn.addEventListener('click', () => {
+            const videoUrl = urlInput.value.trim();
+            if (!videoUrl) {
+                alert('请先粘贴需要解析的视频网页链接！');
+                urlInput.focus();
+                return;
+            }
+            
+            // 隐藏占位，显示播放器
+            placeholder.style.display = 'none';
+            iframe.style.display = 'block';
+            
+            // 组合解析接口和目标视频地址
+            const parseUrl = apiSelect.value + encodeURIComponent(videoUrl);
+            iframe.src = parseUrl;
+        });
+
+        // 支持回车键直接播放
+        urlInput.addEventListener('keypress', function (e) {
+            if (e.key === 'Enter') {
+                playBtn.click();
+            }
+        });
+    </script>
+</body>
+</html>
