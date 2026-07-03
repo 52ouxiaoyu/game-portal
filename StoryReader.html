@@ -275,18 +275,18 @@
             <p>导入单词表，AI 自动生成自然口语文章并带读</p>
             
             <div class="form-group">
-                <label>API Key (必填，支持 OpenAI / DeepSeek / 阿里百炼 等兼容格式)</label>
-                <input type="password" id="api-key" class="form-control" placeholder="sk-...">
+                <label>API Key (已自动配置为你笔记本中的 DeepSeek 密钥)</label>
+                <input type="password" id="api-key" class="form-control" value="sk-20c2bbdf4cbd4f74b0fed64dea6921ce" placeholder="sk-...">
             </div>
             
             <div style="display: flex; gap: 1rem;">
                 <div class="form-group" style="flex: 2;">
                     <label>API Base URL</label>
-                    <input type="text" id="api-base" class="form-control" value="https://api.openai.com/v1">
+                    <input type="text" id="api-base" class="form-control" value="https://api.deepseek.com/v1">
                 </div>
                 <div class="form-group" style="flex: 1;">
                     <label>模型名称</label>
-                    <input type="text" id="api-model" class="form-control" value="gpt-4o-mini">
+                    <input type="text" id="api-model" class="form-control" value="V4 PRO">
                 </div>
             </div>
 
