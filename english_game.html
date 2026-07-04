@@ -230,6 +230,20 @@
             };
         }
 
+        // 键盘快捷键绑定
+        document.addEventListener('keydown', function(e) {
+            if (document.getElementById('game-screen').style.display !== 'flex') return;
+            
+            if (e.key === 'ArrowLeft') {
+                prevItem();
+            } else if (e.key === 'ArrowRight') {
+                nextItem();
+            } else if (e.key === ' ') {
+                e.preventDefault(); // 防止空格键使页面滚动
+                playAudio();
+            }
+        });
+
         initMenu();
     </script>
 </body>
