@@ -100,6 +100,7 @@
         // 过滤掉没内容的假单元（保留超过20个句子的单元）
         const validUnits = grade6Data.filter(u => u.items && u.items.length > 20);
         let currentUnit = null;
+        let currentUnitIndex = -1;
         let currentIndex = 0;
 
         const synth = window.speechSynthesis;
@@ -116,17 +117,36 @@
             const screen = document.getElementById('unit-screen');
             screen.innerHTML = '';
             validUnits.forEach((unit, idx) => {
+                // 读取当前单元的进度
+                const savedIndex = localStorage.getItem('english_game_progress_' + idx);
+                const progress = savedIndex ? parseInt(savedIndex, 10) + 1 : 0;
+                
                 const div = document.createElement('div');
                 div.className = 'unit-card';
-                div.innerHTML = `<h2>${unit.title.replace('Unit', '第').replace(' ', '单元<br>')}</h2><p>共 ${unit.items.length} 句</p>`;
+                
+                let progressText = progress > 0 ? `已学进度: ${progress} / ${unit.items.length}` : `共 ${unit.items.length} 句`;
+                if (progress === unit.items.length) {
+                    progressText = '✅ 已学完';
+                }
+
+                div.innerHTML = `<h2>${unit.title.replace('Unit', '第').replace(' ', '单元<br>')}</h2><p style="color:var(--primary); font-weight:600;">${progressText}</p>`;
                 div.onclick = () => startUnit(idx);
                 screen.appendChild(div);
             });
         }
 
         function startUnit(idx) {
+            currentUnitIndex = idx;
             currentUnit = validUnits[idx];
-            currentIndex = 0;
+            
+            // 恢复进度
+            const savedIndex = localStorage.getItem('english_game_progress_' + idx);
+            currentIndex = savedIndex ? parseInt(savedIndex, 10) : 0;
+            // 如果上次已经学完了，重进时从头开始
+            if (currentIndex >= currentUnit.items.length) {
+                currentIndex = 0;
+            }
+
             document.getElementById('unit-screen').style.display = 'none';
             document.getElementById('game-screen').style.display = 'flex';
             renderItem();
@@ -136,10 +156,15 @@
             document.getElementById('unit-screen').style.display = 'grid';
             document.getElementById('game-screen').style.display = 'none';
             if(synth.speaking) synth.cancel();
+            initMenu(); // 刷新菜单进度显示
         }
 
         function renderItem() {
             if(!currentUnit) return;
+            
+            // 保存进度
+            localStorage.setItem('english_game_progress_' + currentUnitIndex, currentIndex);
+
             const item = currentUnit.items[currentIndex];
             document.getElementById('progress').innerText = `${currentIndex + 1} / ${currentUnit.items.length}`;
             document.getElementById('en-text').innerText = item.en;
