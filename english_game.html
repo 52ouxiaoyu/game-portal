@@ -101,7 +101,7 @@
                 <button onclick="prevItem()">⬅️ 上一个 <kbd>←</kbd></button>
                 <button class="btn-primary" onclick="playAudio()">🔊 原声朗读 <kbd>Space</kbd></button>
                 <button class="btn-mic" id="mic-btn" onclick="toggleMic()">🎤 智能跟读 <kbd>↓</kbd></button>
-                <button onclick="nextItem()">下一个 ➡️ <kbd>→</kbd></button>
+                <button id="next-btn" onclick="nextItem()">下一个 ➡️ <kbd>→</kbd></button>
             </div>
         </div>
     </div>
@@ -112,6 +112,7 @@
         let currentUnit = null;
         let currentUnitIndex = -1;
         let currentIndex = 0;
+        let unlockedIndex = 0; // 记录当前单元最高解锁到了第几句
 
         const synth = window.speechSynthesis;
         let recognition = null;
@@ -127,16 +128,16 @@
             const screen = document.getElementById('unit-screen');
             screen.innerHTML = '';
             validUnits.forEach((unit, idx) => {
-                // 读取当前单元的进度
-                const savedIndex = localStorage.getItem('english_game_progress_' + idx);
-                const progress = savedIndex ? parseInt(savedIndex, 10) + 1 : 0;
+                // 读取当前单元的最高解锁进度
+                const savedUnlocked = localStorage.getItem('english_game_unlocked_' + idx);
+                const progress = savedUnlocked ? parseInt(savedUnlocked, 10) : 0;
                 
                 const div = document.createElement('div');
                 div.className = 'unit-card';
                 
-                let progressText = progress > 0 ? `已学进度: ${progress} / ${unit.items.length}` : `共 ${unit.items.length} 句`;
-                if (progress === unit.items.length) {
-                    progressText = '✅ 已学完';
+                let progressText = progress > 0 ? `已解锁: ${progress} / ${unit.items.length}` : `共 ${unit.items.length} 句`;
+                if (progress >= unit.items.length) {
+                    progressText = '✅ 全部通关';
                 }
 
                 div.innerHTML = `<h2>${unit.title.replace('Unit', '第').replace(' ', '单元<br>')}</h2><p style="color:var(--primary); font-weight:600;">${progressText}</p>`;
@@ -149,10 +150,17 @@
             currentUnitIndex = idx;
             currentUnit = validUnits[idx];
             
-            // 恢复进度
+            // 恢复解锁进度
+            const savedUnlocked = localStorage.getItem('english_game_unlocked_' + idx);
+            unlockedIndex = savedUnlocked ? parseInt(savedUnlocked, 10) : 0;
+            
+            // 恢复当前浏览位置
             const savedIndex = localStorage.getItem('english_game_progress_' + idx);
             currentIndex = savedIndex ? parseInt(savedIndex, 10) : 0;
-            // 如果上次已经学完了，重进时从头开始
+            
+            // 约束：当前位置不能超过解锁进度
+            if (currentIndex > unlockedIndex) currentIndex = unlockedIndex;
+            // 如果上次已经学完了，重进时从头复习，但解锁进度保留
             if (currentIndex >= currentUnit.items.length) {
                 currentIndex = 0;
             }
@@ -188,9 +196,28 @@
                 tipBox.style.display = 'none';
             }
             document.getElementById('feedback').innerText = '';
+            
+            // 锁定“下一个”按钮的外观
+            const nextBtn = document.getElementById('next-btn');
+            if (currentIndex >= unlockedIndex) {
+                nextBtn.style.opacity = '0.5';
+                nextBtn.style.cursor = 'not-allowed';
+            } else {
+                nextBtn.style.opacity = '1';
+                nextBtn.style.cursor = 'pointer';
+            }
         }
 
         function nextItem() {
+            if (currentIndex >= unlockedIndex) {
+                const fb = document.getElementById('feedback');
+                fb.innerText = '🔒 请先使用【智能跟读】读对本句，才能解锁下一句！';
+                fb.className = 'error';
+                // 震动提示效果
+                fb.style.animation = 'none';
+                setTimeout(() => fb.style.animation = 'pulse 0.3s 2', 10);
+                return;
+            }
             if(currentIndex < currentUnit.items.length - 1) {
                 currentIndex++;
                 renderItem();
@@ -269,6 +296,12 @@
                 if(spokenClean.includes(targetText) || targetText.includes(spokenClean)) {
                     fb.innerText = '🌟 Perfect! 发音非常标准！';
                     fb.className = 'success';
+                    
+                    // 解锁逻辑：如果读对的是当前最高未解锁的句子，则解锁下一句
+                    if (currentIndex >= unlockedIndex) {
+                        unlockedIndex = currentIndex + 1;
+                        localStorage.setItem('english_game_unlocked_' + currentUnitIndex, unlockedIndex);
+                    }
                     setTimeout(nextItem, 1500); // 自动下一题
                 } else {
                     fb.innerText = `⚠️ 识别到: "${speechResult}"。再试一次吧！`;
