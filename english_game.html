@@ -239,6 +239,16 @@
         }
 
         function playAudio() {
+            // 核心 Bug 修复：防止系统原声被麦克风听到，导致自己给自己判满分而自动跳关
+            if (isRecording && recognition) {
+                recognition.stop();
+                isRecording = false;
+                const micBtn = document.getElementById('mic-btn');
+                micBtn.classList.remove('recording');
+                micBtn.innerText = '🎤 智能跟读 <kbd>↓</kbd>';
+                document.getElementById('feedback').innerText = '已打断录音';
+            }
+
             if(synth.speaking) synth.cancel();
             const text = currentUnit.items[currentIndex].en;
             const utter = new SpeechSynthesisUtterance(text);
@@ -329,6 +339,7 @@
                 nextItem();
             } else if (e.key === ' ') {
                 e.preventDefault(); // 防止空格键使页面滚动
+                if (document.activeElement) document.activeElement.blur(); // 核心：取消按钮焦点，防止空格键误触触发按钮点击
                 playAudio();
             } else if (e.key === 'ArrowDown') {
                 e.preventDefault(); // 防止下键使页面滚动
