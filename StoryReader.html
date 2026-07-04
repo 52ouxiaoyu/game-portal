@@ -249,6 +249,27 @@
             border: 1px solid rgba(255,255,255,0.2);
         }
 
+
+        /* Login Screen */
+        .auth-card { background: var(--card-bg); border: 1px solid var(--card-border); padding: 40px; border-radius: 24px; text-align: center; max-width: 400px; margin: 0 auto; width: 100%; }
+        .auth-card input { width: 100%; padding: 16px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.2); background: rgba(0,0,0,0.3); color: white; font-size: 18px; text-align: center; margin-bottom: 20px; outline:none; }
+        .auth-card input:focus { border-color: var(--accent); }
+
+        /* Dashboard Screen */
+        .dash-header { display: flex; justify-content: space-between; align-items: center; background: rgba(0,0,0,0.2); padding: 16px 24px; border-radius: 16px; border: 1px solid var(--card-border); width: 100%; margin-bottom: 24px; }
+        .user-info { font-weight: 600; font-size: 18px; display: flex; align-items: center; gap: 10px;}
+        .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 20px; width: 100%; }
+        .article-card { background: var(--card-bg); border: 1px solid var(--card-border); padding: 24px; border-radius: 20px; cursor: pointer; transition: all 0.3s; position: relative; }
+        .article-card:hover { transform: translateY(-5px); border-color: var(--accent); background: rgba(255,255,255,0.1); }
+        .article-title { font-size: 20px; font-weight: 700; margin-bottom: 12px; }
+        .article-meta { font-size: 14px; color: var(--text-muted); display:flex; justify-content: space-between;}
+        .delete-btn { position: absolute; top: 12px; right: 12px; background: rgba(239, 68, 68, 0.2); color: #f87171; border: none; width: 24px; height: 24px; border-radius: 12px; cursor: pointer; display: none;}
+        .article-card:hover .delete-btn { display: block; }
+        .delete-btn:hover { background: #ef4444; color: white; }
+        
+        .add-card { border: 2px dashed rgba(255,255,255,0.2); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px; color: var(--text-muted); min-height: 150px; }
+        .add-card:hover { border-color: var(--accent); color: white; }
+
         /* Float Back to Hub */
         .float-back {
             position: fixed;
@@ -277,9 +298,40 @@
 
     <a href="learning.html" class="float-back">⬅️ 返回学习天地</a>
 
+
+    <!-- Login Screen -->
+    <div id="login-screen" class="screen active">
+        <div class="auth-card">
+            <h2 style="margin-bottom: 24px;">创建或选择你的学习账号</h2>
+            <div id="user-list" style="margin-bottom: 1.5rem; text-align: left; max-height: 250px; overflow-y: auto;">
+            </div>
+            <div style="display: flex; gap: 8px;">
+                <input type="text" id="username-input" placeholder="输入名字 (如: Tom)" autocomplete="off" style="flex-grow:1; margin-bottom: 0;">
+                <button class="btn-primary" style="white-space: nowrap; margin-top: 0;" onclick="loginUser()">创建/登录</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Dashboard Screen -->
+    <div id="dashboard-screen" class="screen">
+        <div class="dash-header">
+            <div class="user-info">
+                <span style="font-size: 24px;">🧑‍🎓</span>
+                <span>当前学习者：<span id="current-username" style="color: var(--accent);"></span></span>
+            </div>
+            <button class="btn-back" onclick="logout()">切换账号</button>
+        </div>
+        
+        <h2 style="align-self: flex-start; margin-bottom: 10px;">我的故事库</h2>
+        <div class="grid" id="library-grid">
+            <!-- Cards injected here -->
+        </div>
+    </div>
+
     <!-- Setup Screen -->
-    <div id="setup-screen" class="screen active">
+    <div id="setup-screen" class="screen">
         <div class="setup-container">
+            <button class="btn-back" style="margin-bottom: 1rem;" onclick="switchScreen('dashboard-screen')">⬅️ 返回故事库</button>
             <h1>AI 语境阅读器</h1>
             <p>导入单词表，AI 自动生成自然口语文章并带读</p>
             
@@ -327,7 +379,7 @@
     <!-- Reader Screen -->
     <div id="reader-screen" class="screen">
         <div class="reader-header">
-            <button class="btn-back" onclick="location.reload()">↺ 重新生成</button>
+            <button class="btn-back" onclick="initDashboard()">⬅️ 返回故事库</button>
             <div class="progress-text" id="progress-text">1 / 5</div>
         </div>
         
@@ -349,7 +401,7 @@
     <div id="done-screen" class="screen" style="justify-content: center; text-align: center;">
         <h1 style="font-size: 4rem; margin-bottom: 1rem;">🎉 太棒了！</h1>
         <p style="font-size: 1.5rem; color: var(--text-muted);">你已经读完了整段材料，词汇掌握度+1</p>
-        <button class="btn-primary" style="max-width: 300px; margin-top: 2rem;" onclick="location.reload()">再来一篇</button>
+        <button class="btn-primary" style="max-width: 300px; margin-top: 2rem;" onclick="initDashboard()">返回故事库</button>
     </div>
 
     <script>
@@ -373,11 +425,142 @@
         const progressText = document.getElementById('progress-text');
 
         // State
+        let currentUser = '';
         let uploadedVocab = [];
         let generatedStory = [];
         let currentIndex = 0;
+        let savedStories = [];
 
-        // Restore Settings
+        function switchScreen(screenId) {
+            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+            document.getElementById(screenId).classList.add('active');
+        }
+
+        // --- AUTH & DASHBOARD ---
+        let createdUsers = JSON.parse(localStorage.getItem('game_portal_users') || '[]');
+
+        function saveUsers() {
+            localStorage.setItem('game_portal_users', JSON.stringify(createdUsers));
+        }
+
+        function renderUserList() {
+            const listDiv = document.getElementById('user-list');
+            if (createdUsers.length === 0) {
+                listDiv.innerHTML = '<div style="color: var(--text-muted); text-align:center; padding: 1rem 0;">还没有账号，请在下方创建一个。</div>';
+                return;
+            }
+            listDiv.innerHTML = createdUsers.map(u => `
+                <div style="display:flex; justify-content:space-between; align-items:center; background: rgba(255,255,255,0.05); padding: 0.8rem 1rem; border-radius: 8px; margin-bottom: 8px; border: 1px solid var(--card-border);">
+                    <div style="font-weight:600; cursor:pointer; flex-grow:1;" onclick="loginAs('${u}')">🧑‍🎓 ${u}</div>
+                    <button style="background:transparent; border:none; color:#ef4444; cursor:pointer; padding: 0.5rem;" onclick="deleteUser('${u}')">🗑️ 删除</button>
+                </div>
+            `).join('');
+        }
+
+        function loginAs(name) {
+            currentUser = name;
+            localStorage.setItem('sr_current_user', name);
+            if (!createdUsers.includes(name)) {
+                createdUsers.push(name);
+                saveUsers();
+            }
+            initDashboard();
+        }
+
+        function loginUser() {
+            const name = document.getElementById('username-input').value.trim();
+            if(!name) return alert("请输入名字！");
+            loginAs(name);
+        }
+
+        function deleteUser(name) {
+            if (confirm(`确定要删除用户 "${name}" 的所有故事记录吗？`)) {
+                createdUsers = createdUsers.filter(u => u !== name);
+                saveUsers();
+                localStorage.removeItem(`sr_stories_${name}`);
+                if (currentUser === name) {
+                    logout();
+                } else {
+                    renderUserList();
+                }
+            }
+        }
+
+        function logout() {
+            localStorage.removeItem('sr_current_user');
+            currentUser = '';
+            renderUserList();
+            switchScreen('login-screen');
+        }
+
+        function loadStories() {
+            savedStories = JSON.parse(localStorage.getItem(`sr_stories_${currentUser}`) || '[]');
+        }
+
+        function saveStories() {
+            localStorage.setItem(`sr_stories_${currentUser}`, JSON.stringify(savedStories));
+        }
+
+        function initDashboard() {
+            document.getElementById('current-username').innerText = currentUser;
+            loadStories();
+            
+            const grid = document.getElementById('library-grid');
+            grid.innerHTML = '';
+
+            const addCard = document.createElement('div');
+            addCard.className = 'article-card add-card';
+            addCard.innerHTML = `
+                <div style="font-size: 40px;">➕</div>
+                <div style="font-weight: 600;">新建 AI 故事</div>
+            `;
+            addCard.onclick = () => {
+                document.getElementById('text-input').value = '';
+                document.getElementById('file-input').value = '';
+                uploadedVocab = [];
+                document.getElementById('btn-generate').disabled = true;
+                const fileLabel = document.getElementById('file-label');
+                fileLabel.innerHTML = `📂 导入 Markdown 单词表文件<div style="font-size: 0.9rem; color: #94a3b8; margin-top: 0.5rem; font-weight: 400;">请选择文件 (支持 .md / .txt)</div>`;
+                fileLabel.style.borderColor = 'var(--text-muted)';
+                switchScreen('setup-screen');
+            };
+            grid.appendChild(addCard);
+
+            savedStories.forEach((story, idx) => {
+                const card = document.createElement('div');
+                card.className = 'article-card';
+                card.innerHTML = `
+                    <button class="delete-btn" onclick="deleteStory(event, ${idx})">×</button>
+                    <div class="article-title">${story.title}</div>
+                    <div class="article-meta">
+                        <span>共 ${story.items.length} 句</span>
+                        <span>${story.date}</span>
+                    </div>
+                `;
+                card.onclick = () => startStory(idx);
+                grid.appendChild(card);
+            });
+            
+            switchScreen('dashboard-screen');
+        }
+
+        function deleteStory(e, idx) {
+            e.stopPropagation();
+            if(confirm('确定要删除这个故事吗？')) {
+                savedStories.splice(idx, 1);
+                saveStories();
+                initDashboard();
+            }
+        }
+
+        function startStory(idx) {
+            generatedStory = savedStories[idx].items;
+            currentIndex = 0;
+            switchScreen('reader-screen');
+            showCurrentSentence();
+        }
+
+        // Restore Settings & Boot
         window.onload = () => {
             if(localStorage.getItem('story_api_key')) apiKeyInput.value = localStorage.getItem('story_api_key');
             if(localStorage.getItem('story_api_base')) apiBaseInput.value = localStorage.getItem('story_api_base');
@@ -385,6 +568,15 @@
             let savedModel = localStorage.getItem('story_api_model');
             if (savedModel === 'V4 PRO') savedModel = 'deepseek-v4-pro'; // 自动修复旧的错误缓存
             if(savedModel) apiModelInput.value = savedModel;
+
+            const savedUser = localStorage.getItem('sr_current_user');
+            if (savedUser) {
+                currentUser = savedUser;
+                initDashboard();
+            } else {
+                renderUserList();
+                switchScreen('login-screen');
+            }
         };
 
         function saveSettings() {
@@ -515,8 +707,16 @@ Strict JSON format:
                 generatedStory = JSON.parse(content);
                 currentIndex = 0;
                 
-                loadingScreen.classList.remove('active');
-                readerScreen.classList.add('active');
+                // Save to user's history
+                const now = new Date();
+                savedStories.unshift({
+                    title: `AI 语境练习 (${uploadedVocab.length}词)`,
+                    date: `${now.getMonth()+1}-${now.getDate()} ${now.getHours()}:${now.getMinutes().toString().padStart(2, '0')}`,
+                    items: generatedStory
+                });
+                saveStories();
+
+                switchScreen('reader-screen');
                 
                 showCurrentSentence();
                 
