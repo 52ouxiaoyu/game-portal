@@ -107,8 +107,15 @@
         <div id="login-screen" class="screen">
             <div class="auth-card">
                 <h2 style="margin-bottom: 24px;">创建或选择你的学习账号</h2>
-                <input type="text" id="username-input" placeholder="输入你的专属用户名 (如: Tom)" autocomplete="off">
-                <button class="btn-primary" style="width: 100%; justify-content: center;" onclick="login()">进入学习中心 🚀</button>
+                
+                <div id="user-list" style="margin-bottom: 1.5rem; text-align: left; max-height: 250px; overflow-y: auto;">
+                    <!-- Existing users will be injected here -->
+                </div>
+
+                <div style="display: flex; gap: 8px;">
+                    <input type="text" id="username-input" placeholder="输入名字 (如: Tom)" autocomplete="off" style="flex-grow:1;">
+                    <button class="btn-primary" style="white-space: nowrap;" onclick="loginUser()">创建/登录</button>
+                </div>
             </div>
         </div>
 
@@ -194,27 +201,69 @@
         }
 
         // --- AUTH ---
+        let createdUsers = JSON.parse(localStorage.getItem('game_portal_users') || '[]');
+
+        function saveUsers() {
+            localStorage.setItem('game_portal_users', JSON.stringify(createdUsers));
+        }
+
+        function renderUserList() {
+            const listDiv = document.getElementById('user-list');
+            if (createdUsers.length === 0) {
+                listDiv.innerHTML = '<div style="color: var(--text-muted); text-align:center; padding: 1rem 0;">还没有账号，请在下方创建一个。</div>';
+                return;
+            }
+            listDiv.innerHTML = createdUsers.map(u => `
+                <div style="display:flex; justify-content:space-between; align-items:center; background: rgba(255,255,255,0.05); padding: 0.8rem 1rem; border-radius: 8px; margin-bottom: 8px; border: 1px solid var(--border-color);">
+                    <div style="font-weight:600; cursor:pointer; flex-grow:1;" onclick="loginAs('${u}')">🧑‍🎓 ${u}</div>
+                    <button style="background:transparent; border:none; color:#ef4444; cursor:pointer; padding: 0.5rem;" onclick="deleteUser('${u}')">🗑️ 删除</button>
+                </div>
+            `).join('');
+        }
+
+        function loginAs(name) {
+            currentUser = name;
+            localStorage.setItem('cr_current_user', name);
+            if (!createdUsers.includes(name)) {
+                createdUsers.push(name);
+                saveUsers();
+            }
+            initDashboard();
+        }
+
+        function loginUser() {
+            const name = document.getElementById('username-input').value.trim();
+            if(!name) return alert("请输入名字！");
+            loginAs(name);
+        }
+
+        function deleteUser(name) {
+            if (confirm(`确定要删除用户 "${name}" 吗？注意，这仅删除用户记录，学习进度会被保留在本地。`)) {
+                createdUsers = createdUsers.filter(u => u !== name);
+                saveUsers();
+                if (currentUser === name) {
+                    logout();
+                } else {
+                    renderUserList();
+                }
+            }
+        }
+
         window.onload = () => {
             const savedUser = localStorage.getItem('cr_current_user');
             if (savedUser) {
                 currentUser = savedUser;
                 initDashboard();
             } else {
+                renderUserList();
                 switchScreen('login-screen');
             }
         };
 
-        function login() {
-            const name = document.getElementById('username-input').value.trim();
-            if(!name) return alert("请输入名字！");
-            currentUser = name;
-            localStorage.setItem('cr_current_user', name);
-            initDashboard();
-        }
-
         function logout() {
             localStorage.removeItem('cr_current_user');
             currentUser = '';
+            renderUserList();
             switchScreen('login-screen');
         }
 
