@@ -260,8 +260,20 @@
 <body>
     <a href="learning.html" class="float-back">⬅️ 返回学习天地</a>
 
-    <div id="setup-screen" class="screen active">
+    <div id="login-screen" class="screen active">
+        <div class="setup-container" style="max-width: 400px; padding: 2rem;">
+            <h2 style="margin-bottom: 2rem;">切换或创建账号</h2>
+            <input type="text" id="username-input" placeholder="输入名字 (如: Tom)" style="width: 100%; padding: 1rem; border-radius: 12px; border: 1px solid rgba(255,255,255,0.2); background: rgba(0,0,0,0.3); color: white; font-size: 1.2rem; text-align: center; margin-bottom: 1.5rem; outline:none;">
+            <button class="export-btn large" style="width: 100%; background: linear-gradient(135deg, #10b981, #059669);" onclick="loginUser()">进入极速词汇过滤 🚀</button>
+        </div>
+    </div>
+
+    <div id="setup-screen" class="screen">
         <div class="setup-container">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 2rem; background: rgba(0,0,0,0.2); padding: 1rem; border-radius: 12px; border: 1px solid var(--card-border);">
+                <div>🧑‍🎓 当前用户：<strong id="current-username" style="color:var(--accent-discard);"></strong></div>
+                <button class="export-btn" style="padding: 0.4rem 1rem;" onclick="logoutUser()">切换账号</button>
+            </div>
             <h1>VocabSwipe</h1>
             
             <div id="resume-container" style="display: none; margin-bottom: 2rem; padding: 1.5rem; background: rgba(255,255,255,0.1); border-radius: 16px; border: 1px solid var(--card-border);">
@@ -361,29 +373,63 @@
         const resumeContainer = document.getElementById('resume-container');
         const fileSelectContainer = document.getElementById('file-select-container');
         
-        // --- 本地存储持久化功能 ---
+        // --- 多账号与本地存储持久化功能 ---
+        let currentUser = localStorage.getItem('vs_current_user') || '';
+
+        function switchScreen(screenId) {
+            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+            document.getElementById(screenId).classList.add('active');
+        }
+
+        function checkAuth() {
+            if (currentUser) {
+                document.getElementById('current-username').textContent = currentUser;
+                switchScreen('setup-screen');
+                checkSavedProgress();
+            } else {
+                switchScreen('login-screen');
+            }
+        }
+
+        function loginUser() {
+            const name = document.getElementById('username-input').value.trim();
+            if (!name) return alert("请输入名字");
+            currentUser = name;
+            localStorage.setItem('vs_current_user', name);
+            checkAuth();
+        }
+
+        function logoutUser() {
+            currentUser = '';
+            localStorage.removeItem('vs_current_user');
+            checkAuth();
+        }
+
         function saveProgress() {
+            if (!currentUser) return;
             try {
-                localStorage.setItem('vocabSwipe_data', JSON.stringify(parsedData));
-                localStorage.setItem('vocabSwipe_index', currentIndex.toString());
-                localStorage.setItem('vocabSwipe_fileName', originalFileName);
+                localStorage.setItem(`vs_data_${currentUser}`, JSON.stringify(parsedData));
+                localStorage.setItem(`vs_index_${currentUser}`, currentIndex.toString());
+                localStorage.setItem(`vs_fileName_${currentUser}`, originalFileName);
             } catch(e) {
                 console.warn("无法保存进度到本地存储", e);
             }
         }
         
         function clearProgress() {
-            localStorage.removeItem('vocabSwipe_data');
-            localStorage.removeItem('vocabSwipe_index');
-            localStorage.removeItem('vocabSwipe_fileName');
+            if (!currentUser) return;
+            localStorage.removeItem(`vs_data_${currentUser}`);
+            localStorage.removeItem(`vs_index_${currentUser}`);
+            localStorage.removeItem(`vs_fileName_${currentUser}`);
         }
 
         function checkSavedProgress() {
-            const savedData = localStorage.getItem('vocabSwipe_data');
+            if (!currentUser) return;
+            const savedData = localStorage.getItem(`vs_data_${currentUser}`);
             if (savedData) {
                 try {
                     const tempParsed = JSON.parse(savedData);
-                    const tempIndex = parseInt(localStorage.getItem('vocabSwipe_index') || "0");
+                    const tempIndex = parseInt(localStorage.getItem(`vs_index_${currentUser}`) || "0");
                     const tempVocab = tempParsed.filter(d => d.type === 'vocab');
                     
                     if (tempVocab.length > 0) {
@@ -395,10 +441,9 @@
                             parsedData = tempParsed;
                             vocabItems = tempVocab;
                             currentIndex = tempIndex;
-                            originalFileName = localStorage.getItem('vocabSwipe_fileName') || '词汇过滤_已完成.md';
+                            originalFileName = localStorage.getItem(`vs_fileName_${currentUser}`) || '词汇过滤_已完成.md';
                             
-                            setupScreen.classList.remove('active');
-                            swipeScreen.classList.add('active');
+                            switchScreen('swipe-screen');
                             showCard();
                             updateProgress();
                         };
@@ -412,10 +457,13 @@
                 } catch(e) {
                     clearProgress();
                 }
+            } else {
+                resumeContainer.style.display = 'none';
+                fileSelectContainer.style.display = 'block';
             }
         }
         
-        window.addEventListener('DOMContentLoaded', checkSavedProgress);
+        window.addEventListener('DOMContentLoaded', checkAuth);
         
         // --- 朗读 (TTS) 功能 ---
         let availableVoices = [];
@@ -454,8 +502,7 @@
         function handleMarkdownText(text) {
             parseMarkdown(text);
             if (vocabItems.length > 0) {
-                setupScreen.classList.remove('active');
-                swipeScreen.classList.add('active');
+                switchScreen('swipe-screen');
                 showCard();
                 updateProgress();
                 saveProgress();
@@ -527,8 +574,7 @@
         // --- 核心展示与交互逻辑 ---
         function showCard() {
             if (currentIndex >= vocabItems.length) {
-                swipeScreen.classList.remove('active');
-                doneScreen.classList.add('active');
+                switchScreen('done-screen');
                 return;
             }
             
@@ -588,9 +634,8 @@
                 currentCard.style.transform = 'translateY(0) scale(1)';
                 currentCard.style.opacity = '1';
                 
-                if (doneScreen.classList.contains('active')) {
-                    doneScreen.classList.remove('active');
-                    swipeScreen.classList.add('active');
+                if (document.getElementById('done-screen').classList.contains('active')) {
+                    switchScreen('swipe-screen');
                 }
             }
         }
