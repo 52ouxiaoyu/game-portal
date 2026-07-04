@@ -429,6 +429,7 @@
         let uploadedVocab = [];
         let generatedStory = [];
         let currentIndex = 0;
+        let currentStoryIndex = -1;
         let savedStories = [];
 
         function switchScreen(screenId) {
@@ -534,6 +535,7 @@
                     <div class="article-title">${story.title}</div>
                     <div class="article-meta">
                         <span>共 ${story.items.length} 句</span>
+                        <span style="color:var(--accent); font-weight:600;">${story.progress && story.progress < story.items.length ? `进度: ${story.progress + 1} / ${story.items.length}` : (story.progress >= story.items.length ? '✅ 已通关' : '新生成')}</span>
                         <span>${story.date}</span>
                     </div>
                 `;
@@ -554,8 +556,9 @@
         }
 
         function startStory(idx) {
+            currentStoryIndex = idx;
             generatedStory = savedStories[idx].items;
-            currentIndex = 0;
+            currentIndex = savedStories[idx].progress || 0;
             switchScreen('reader-screen');
             showCurrentSentence();
         }
@@ -712,9 +715,12 @@ Strict JSON format:
                 savedStories.unshift({
                     title: `AI 语境练习 (${uploadedVocab.length}词)`,
                     date: `${now.getMonth()+1}-${now.getDate()} ${now.getHours()}:${now.getMinutes().toString().padStart(2, '0')}`,
-                    items: generatedStory
+                    items: generatedStory,
+                    progress: 0
                 });
                 saveStories();
+                
+                currentStoryIndex = 0;
 
                 switchScreen('reader-screen');
                 
@@ -743,6 +749,10 @@ Strict JSON format:
         }
 
         function showCurrentSentence() {
+            if (currentStoryIndex !== -1 && savedStories[currentStoryIndex]) {
+                savedStories[currentStoryIndex].progress = currentIndex;
+                saveStories();
+            }
             if(currentIndex >= generatedStory.length) {
                 readerScreen.classList.remove('active');
                 doneScreen.classList.add('active');
