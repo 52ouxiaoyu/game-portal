@@ -194,12 +194,31 @@
             }
         }
 
+        let availableVoices = [];
+        function loadVoices() { availableVoices = window.speechSynthesis.getVoices(); }
+        loadVoices();
+        if (speechSynthesis.onvoiceschanged !== undefined) {
+            speechSynthesis.onvoiceschanged = loadVoices;
+        }
+
         function playAudio() {
             if(synth.speaking) synth.cancel();
             const text = currentUnit.items[currentIndex].en;
             const utter = new SpeechSynthesisUtterance(text);
             utter.lang = 'en-US';
             utter.rate = 0.85; // 放慢语速适合学生
+            
+            if (availableVoices.length === 0) loadVoices();
+            
+            // 优先选择高质量拟真声音 (如 macOS 的 Siri, Premium, Enhanced) 或 Google 原生美音
+            let bestVoice = availableVoices.find(v => (v.name.includes('Siri') || v.name.includes('Premium') || v.name.includes('Enhanced')) && v.lang === 'en-US');
+            if (!bestVoice) bestVoice = availableVoices.find(v => v.name === 'Google US English');
+            if (!bestVoice) bestVoice = availableVoices.find(v => v.name === 'Samantha');
+            if (!bestVoice) bestVoice = availableVoices.find(v => v.name === 'Alex');
+            if (!bestVoice) bestVoice = availableVoices.find(v => v.lang === 'en-US');
+            
+            if (bestVoice) utter.voice = bestVoice;
+
             synth.speak(utter);
         }
 
