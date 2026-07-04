@@ -1,0 +1,518 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI 文章专属跟读中心</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&family=Outfit:wght@500;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-color: #1e1b4b;
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --primary: #8b5cf6;
+            --secondary: #ec4899;
+            --card-bg: rgba(255, 255, 255, 0.05);
+            --card-border: rgba(255, 255, 255, 0.1);
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-color);
+            background-image: 
+                radial-gradient(circle at 10% 20%, rgba(139, 92, 246, 0.2) 0%, transparent 50%),
+                radial-gradient(circle at 90% 80%, rgba(236, 72, 153, 0.1) 0%, transparent 50%);
+            color: var(--text-main);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 40px 20px;
+        }
+        .container { width: 100%; max-width: 900px; display: flex; flex-direction: column; gap: 30px;}
+        header { text-align: center; margin-bottom: 20px; position: relative;}
+        h1 { font-family: 'Outfit', sans-serif; font-size: 42px; background: linear-gradient(135deg, #c084fc 0%, #f472b6 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        .float-back { position: absolute; top: 20px; left: 20px; color: white; text-decoration: none; font-weight: 600; background: rgba(255,255,255,0.1); padding: 8px 16px; border-radius: 20px; z-index:100; }
+        
+        .screen { display: none; flex-direction: column; gap: 24px; animation: fadeIn 0.3s ease; }
+        .screen.active { display: flex; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* Login Screen */
+        .auth-card { background: var(--card-bg); border: 1px solid var(--card-border); padding: 40px; border-radius: 24px; text-align: center; max-width: 400px; margin: 50px auto; width: 100%; }
+        .auth-card input { width: 100%; padding: 16px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.2); background: rgba(0,0,0,0.3); color: white; font-size: 18px; text-align: center; margin-bottom: 20px; outline:none; }
+        .auth-card input:focus { border-color: var(--primary); }
+
+        /* Dashboard Screen */
+        .dash-header { display: flex; justify-content: space-between; align-items: center; background: rgba(0,0,0,0.2); padding: 16px 24px; border-radius: 16px; border: 1px solid var(--card-border); }
+        .user-info { font-weight: 600; font-size: 18px; display: flex; align-items: center; gap: 10px;}
+        .logout-btn { font-size: 14px; background: rgba(255,255,255,0.1); padding: 4px 12px; border-radius: 8px; cursor: pointer; border: none; color: white; }
+        .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 20px; }
+        .article-card { background: var(--card-bg); border: 1px solid var(--card-border); padding: 24px; border-radius: 20px; cursor: pointer; transition: all 0.3s; position: relative; }
+        .article-card:hover { transform: translateY(-5px); border-color: var(--primary); background: rgba(255,255,255,0.1); }
+        .article-title { font-size: 20px; font-weight: 700; margin-bottom: 12px; }
+        .article-meta { font-size: 14px; color: var(--text-muted); display:flex; justify-content: space-between;}
+        .delete-btn { position: absolute; top: 12px; right: 12px; background: rgba(239, 68, 68, 0.2); color: #f87171; border: none; width: 24px; height: 24px; border-radius: 12px; cursor: pointer; display: none;}
+        .article-card:hover .delete-btn { display: block; }
+        .delete-btn:hover { background: #ef4444; color: white; }
+        
+        .add-card { border: 2px dashed rgba(255,255,255,0.2); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px; color: var(--text-muted); }
+        .add-card:hover { border-color: var(--primary); color: white; }
+
+        /* Import Screen */
+        .import-box { background: var(--card-bg); border: 1px solid var(--card-border); padding: 30px; border-radius: 24px; }
+        .form-group { margin-bottom: 20px; }
+        .form-group label { display: block; margin-bottom: 8px; font-weight: 600; color: #cbd5e1; }
+        .form-control { width: 100%; background: rgba(0,0,0,0.3); border: 1px solid var(--card-border); color: white; padding: 16px; border-radius: 12px; font-size: 16px; font-family: inherit; resize: vertical;}
+        .form-control:focus { outline: none; border-color: var(--primary); }
+
+        /* Loader */
+        .loader-wrapper { text-align: center; padding: 60px 0; }
+        .loader { border: 4px solid rgba(255,255,255,0.1); border-top: 4px solid var(--primary); border-radius: 50%; width: 60px; height: 60px; animation: spin 1s linear infinite; margin: 0 auto 20px; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+        /* Game Screen */
+        .top-bar { display: flex; justify-content: space-between; align-items: center; }
+        .progress-text { font-weight: 600; color: var(--primary); font-size: 18px; }
+        .card { background: var(--card-bg); border: 1px solid var(--card-border); border-radius: 24px; padding: 50px 40px; text-align: center; min-height: 300px; display: flex; flex-direction: column; justify-content: center;}
+        .en-text { font-size: 32px; font-weight: 800; margin-bottom: 24px; line-height: 1.5; }
+        .zh-text { font-size: 22px; color: #cbd5e1; margin-bottom: 20px; }
+        
+        .controls { display: flex; justify-content: center; gap: 16px; flex-wrap: wrap; margin-top: 20px;}
+        button { background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); color: white; padding: 14px 28px; border-radius: 100px; font-size: 16px; font-weight: 600; cursor: pointer; transition: all 0.2s; display: flex; align-items: center; gap: 8px;}
+        button:hover { background: rgba(255,255,255,0.15); }
+        .btn-primary { background: linear-gradient(135deg, #c084fc 0%, #ec4899 100%); border: none; }
+        .btn-primary:hover { opacity: 0.9; transform: scale(1.05); }
+        .btn-mic { background: #ef4444; border: none; }
+        .btn-mic.recording { animation: pulse 1s infinite; background: #dc2626; }
+        
+        kbd { background: rgba(255,255,255,0.2); padding: 2px 6px; border-radius: 4px; font-size: 12px; font-family: monospace; border: 1px solid rgba(255,255,255,0.3); margin-left: 4px; }
+        @keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.05); box-shadow: 0 0 15px #ef4444; } 100% { transform: scale(1); } }
+        
+        #feedback { font-size: 18px; font-weight: bold; margin-top: 24px; min-height: 24px; text-align: center; }
+        .success { color: #4ade80; }
+        .error { color: #f87171; }
+    </style>
+</head>
+<body>
+    <a href="learning.html" class="float-back">⬅️ 学习天地</a>
+    
+    <div class="container">
+        <header>
+            <h1>AI 文章跟读中心</h1>
+            <p style="color: var(--text-muted); margin-top:10px;">多用户隔离保存进度 · AI 智能拆解句义 · 强制通关机制</p>
+        </header>
+
+        <!-- Login Screen -->
+        <div id="login-screen" class="screen">
+            <div class="auth-card">
+                <h2 style="margin-bottom: 24px;">创建或选择你的学习账号</h2>
+                <input type="text" id="username-input" placeholder="输入你的专属用户名 (如: Tom)" autocomplete="off">
+                <button class="btn-primary" style="width: 100%; justify-content: center;" onclick="login()">进入学习中心 🚀</button>
+            </div>
+        </div>
+
+        <!-- Dashboard Screen -->
+        <div id="dashboard-screen" class="screen">
+            <div class="dash-header">
+                <div class="user-info">
+                    <span style="font-size: 24px;">🧑‍🎓</span>
+                    <span>当前学习者：<span id="current-username" style="color: var(--primary);"></span></span>
+                </div>
+                <button class="logout-btn" onclick="logout()">切换账号</button>
+            </div>
+            
+            <h2 style="margin-top: 10px;">我的文章库</h2>
+            <div class="grid" id="library-grid">
+                <!-- Articles will be rendered here -->
+            </div>
+        </div>
+
+        <!-- Import Screen -->
+        <div id="import-screen" class="screen">
+            <div class="import-box">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 24px;">
+                    <h2>导入新文章</h2>
+                    <button class="logout-btn" onclick="switchScreen('dashboard-screen')">取消</button>
+                </div>
+                
+                <div class="form-group">
+                    <label>API Key (默认使用本地配置的 DeepSeek 密钥)</label>
+                    <input type="password" id="api-key" class="form-control" value="sk-20c2bbdf4cbd4f74b0fed64dea6921ce" placeholder="sk-...">
+                </div>
+
+                <div class="form-group">
+                    <label>文章标题</label>
+                    <input type="text" id="article-title" class="form-control" placeholder="给文章起个名字 (如: 小王子第一章)">
+                </div>
+                <div class="form-group">
+                    <label>英文原文内容</label>
+                    <textarea id="article-text" class="form-control" rows="8" placeholder="在此粘贴一大段英文原文，AI 会自动将其拆分成句子并翻译..."></textarea>
+                </div>
+                <button class="btn-primary" style="width: 100%; justify-content: center;" id="btn-analyze" onclick="analyzeArticle()">✨ 交给 AI 拆解与翻译</button>
+                
+                <div id="loading-area" class="loader-wrapper" style="display: none;">
+                    <div class="loader"></div>
+                    <p style="color: var(--text-muted);">AI 正在逐句解析并翻译文章，请耐心等待 (约 10-20 秒)...</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Game Screen -->
+        <div id="game-screen" class="screen">
+            <div class="top-bar">
+                <button onclick="exitGame()">🔙 退出并保存进度</button>
+                <div class="progress-text" id="progress">1 / 10</div>
+            </div>
+            <div class="card">
+                <div class="en-text" id="en-text"></div>
+                <div class="zh-text" id="zh-text"></div>
+            </div>
+            <div id="feedback"></div>
+            <div class="controls">
+                <button onclick="prevItem()">⬅️ 上一个 <kbd>←</kbd></button>
+                <button class="btn-primary" onclick="playAudio()">🔊 朗读 <kbd>Space</kbd></button>
+                <button class="btn-mic" id="mic-btn" onclick="toggleMic()">🎤 智能跟读 <kbd>↓</kbd></button>
+                <button id="next-btn" onclick="nextItem()">下一个 ➡️ <kbd>→</kbd></button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Global State
+        let currentUser = '';
+        let customArticles = JSON.parse(localStorage.getItem('cr_custom_articles')) || [];
+        
+        let currentArticle = null;
+        let currentIndex = 0;
+        let unlockedIndex = 0; 
+        
+        // Screens
+        function switchScreen(screenId) {
+            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+            document.getElementById(screenId).classList.add('active');
+        }
+
+        // --- AUTH ---
+        window.onload = () => {
+            const savedUser = localStorage.getItem('cr_current_user');
+            if (savedUser) {
+                currentUser = savedUser;
+                initDashboard();
+            } else {
+                switchScreen('login-screen');
+            }
+        };
+
+        function login() {
+            const name = document.getElementById('username-input').value.trim();
+            if(!name) return alert("请输入名字！");
+            currentUser = name;
+            localStorage.setItem('cr_current_user', name);
+            initDashboard();
+        }
+
+        function logout() {
+            localStorage.removeItem('cr_current_user');
+            currentUser = '';
+            switchScreen('login-screen');
+        }
+
+        // --- DASHBOARD ---
+        function initDashboard() {
+            document.getElementById('current-username').innerText = currentUser;
+            const grid = document.getElementById('library-grid');
+            grid.innerHTML = '';
+
+            // Add Article Button
+            const addCard = document.createElement('div');
+            addCard.className = 'article-card add-card';
+            addCard.innerHTML = `
+                <div style="font-size: 40px;">➕</div>
+                <div style="font-weight: 600;">导入新文章</div>
+            `;
+            addCard.onclick = () => switchScreen('import-screen');
+            grid.appendChild(addCard);
+
+            // Render existing articles
+            customArticles.forEach(article => {
+                const unlockedKey = `cr_unlocked_${currentUser}_${article.id}`;
+                const savedUnlocked = localStorage.getItem(unlockedKey);
+                const progress = savedUnlocked ? parseInt(savedUnlocked, 10) : 0;
+                
+                let progressText = progress > 0 ? `已解锁: ${progress}/${article.items.length}` : `未开始`;
+                if (progress >= article.items.length) progressText = '✅ 已通关';
+
+                const card = document.createElement('div');
+                card.className = 'article-card';
+                card.innerHTML = `
+                    <button class="delete-btn" onclick="deleteArticle(event, '${article.id}')">×</button>
+                    <div class="article-title">${article.title}</div>
+                    <div class="article-meta">
+                        <span>共 ${article.items.length} 句</span>
+                        <span style="color:var(--primary); font-weight:600;">${progressText}</span>
+                    </div>
+                `;
+                card.onclick = () => startGame(article.id);
+                grid.appendChild(card);
+            });
+
+            switchScreen('dashboard-screen');
+        }
+
+        function deleteArticle(e, id) {
+            e.stopPropagation();
+            if(confirm("确定要删除这篇文章吗？所有人的学习记录都会受到影响。")) {
+                customArticles = customArticles.filter(a => a.id !== id);
+                localStorage.setItem('cr_custom_articles', JSON.stringify(customArticles));
+                initDashboard();
+            }
+        }
+
+        // --- AI IMPORT ---
+        async function analyzeArticle() {
+            const title = document.getElementById('article-title').value.trim();
+            const text = document.getElementById('article-text').value.trim();
+            const key = document.getElementById('api-key').value.trim();
+            
+            if(!title || !text || !key) return alert("请完整填写标题、内容和 API Key！");
+
+            document.getElementById('btn-analyze').style.display = 'none';
+            document.getElementById('loading-area').style.display = 'block';
+
+            const prompt = `You are a helpful English learning assistant. 
+Please split the following English text into individual sentences. 
+For each sentence, provide the original English text and its precise Chinese translation.
+Ignore any garbage text or weird formatting, just extract the actual meaningful sentences.
+
+Return EXACTLY a JSON array containing objects with "en" and "zh" keys. Do NOT wrap it in markdown block.
+Example:
+[
+  {"en": "Hello world.", "zh": "你好世界。"},
+  {"en": "This is a test.", "zh": "这是一个测试。"}
+]
+
+Text to parse:
+${text}`;
+
+            try {
+                const response = await fetch("https://api.deepseek.com/v1/chat/completions", {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${key}` },
+                    body: JSON.stringify({
+                        model: "deepseek-chat",
+                        messages: [{ role: 'user', content: prompt }],
+                        temperature: 0.1
+                    })
+                });
+
+                if(!response.ok) throw new Error("API 请求失败");
+                const data = await response.json();
+                let resultStr = data.choices[0].message.content.trim();
+                resultStr = resultStr.replace(/^```[a-z]*\n?/i, '').replace(/\n?```$/i, '').trim();
+                
+                const parsedItems = JSON.parse(resultStr);
+                if(!parsedItems || parsedItems.length === 0) throw new Error("解析出的句子为空");
+
+                const newArticle = {
+                    id: 'art_' + Date.now().toString(36) + Math.random().toString(36).substr(2, 5),
+                    title: title,
+                    items: parsedItems
+                };
+                
+                customArticles.push(newArticle);
+                localStorage.setItem('cr_custom_articles', JSON.stringify(customArticles));
+                
+                // Clear form
+                document.getElementById('article-title').value = '';
+                document.getElementById('article-text').value = '';
+                initDashboard();
+
+            } catch(e) {
+                alert("AI 解析失败，请检查你的 API Key 余额或文本格式。\n错误信息: " + e.message);
+            } finally {
+                document.getElementById('btn-analyze').style.display = 'flex';
+                document.getElementById('loading-area').style.display = 'none';
+            }
+        }
+
+        // --- GAME ENGINE ---
+        function startGame(articleId) {
+            currentArticle = customArticles.find(a => a.id === articleId);
+            if(!currentArticle) return;
+
+            const unlockedKey = `cr_unlocked_${currentUser}_${articleId}`;
+            const progressKey = `cr_progress_${currentUser}_${articleId}`;
+            
+            unlockedIndex = parseInt(localStorage.getItem(unlockedKey) || '0', 10);
+            currentIndex = parseInt(localStorage.getItem(progressKey) || '0', 10);
+            
+            if (currentIndex > unlockedIndex) currentIndex = unlockedIndex;
+            if (currentIndex >= currentArticle.items.length) currentIndex = 0;
+
+            switchScreen('game-screen');
+            renderItem();
+        }
+
+        function exitGame() {
+            if(synth.speaking) synth.cancel();
+            initDashboard();
+        }
+
+        function renderItem() {
+            if(!currentArticle) return;
+            
+            const progressKey = `cr_progress_${currentUser}_${currentArticle.id}`;
+            localStorage.setItem(progressKey, currentIndex);
+
+            const item = currentArticle.items[currentIndex];
+            document.getElementById('progress').innerText = `${currentIndex + 1} / ${currentArticle.items.length}`;
+            document.getElementById('en-text').innerText = item.en;
+            document.getElementById('zh-text').innerText = item.zh;
+            document.getElementById('feedback').innerText = '';
+            
+            const nextBtn = document.getElementById('next-btn');
+            if (currentIndex >= unlockedIndex) {
+                nextBtn.style.opacity = '0.5';
+                nextBtn.style.cursor = 'not-allowed';
+            } else {
+                nextBtn.style.opacity = '1';
+                nextBtn.style.cursor = 'pointer';
+            }
+        }
+
+        function nextItem() {
+            if (currentIndex >= unlockedIndex) {
+                const fb = document.getElementById('feedback');
+                fb.innerText = '🔒 严格通关模式：请使用【智能跟读】读对本句后，才能解锁下一句！';
+                fb.className = 'error';
+                fb.style.animation = 'none';
+                setTimeout(() => fb.style.animation = 'pulse 0.3s 2', 10);
+                return;
+            }
+            if(currentIndex < currentArticle.items.length - 1) {
+                currentIndex++;
+                renderItem();
+            }
+        }
+
+        function prevItem() {
+            if(currentIndex > 0) {
+                currentIndex--;
+                renderItem();
+            }
+        }
+
+        // --- TTS & STT (Copied from english_game with fixes) ---
+        const synth = window.speechSynthesis;
+        let recognition = null;
+        if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
+            const SpeechRec = window.SpeechRecognition || window.webkitSpeechRecognition;
+            recognition = new SpeechRec();
+            recognition.lang = 'en-US';
+            recognition.interimResults = false;
+            recognition.maxAlternatives = 1;
+        }
+
+        let availableVoices = [];
+        function loadVoices() { availableVoices = window.speechSynthesis.getVoices(); }
+        loadVoices();
+        if (speechSynthesis.onvoiceschanged !== undefined) speechSynthesis.onvoiceschanged = loadVoices;
+
+        let isRecording = false;
+
+        function playAudio() {
+            if (isRecording && recognition) {
+                recognition.stop();
+                isRecording = false;
+                const micBtn = document.getElementById('mic-btn');
+                micBtn.classList.remove('recording');
+                micBtn.innerHTML = '🎤 智能跟读 <kbd>↓</kbd>';
+                document.getElementById('feedback').innerText = '已打断录音';
+            }
+            if(synth.speaking) synth.cancel();
+            
+            const text = currentArticle.items[currentIndex].en;
+            const utter = new SpeechSynthesisUtterance(text);
+            utter.lang = 'en-US';
+            utter.rate = 0.85;
+            
+            if (availableVoices.length === 0) loadVoices();
+            let bestVoice = availableVoices.find(v => (v.name.includes('Siri') || v.name.includes('Premium') || v.name.includes('Enhanced')) && v.lang === 'en-US');
+            if (!bestVoice) bestVoice = availableVoices.find(v => v.name === 'Google US English');
+            if (!bestVoice) bestVoice = availableVoices.find(v => v.name === 'Samantha');
+            if (!bestVoice) bestVoice = availableVoices.find(v => v.name === 'Alex');
+            if (!bestVoice) bestVoice = availableVoices.find(v => v.lang === 'en-US');
+            
+            if (bestVoice) utter.voice = bestVoice;
+            synth.speak(utter);
+        }
+
+        function toggleMic() {
+            const micBtn = document.getElementById('mic-btn');
+            if(!recognition) return alert("当前浏览器不支持语音识别功能，请使用 Chrome。");
+            if(isRecording) {
+                recognition.stop();
+                return;
+            }
+            try {
+                recognition.start();
+                isRecording = true;
+                micBtn.classList.add('recording');
+                micBtn.innerHTML = '🛑 录音中... <kbd>↓</kbd>';
+                document.getElementById('feedback').innerText = '正在倾听...';
+                document.getElementById('feedback').className = '';
+            } catch(e) { console.error(e); }
+        }
+
+        if(recognition) {
+            recognition.onresult = (event) => {
+                const speechResult = event.results[0][0].transcript.toLowerCase();
+                const targetText = currentArticle.items[currentIndex].en.toLowerCase().replace(/[^a-z0-9\s]/g, '');
+                const spokenClean = speechResult.replace(/[^a-z0-9\s]/g, '');
+                
+                const fb = document.getElementById('feedback');
+                if(spokenClean.includes(targetText) || targetText.includes(spokenClean)) {
+                    fb.innerText = '🌟 Perfect! 发音非常标准！';
+                    fb.className = 'success';
+                    
+                    if (currentIndex >= unlockedIndex) {
+                        unlockedIndex = currentIndex + 1;
+                        const unlockedKey = `cr_unlocked_${currentUser}_${currentArticle.id}`;
+                        localStorage.setItem(unlockedKey, unlockedIndex);
+                    }
+                    setTimeout(nextItem, 1500);
+                } else {
+                    fb.innerText = `⚠️ 听到: "${speechResult}"。没过关，再试一次！`;
+                    fb.className = 'error';
+                }
+            };
+            recognition.onend = () => {
+                isRecording = false;
+                const micBtn = document.getElementById('mic-btn');
+                micBtn.classList.remove('recording');
+                micBtn.innerHTML = '🎤 智能跟读 <kbd>↓</kbd>';
+            };
+        }
+
+        // Key bindings
+        document.addEventListener('keydown', function(e) {
+            if (!document.getElementById('game-screen').classList.contains('active')) return;
+            if (e.key === 'ArrowLeft') {
+                e.preventDefault();
+                prevItem();
+            } else if (e.key === 'ArrowRight') {
+                e.preventDefault();
+                nextItem();
+            } else if (e.key === ' ') {
+                e.preventDefault();
+                if (document.activeElement) document.activeElement.blur();
+                playAudio();
+            } else if (e.key === 'ArrowDown') {
+                e.preventDefault();
+                toggleMic();
+            }
+        });
+    </script>
+</body>
+</html>
