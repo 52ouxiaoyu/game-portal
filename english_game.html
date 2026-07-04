@@ -100,7 +100,7 @@
             <div class="controls">
                 <button onclick="prevItem()">⬅️ 上一个 <kbd>←</kbd></button>
                 <button class="btn-primary" onclick="playAudio()">🔊 原声朗读 <kbd>Space</kbd></button>
-                <button class="btn-mic" id="mic-btn" onclick="toggleMic()">🎤 智能跟读</button>
+                <button class="btn-mic" id="mic-btn" onclick="toggleMic()">🎤 智能跟读 <kbd>↓</kbd></button>
                 <button onclick="nextItem()">下一个 ➡️ <kbd>→</kbd></button>
             </div>
         </div>
@@ -289,12 +289,17 @@
             if (document.getElementById('game-screen').style.display !== 'flex') return;
             
             if (e.key === 'ArrowLeft') {
+                e.preventDefault();
                 prevItem();
             } else if (e.key === 'ArrowRight') {
+                e.preventDefault();
                 nextItem();
             } else if (e.key === ' ') {
                 e.preventDefault(); // 防止空格键使页面滚动
                 playAudio();
+            } else if (e.key === 'ArrowDown') {
+                e.preventDefault(); // 防止下键使页面滚动
+                toggleMic();
             }
         });
 
