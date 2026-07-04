@@ -59,6 +59,16 @@
         .btn-mic { background: #ef4444; border: none; }
         .btn-mic.recording { animation: pulse 1s infinite; background: #dc2626; }
         
+        kbd {
+            background: rgba(255,255,255,0.2);
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-family: monospace;
+            border: 1px solid rgba(255,255,255,0.3);
+            margin-left: 4px;
+        }
+
         @keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.05); box-shadow: 0 0 15px #ef4444; } 100% { transform: scale(1); } }
         
         #feedback { font-size: 18px; font-weight: bold; margin-top: 16px; min-height: 24px; }
@@ -88,10 +98,10 @@
                 <div id="feedback"></div>
             </div>
             <div class="controls">
-                <button onclick="prevItem()">⬅️ 上一个</button>
-                <button class="btn-primary" onclick="playAudio()">🔊 原声朗读</button>
+                <button onclick="prevItem()">⬅️ 上一个 <kbd>←</kbd></button>
+                <button class="btn-primary" onclick="playAudio()">🔊 原声朗读 <kbd>Space</kbd></button>
                 <button class="btn-mic" id="mic-btn" onclick="toggleMic()">🎤 智能跟读</button>
-                <button onclick="nextItem()">下一个 ➡️</button>
+                <button onclick="nextItem()">下一个 ➡️ <kbd>→</kbd></button>
             </div>
         </div>
     </div>
