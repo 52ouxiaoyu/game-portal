@@ -458,8 +458,25 @@ class Bullet {
         this.size = 8 + Math.min(level, 5); 
         this.active = true; 
         this.damage = (this.owner instanceof Player) ? 5 + level * 3 : 1;
-        if (this.type === 'LASER' || this.type === 'LASER_MISSILE') { this.speed *= 2; this.damage *= 1.5; }
-        if (this.type === 'MISSILE') { this.speed *= 0.8; }
+        if (this.type === 'LASER' || this.type === 'LASER_MISSILE') { 
+            let speedMult = 2; 
+            if (this.owner instanceof Player) {
+                if (level === 5) speedMult = 1.2;
+                else if (level === 6) speedMult = 1.5;
+                else if (level >= 7) speedMult = 2.0;
+            }
+            this.speed *= speedMult; 
+            this.damage *= 1.5; 
+        }
+        if (this.type === 'MISSILE') { 
+            let speedMult = 0.8;
+            if (this.owner instanceof Player) {
+                if (level === 1) speedMult = 0.8;
+                else if (level === 2) speedMult = 1.2;
+                else if (level >= 3) speedMult = 1.5;
+            }
+            this.speed *= speedMult; 
+        }
         this.vx = undefined; this.vy = undefined;
     }
     update() {
@@ -600,7 +617,7 @@ class Tank {
     constructor(game, x, y, color) { this.game = game; this.x = x; this.y = y; this.width = 60; this.height = 60; this.color = color; this.direction = 'UP'; this.speed = 4; this.cooldown = 0; this.alive = true; this.shieldTimer = 0; this.level = 0; this.score = 0; }
     setShield(d) { this.shieldTimer = d; }
     upgrade() { 
-        if (this.level >= 4) return;
+        if (this.level >= 9) return;
         this.level++;
         this.speed = Math.min(8, 4 + this.level * 0.15); 
         if (this instanceof Player) {
@@ -688,26 +705,42 @@ class Tank {
         if (this instanceof Player) audio.play('shoot');
         
         let bType = 'NORMAL';
+        let numShots = 1;
         if (this instanceof Player) {
-            if (this.level >= 4) bType = 'LASER_MISSILE';
-            else if (this.level >= 3) bType = 'LASER';
-            else if (this.level >= 1) bType = 'MISSILE';
+            if (this.level >= 8) { bType = 'LASER_MISSILE'; numShots = this.level === 8 ? 2 : 3; }
+            else if (this.level >= 5) { bType = 'LASER'; numShots = this.level - 4; }
+            else if (this.level >= 1) { 
+                bType = 'MISSILE'; 
+                if (this.level === 1) numShots = 1;
+                else if (this.level === 2) numShots = 1; // Speed increases at level 2 instead
+                else if (this.level === 3) numShots = 2;
+                else numShots = 3;
+            }
+            if (this.perks && this.perks.includes('SPREAD')) numShots = Math.max(numShots, 3);
         }
         
-        let b = new Bullet(this.game, this, bx, by, this.direction, this.level, bType);
-        
-        if (this.perks && this.perks.includes('PIERCING')) b.piercing = true;
-        this.game.bullets.push(b);
-        
-        if (this instanceof Player && (this.level >= 3 || (this.perks && this.perks.includes('SPREAD')))) {
-             let bx2 = bx, by2 = by, bx3 = bx, by3 = by;
-             if (this.direction === 'UP' || this.direction === 'DOWN') { bx2 -= 15; bx3 += 15; }
-             else { by2 -= 15; by3 += 15; }
-             let b2 = new Bullet(this.game, this, bx2, by2, this.direction, this.level, bType);
-             let b3 = new Bullet(this.game, this, bx3, by3, this.direction, this.level, bType);
-             
-             if (this.perks && this.perks.includes('PIERCING')) { b2.piercing = true; b3.piercing = true; }
-             this.game.bullets.push(b2, b3);
+        if (numShots === 1) {
+            let b = new Bullet(this.game, this, bx, by, this.direction, this.level, bType);
+            if (this.perks && this.perks.includes('PIERCING')) b.piercing = true;
+            this.game.bullets.push(b);
+        } else if (numShots === 2) {
+            let bx1 = bx, by1 = by, bx2 = bx, by2 = by;
+            if (this.direction === 'UP' || this.direction === 'DOWN') { bx1 -= 10; bx2 += 10; }
+            else { by1 -= 10; by2 += 10; }
+            let b1 = new Bullet(this.game, this, bx1, by1, this.direction, this.level, bType);
+            let b2 = new Bullet(this.game, this, bx2, by2, this.direction, this.level, bType);
+            if (this.perks && this.perks.includes('PIERCING')) { b1.piercing = true; b2.piercing = true; }
+            this.game.bullets.push(b1, b2);
+        } else {
+            let bx2 = bx, by2 = by, bx3 = bx, by3 = by;
+            if (this.direction === 'UP' || this.direction === 'DOWN') { bx2 -= 15; bx3 += 15; }
+            else { by2 -= 15; by3 += 15; }
+            let b = new Bullet(this.game, this, bx, by, this.direction, this.level, bType);
+            let b2 = new Bullet(this.game, this, bx2, by2, this.direction, this.level, bType);
+            let b3 = new Bullet(this.game, this, bx3, by3, this.direction, this.level, bType);
+            
+            if (this.perks && this.perks.includes('PIERCING')) { b.piercing = true; b2.piercing = true; b3.piercing = true; }
+            this.game.bullets.push(b, b2, b3);
         }
     }
     destroy(killer, damage = 1) {
@@ -1103,7 +1136,7 @@ class Boss extends Enemy {
         
         const scale = (1.5 + Math.random() * 0.5 + difficulty * 0.5) * scaleMult;
         this.width = TILE_SIZE * scale; this.height = TILE_SIZE * scale;
-        this.health = Math.floor((50 + stage * 8) * scale * hpMult); 
+        this.health = Math.floor((30 + stage * 5) * scale * hpMult); 
         this.maxHealth = this.health;
         this.speed = (1.0 + difficulty * 0.8) * speedMult; 
         this.isBoss = true;
