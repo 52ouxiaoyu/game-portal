@@ -287,6 +287,15 @@ class PowerUp {
             } 
         });
     }
+    handleWeaponPickup(player, newClass, name, color) {
+        if (player.weaponClass === newClass) {
+            player.upgrade();
+            this.game.showAnnouncement(`${name}升级 (Lv ${player.level})!`, color);
+        } else {
+            player.weaponClass = newClass;
+            this.game.showAnnouncement(`切换为 ${name}!`, color);
+        }
+    }
     applyEffect(player) {
         audio.play('powerup');
         this.game.effects.push(new Effect(this.x + 32, this.y + 32, 'EXPLOSION'));
@@ -304,11 +313,11 @@ class PowerUp {
             this.game.showAnnouncement('终极武器 MAX WEAPON!', '#f0f');
             this.game.updateHUD();
         }
-        else if (this.type === POWERUP_TYPES.W_MISSILE) { player.weaponClass = 'MISSILE'; player.upgrade(); this.game.showAnnouncement('获得 跟踪导弹!', '#0f0'); }
-        else if (this.type === POWERUP_TYPES.W_LASER) { player.weaponClass = 'LASER'; player.upgrade(); this.game.showAnnouncement('获得 穿透激光!', '#0ff'); }
-        else if (this.type === POWERUP_TYPES.W_EXPLOSIVE) { player.weaponClass = 'EXPLOSIVE'; player.upgrade(); this.game.showAnnouncement('获得 高爆弹!', '#f00'); }
-        else if (this.type === POWERUP_TYPES.W_SPREAD) { player.weaponClass = 'SPREAD'; player.upgrade(); this.game.showAnnouncement('获得 霰弹枪!', '#ff0'); }
-        else if (this.type === POWERUP_TYPES.W_BOUNCE) { player.weaponClass = 'BOUNCE'; player.upgrade(); this.game.showAnnouncement('获得 弹射炮!', '#f0f'); }
+        else if (this.type === POWERUP_TYPES.W_MISSILE) { this.handleWeaponPickup(player, 'MISSILE', '跟踪导弹', '#0f0'); }
+        else if (this.type === POWERUP_TYPES.W_LASER) { this.handleWeaponPickup(player, 'LASER', '穿透激光', '#0ff'); }
+        else if (this.type === POWERUP_TYPES.W_EXPLOSIVE) { this.handleWeaponPickup(player, 'EXPLOSIVE', '高爆弹', '#f00'); }
+        else if (this.type === POWERUP_TYPES.W_SPREAD) { this.handleWeaponPickup(player, 'SPREAD', '霰弹枪', '#ff0'); }
+        else if (this.type === POWERUP_TYPES.W_BOUNCE) { this.handleWeaponPickup(player, 'BOUNCE', '弹射炮', '#f0f'); }
         else if (this.type === POWERUP_TYPES.BOAT) {
             player.canBoat = true;
             this.game.showAnnouncement('获得渡河能力 CAN BOAT!', '#0cf');
@@ -843,24 +852,25 @@ class Tank {
             let dropChance = 0.15;
             let dropTypes = [
                 POWERUP_TYPES.SHIELD, POWERUP_TYPES.BOMB, POWERUP_TYPES.SHOVEL, 
-                POWERUP_TYPES.TIME, POWERUP_TYPES.STAR, POWERUP_TYPES.W_MISSILE
+                POWERUP_TYPES.TIME, POWERUP_TYPES.STAR, 
+                POWERUP_TYPES.W_MISSILE, POWERUP_TYPES.W_LASER, POWERUP_TYPES.W_EXPLOSIVE, POWERUP_TYPES.W_SPREAD, POWERUP_TYPES.W_BOUNCE
             ];
             
             if (this.variant === 'HEAVY') {
                 dropChance = 0.4;
-                dropTypes = [POWERUP_TYPES.LIFE, POWERUP_TYPES.SHOVEL, POWERUP_TYPES.W_EXPLOSIVE, POWERUP_TYPES.BOMB, POWERUP_TYPES.BOMB];
+                dropTypes = [POWERUP_TYPES.LIFE, POWERUP_TYPES.SHOVEL, POWERUP_TYPES.W_EXPLOSIVE, POWERUP_TYPES.BOMB, POWERUP_TYPES.W_MISSILE];
             } else if (this.variant === 'FAST') {
                 dropChance = 0.3;
-                dropTypes = [POWERUP_TYPES.TIME, POWERUP_TYPES.SHIELD, POWERUP_TYPES.W_LASER];
+                dropTypes = [POWERUP_TYPES.TIME, POWERUP_TYPES.SHIELD, POWERUP_TYPES.W_LASER, POWERUP_TYPES.W_BOUNCE];
             } else if (this.variant === 'ELITE') {
                 dropChance = 0.8;
-                dropTypes = [POWERUP_TYPES.STAR, POWERUP_TYPES.STAR, POWERUP_TYPES.LIFE, POWERUP_TYPES.W_BOUNCE, POWERUP_TYPES.W_SPREAD];
+                dropTypes = [POWERUP_TYPES.STAR, POWERUP_TYPES.STAR, POWERUP_TYPES.LIFE, POWERUP_TYPES.W_BOUNCE, POWERUP_TYPES.W_SPREAD, POWERUP_TYPES.W_EXPLOSIVE];
             } else if (this.variant === 'SMART') {
                 dropChance = 0.5;
-                dropTypes = [POWERUP_TYPES.STAR, POWERUP_TYPES.W_MISSILE, POWERUP_TYPES.SHIELD];
+                dropTypes = [POWERUP_TYPES.STAR, POWERUP_TYPES.W_MISSILE, POWERUP_TYPES.SHIELD, POWERUP_TYPES.W_LASER];
             } else if (this.variant === 'RAPID') {
                 dropChance = 0.4;
-                dropTypes = [POWERUP_TYPES.W_SPREAD, POWERUP_TYPES.W_BOUNCE, POWERUP_TYPES.STAR, POWERUP_TYPES.W_LASER];
+                dropTypes = [POWERUP_TYPES.W_SPREAD, POWERUP_TYPES.W_BOUNCE, POWERUP_TYPES.STAR, POWERUP_TYPES.W_SPREAD];
             }
 
             if (Math.random() < dropChance) {
@@ -1725,15 +1735,20 @@ class Game {
         
         const p1LvlEl = document.getElementById('p1-level');
         const p2LvlEl = document.getElementById('p2-level');
-        const getWeaponHTML = (level) => {
-            if (level >= 4) return "<span style='color:#f0f;'>追踪激光(紫)</span>";
-            if (level >= 3) return "<span style='color:#0ff;'>穿透激光(青)</span>";
-            if (level >= 2) return "<span style='color:#f00;'>跟踪导弹(红)</span>";
-            if (level >= 1) return "<span style='color:#ff0;'>强化高爆(黄)</span>";
-            return "<span style='color:#fff;'>普通炮弹(白)</span>";
+        const getWeaponHTML = (p) => {
+            const levelStr = p.level;
+            let wName = "普通炮弹";
+            let color = "#fff";
+            if (p.weaponClass === 'MISSILE') { wName = "跟踪导弹(红)"; color = "#f00"; }
+            else if (p.weaponClass === 'LASER') { wName = "穿透激光(青)"; color = "#0ff"; }
+            else if (p.weaponClass === 'EXPLOSIVE') { wName = "高爆弹(黄)"; color = "#ff0"; }
+            else if (p.weaponClass === 'SPREAD') { wName = "霰弹枪(绿)"; color = "#0f0"; }
+            else if (p.weaponClass === 'BOUNCE') { wName = "弹射炮(紫)"; color = "#f0f"; }
+            
+            return `<span style='color:${color};'>${wName}</span>`;
         };
-        if(p1LvlEl) p1LvlEl.innerHTML = this.players[0].alive ? `火力: Lv.${this.players[0].level} [${getWeaponHTML(this.players[0].level)}]` : `DEAD`;
-        if(p2LvlEl) p2LvlEl.innerHTML = this.players[1].alive ? `火力: Lv.${this.players[1].level} [${getWeaponHTML(this.players[1].level)}]` : `DEAD`;
+        if(p1LvlEl) p1LvlEl.innerHTML = this.players[0].alive ? `火力: Lv.${this.players[0].level} [${getWeaponHTML(this.players[0])}]` : `DEAD`;
+        if(p2LvlEl) p2LvlEl.innerHTML = this.players[1].alive ? `火力: Lv.${this.players[1].level} [${getWeaponHTML(this.players[1])}]` : `DEAD`;
 
         document.getElementById('lives-info').innerText = `生命 Lives: ❤️x${this.lives}`;
         document.getElementById('enemies-info').innerText = `敌人 Enemies: ${this.enemiesRemaining + this.enemies.length}`;
