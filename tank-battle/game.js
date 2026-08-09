@@ -914,6 +914,7 @@ class Player extends Tank {
         super(game, x, y, color);
         this.controls = controls;
         this.id = id;
+        this.shownTips = new Set();
         this.health = 1;
         this.maxHealth = 1;
         this.aiActive = false;
@@ -1647,6 +1648,7 @@ class Game {
         this.shakeX = 0; this.shakeY = 0; this.shakeTimer = 0;
         this.announcements = [];
         this.floatingTexts = [];
+        this.shownTips = new Set();
         this.pausePressed = false;
         this.bossWarning = 0;
         this.lastEnemyCount = 0;
@@ -1669,6 +1671,8 @@ class Game {
     showAnnouncement(text, color = '#fff') { this.announcements.push({ text, color, timer: 120, y: CANVAS_SIZE / 2 }); }
     showFloatingText(text, x, y, color = '#fff') { this.floatingTexts.push({ text, x, y, color, timer: 60, vy: -2 }); }
     showTip(text, duration = 300) {
+        if (this.shownTips.has(text)) return;
+        this.shownTips.add(text);
         const banner = document.getElementById('tips-banner');
         if (banner) {
             banner.innerText = text;
@@ -1700,6 +1704,7 @@ class Game {
         this.currentLevel = this.map.currentLevel;
         const diffMult = this.difficulty === 'easy' ? 0.7 : (this.difficulty === 'hard' ? 1.3 : 1);
         this.enemiesRemaining = Math.floor(this.currentLevel.totalEnemies * diffMult);
+        this.initialEnemies = this.enemiesRemaining;
         if (this.currentStage === 0) { this.baseHealth = 5; this.maxBaseHealth = 5; }
         else { this.baseHealth = this.maxBaseHealth; }
         if (this.players.length === 0) {
@@ -1832,11 +1837,15 @@ class Game {
             this.showAnnouncement('天降奇遇 AIRDROP!', '#0ff');
         }
 
-        if (this.enemiesRemaining > 0 && this.enemies.length < Math.min(4 + Math.floor(this.currentStage / 10), 8)) {
+        if (this.enemiesRemaining > 0 && this.enemies.length < 30) {
             this.spawnTimer--;
             if (this.spawnTimer <= 0) {
                 const sx = [TILE_SIZE * 2, TILE_SIZE * 12, TILE_SIZE * 22][Math.floor(Math.random() * 3)]; const sy = TILE_SIZE * 2; this.effects.push(new Effect(sx + TILE_SIZE, sy + TILE_SIZE, 'SPAWN'));
-                setTimeout(() => { if (this.gameState === 'PLAYING') { this.enemies.push(new Enemy(this, sx, sy, this.currentStage)); this.enemiesRemaining--; this.updateHUD(); } }, 1000); this.spawnTimer = 180;
+                this.enemiesRemaining--;
+                setTimeout(() => { if (this.gameState === 'PLAYING') { this.enemies.push(new Enemy(this, sx, sy, this.currentStage)); this.updateHUD(); } }, 1000); 
+                let interval = Math.max(20, Math.floor(2400 / Math.max(1, this.initialEnemies || 1)));
+                if (this.difficulty === 'hard') interval = Math.floor(interval * 0.7);
+                this.spawnTimer = interval;
             }
         } else if (this.enemiesRemaining === 0 && this.enemies.length === 0) {
             if (this.stageClearTimer === 0) {
