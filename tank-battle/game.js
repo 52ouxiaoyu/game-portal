@@ -665,7 +665,7 @@ class Bullet {
 }
 
 class Tank {
-    constructor(game, x, y, color) { this.game = game; this.x = x; this.y = y; this.width = 60; this.height = 60; this.color = color; this.direction = 'UP'; this.speed = 4; this.cooldown = 0; this.alive = true; this.shieldTimer = 0; this.level = 0; this.score = 0; this.weaponClass = 'MISSILE'; }
+    constructor(game, x, y, color) { this.game = game; this.x = x; this.y = y; this.width = 60; this.height = 60; this.color = color; this.direction = 'UP'; this.speed = 4; this.cooldown = 0; this.alive = true; this.shieldTimer = 0; this.level = 0; this.score = 0; this.weaponClass = 'NORMAL'; }
     setShield(d) { this.shieldTimer = d; }
     upgrade() { 
         if (this.level >= 9) return;
@@ -1163,10 +1163,20 @@ class Enemy extends Tank {
         else this.variant = 'BASIC';
 
         if (this.variant === 'FAST') { this.speed = (2.5 + Math.min(stage * 0.05, 0.8)) * diffMult; this.health = 1; this.color = '#FF9999'; }
-        else if (this.variant === 'HEAVY') { this.speed = (1.0 + Math.min(stage * 0.02, 0.5)) * diffMult; this.health = 3 + Math.floor(stage / 10); this.color = '#777777'; }
-        else if (this.variant === 'ELITE') { this.speed = (1.8 + Math.min(stage * 0.05, 0.8)) * diffMult; this.health = 3 + Math.floor(stage / 5); this.level = Math.min(3, 1 + Math.floor(stage / 10)); this.color = '#FF55FF'; }
+        else if (this.variant === 'HEAVY') { 
+            this.speed = (1.0 + Math.min(stage * 0.02, 0.5)) * diffMult; this.health = 3 + Math.floor(stage / 10); this.color = '#777777'; 
+            if (Math.random() < 0.3) this.weaponClass = 'EXPLOSIVE';
+        }
+        else if (this.variant === 'ELITE') { 
+            this.speed = (1.8 + Math.min(stage * 0.05, 0.8)) * diffMult; this.health = 3 + Math.floor(stage / 5); this.level = Math.min(3, 1 + Math.floor(stage / 10)); this.color = '#FF55FF'; 
+            const wClasses = ['MISSILE', 'LASER', 'SPREAD', 'BOUNCE'];
+            this.weaponClass = wClasses[Math.floor(Math.random() * wClasses.length)];
+        }
         else if (this.variant === 'SMART') { this.speed = (1.6 + Math.min(stage * 0.05, 0.8)) * diffMult; this.health = 2; this.color = '#55FFFF'; }
-        else if (this.variant === 'RAPID') { this.speed = (1.2 + Math.min(stage * 0.05, 0.8)) * diffMult; this.health = 2; this.color = '#FFFF55'; }
+        else if (this.variant === 'RAPID') { 
+            this.speed = (1.2 + Math.min(stage * 0.05, 0.8)) * diffMult; this.health = 2; this.color = '#FFFF55'; 
+            if (Math.random() < 0.2) this.weaponClass = 'SPREAD';
+        }
         else { this.speed = (1.5 + Math.min(stage * 0.05, 0.8)) * diffMult; this.health = 1; this.level = Math.min(3, Math.floor(stage / 15)); }
         
         this.dirTimer = 0; 
