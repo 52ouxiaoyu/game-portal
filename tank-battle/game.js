@@ -523,7 +523,8 @@ class Bullet {
         } else if (this.type === 'SPREAD') {
             this.damage *= 0.8;
         } else if (this.type === 'BOUNCE') {
-            this.speed *= 1.2;
+            this.speed *= 1.4;
+            this.damage *= 1.2;
             this.bounces = 2 + Math.floor(level / 2);
             this.piercing = true;
         }
@@ -745,7 +746,7 @@ class Tank {
         }
         let bulletCount = 0;
         for (const b of this.game.bullets) { if (b.owner === this && b.active) bulletCount++; }
-        const maxBullets = this.isBoss ? 2 : (this instanceof Player ? 1 + Math.floor(this.level / 3) : 1);
+        const maxBullets = this.isBoss ? 5 : (this instanceof Player ? 10 + this.level * 2 : 1);
         if (bulletCount >= maxBullets) return;
         if (this.game.bullets.length >= 80) return; 
         this.cooldown = this instanceof Player ? Math.max(5, 35 - this.level * 1.5) : Math.max(30, 60 - this.level * 10);
@@ -770,10 +771,11 @@ class Tank {
                 numShots = 3 + Math.floor(this.level / 2) * 2;
                 spreadAngle = 0.15 + (this.level * 0.02);
             } else if (bType === 'BOUNCE') {
-                if (this.level >= 7) numShots = 4;
-                else if (this.level >= 4) numShots = 3;
-                else if (this.level >= 2) numShots = 2;
-                spreadAngle = 0.2;
+                if (this.level >= 8) numShots = 5;
+                else if (this.level >= 5) numShots = 4;
+                else if (this.level >= 2) numShots = 3;
+                else numShots = 2;
+                spreadAngle = 0.25;
             }
             if (this.perks && this.perks.includes('SPREAD')) numShots = Math.max(numShots, 3);
         }
@@ -850,31 +852,42 @@ class Tank {
         if (this instanceof Player) this.game.handlePlayerDeath(this);
         if (this instanceof Enemy && !this.isBoss) {
             let dropChance = 0.15;
-            let dropTypes = [
-                POWERUP_TYPES.SHIELD, POWERUP_TYPES.BOMB, POWERUP_TYPES.SHOVEL, 
-                POWERUP_TYPES.TIME, POWERUP_TYPES.STAR, 
-                POWERUP_TYPES.W_MISSILE, POWERUP_TYPES.W_LASER, POWERUP_TYPES.W_EXPLOSIVE, POWERUP_TYPES.W_SPREAD, POWERUP_TYPES.W_BOUNCE
-            ];
+            let type = null;
             
-            if (this.variant === 'HEAVY') {
-                dropChance = 0.4;
-                dropTypes = [POWERUP_TYPES.LIFE, POWERUP_TYPES.SHOVEL, POWERUP_TYPES.W_EXPLOSIVE, POWERUP_TYPES.BOMB, POWERUP_TYPES.W_MISSILE];
-            } else if (this.variant === 'FAST') {
-                dropChance = 0.3;
-                dropTypes = [POWERUP_TYPES.TIME, POWERUP_TYPES.SHIELD, POWERUP_TYPES.W_LASER, POWERUP_TYPES.W_BOUNCE];
-            } else if (this.variant === 'ELITE') {
-                dropChance = 0.8;
-                dropTypes = [POWERUP_TYPES.STAR, POWERUP_TYPES.STAR, POWERUP_TYPES.LIFE, POWERUP_TYPES.W_BOUNCE, POWERUP_TYPES.W_SPREAD, POWERUP_TYPES.W_EXPLOSIVE];
-            } else if (this.variant === 'SMART') {
-                dropChance = 0.5;
-                dropTypes = [POWERUP_TYPES.STAR, POWERUP_TYPES.W_MISSILE, POWERUP_TYPES.SHIELD, POWERUP_TYPES.W_LASER];
-            } else if (this.variant === 'RAPID') {
-                dropChance = 0.4;
-                dropTypes = [POWERUP_TYPES.W_SPREAD, POWERUP_TYPES.W_BOUNCE, POWERUP_TYPES.STAR, POWERUP_TYPES.W_SPREAD];
+            if (this.weaponClass && this.weaponClass !== 'NORMAL') {
+                dropChance = 1.0;
+                if (this.weaponClass === 'MISSILE') type = POWERUP_TYPES.W_MISSILE;
+                else if (this.weaponClass === 'LASER') type = POWERUP_TYPES.W_LASER;
+                else if (this.weaponClass === 'EXPLOSIVE') type = POWERUP_TYPES.W_EXPLOSIVE;
+                else if (this.weaponClass === 'SPREAD') type = POWERUP_TYPES.W_SPREAD;
+                else if (this.weaponClass === 'BOUNCE') type = POWERUP_TYPES.W_BOUNCE;
+            } else {
+                let dropTypes = [
+                    POWERUP_TYPES.SHIELD, POWERUP_TYPES.BOMB, POWERUP_TYPES.SHOVEL, 
+                    POWERUP_TYPES.TIME, POWERUP_TYPES.STAR, 
+                    POWERUP_TYPES.W_MISSILE, POWERUP_TYPES.W_LASER, POWERUP_TYPES.W_EXPLOSIVE, POWERUP_TYPES.W_SPREAD, POWERUP_TYPES.W_BOUNCE
+                ];
+                
+                if (this.variant === 'HEAVY') {
+                    dropChance = 0.4;
+                    dropTypes = [POWERUP_TYPES.LIFE, POWERUP_TYPES.SHOVEL, POWERUP_TYPES.W_EXPLOSIVE, POWERUP_TYPES.BOMB, POWERUP_TYPES.W_MISSILE];
+                } else if (this.variant === 'FAST') {
+                    dropChance = 0.3;
+                    dropTypes = [POWERUP_TYPES.TIME, POWERUP_TYPES.SHIELD, POWERUP_TYPES.W_LASER, POWERUP_TYPES.W_BOUNCE];
+                } else if (this.variant === 'ELITE') {
+                    dropChance = 0.8;
+                    dropTypes = [POWERUP_TYPES.STAR, POWERUP_TYPES.STAR, POWERUP_TYPES.LIFE, POWERUP_TYPES.W_BOUNCE, POWERUP_TYPES.W_SPREAD, POWERUP_TYPES.W_EXPLOSIVE];
+                } else if (this.variant === 'SMART') {
+                    dropChance = 0.5;
+                    dropTypes = [POWERUP_TYPES.STAR, POWERUP_TYPES.W_MISSILE, POWERUP_TYPES.SHIELD, POWERUP_TYPES.W_LASER];
+                } else if (this.variant === 'RAPID') {
+                    dropChance = 0.4;
+                    dropTypes = [POWERUP_TYPES.W_SPREAD, POWERUP_TYPES.W_BOUNCE, POWERUP_TYPES.STAR, POWERUP_TYPES.W_SPREAD];
+                }
+                type = dropTypes[Math.floor(Math.random() * dropTypes.length)];
             }
 
-            if (Math.random() < dropChance) {
-                const type = dropTypes[Math.floor(Math.random() * dropTypes.length)];
+            if (Math.random() < dropChance && type) {
                 this.game.powerUps.push(new PowerUp(this.game, this.x, this.y, type));
             }
         }
