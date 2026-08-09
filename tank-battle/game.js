@@ -266,7 +266,7 @@ class PowerUp {
         this.game = game; this.x = x; this.y = y; this.type = type; this.width = 64; this.height = 64; this.timer = 900; this.active = true;
         if (type === POWERUP_TYPES.FLY) this.game.showTip("💡 TIP: 吃到直升机🚁可获得飞行能力，无视地形与子弹，按开火键轰炸！", 600);
         else if (type === POWERUP_TYPES.BOAT) this.game.showTip("💡 TIP: 吃到小艇🚤可在水面上自由移动，利用湖泊躲避不会游泳的敌人！", 600);
-        else if (type === POWERUP_TYPES.MAX_WEAPON) this.game.showTip("💡 TIP: 终极神药来了！吃到🚀直接升至满级4级（紫色追踪），火力全开！", 600);
+        else if (type === POWERUP_TYPES.MAX_WEAPON) this.game.showTip("💡 TIP: 终极神药来了！吃到🚀直接升至满级9级，火力全开！", 600);
         else if (type === POWERUP_TYPES.BOMB) this.game.showTip("💡 TIP: 吃到炸弹💣可以瞬间消灭屏幕上的所有敌人！", 400);
         else if (type === POWERUP_TYPES.SHOVEL) this.game.showTip("💡 TIP: 吃到铁锹🏗️可以把基地周围的砖块升级为坚不可摧的钢板！", 400);
         else if (type === POWERUP_TYPES.TIME) this.game.showTip("💡 TIP: 吃到时钟⏳可以冻结所有敌人一段时间！", 400);
