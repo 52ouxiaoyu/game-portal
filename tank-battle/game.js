@@ -5,7 +5,7 @@ const CANVAS_SIZE = TILE_SIZE * GRID_SIZE; // 832px
 
 const TILE_TYPES = { EMPTY: 0, BRICK: 1, STEEL: 2, WATER: 3, FOREST: 4, ICE: 5, HARD_BRICK: 6, UNBREAKABLE: 7, BASE: 9, BASE_DESTROYED: 10 };
 const COLORS = { BRICK: '#B53120', BRICK_LIGHT: '#DC5341', STEEL: '#AAAAAA', STEEL_LIGHT: '#EEEEEE', WATER: '#2131E7', FOREST: '#21B521', PLAYER1: '#E7E721', PLAYER2: '#63C6FF', ENEMY: '#E7E7E7', BASE: '#E79C21' };
-const POWERUP_TYPES = { SHIELD: '🛡️', BOMB: '💣', STAR: '⭐', SHOVEL: '🏗️', LIFE: '❤️', TIME: '⏳', MAX_WEAPON: '🚀', BOAT: '🚤', FLY: '🚁' };
+const POWERUP_TYPES = { SHIELD: '🛡️', BOMB: '💣', STAR: '⭐', SHOVEL: '🏗️', LIFE: '❤️', TIME: '⏳', MAX_WEAPON: '🚀', BOAT: '🚤', FLY: '🚁', W_MISSILE: '🎯', W_LASER: '⚡', W_EXPLOSIVE: '💥', W_SPREAD: '🎇', W_BOUNCE: '🪀' };
 
 function seededRandom(seed) {
     let s = seed;
@@ -134,33 +134,41 @@ function generateLevel(index) {
             else { level.bricks.push([y, x, h, w]); }
         }
     }
+    // Generate realistic large features instead of scattered blocks
     if (waterDensity > 0) {
-        const waterCount = Math.floor(3 + waterDensity * 20);
-        for (let i = 0; i < waterCount; i++) {
-            const x = 3 + Math.floor(rng() * 20);
-            const y = 3 + Math.floor(rng() * 16);
-            const w = 1 + Math.floor(rng() * 3);
-            const h = 1 + Math.floor(rng() * 3);
-            if (!isProtected(x, y) && !isSpawn(x, y)) level.waters.push([y, x, h, w]);
+        if (rng() < 0.33) {
+            // Horizontal River with a bridge
+            const y = 6 + Math.floor(rng() * 8);
+            const gapX = 4 + Math.floor(rng() * 12);
+            level.waters.push([y, 0, 2, gapX]); 
+            level.waters.push([y, gapX + 3, 2, 26]); 
+        } else if (rng() < 0.5) {
+            // Vertical River with a bridge
+            const x = 6 + Math.floor(rng() * 12);
+            const gapY = 6 + Math.floor(rng() * 8);
+            level.waters.push([0, x, gapY, 2]); 
+            level.waters.push([gapY + 3, x, 26, 2]); 
+        } else {
+            // Big Lake
+            const x = 4 + Math.floor(rng() * 12);
+            const y = 4 + Math.floor(rng() * 10);
+            level.waters.push([y, x, 5 + Math.floor(rng()*3), 5 + Math.floor(rng()*3)]);
         }
     }
     if (forestDensity > 0) {
-        const forestCount = Math.floor(2 + forestDensity * 20);
+        // 1 or 2 large dense forests
+        const forestCount = 1 + Math.floor(rng() * 2);
         for (let i = 0; i < forestCount; i++) {
-            const x = 3 + Math.floor(rng() * 20);
-            const y = 3 + Math.floor(rng() * 16);
-            const w = 2 + Math.floor(rng() * 2);
-            const h = 2 + Math.floor(rng() * 2);
-            level.forests.push([y, x, h, w]);
+            const x = 2 + Math.floor(rng() * 16);
+            const y = 2 + Math.floor(rng() * 14);
+            level.forests.push([y, x, 5 + Math.floor(rng()*4), 5 + Math.floor(rng()*4)]);
         }
     }
     if (iceDensity > 0) {
-        const iceCount = Math.floor(1 + iceDensity * 20);
-        for (let i = 0; i < iceCount; i++) {
-            const x = 3 + Math.floor(rng() * 20);
-            const y = 3 + Math.floor(rng() * 16);
-            if (!isProtected(x, y) && !isSpawn(x, y)) level.ices.push([y, x, 2, 2]);
-        }
+        // 1 large snowfield
+        const x = 2 + Math.floor(rng() * 12);
+        const y = 2 + Math.floor(rng() * 12);
+        level.ices.push([y, x, 6 + Math.floor(rng()*5), 6 + Math.floor(rng()*5)]);
     }
     if (index < 10) {
         level.totalEnemies = Math.floor(6 + index * 0.8);
@@ -263,6 +271,11 @@ class PowerUp {
         else if (type === POWERUP_TYPES.SHOVEL) this.game.showTip("💡 TIP: 吃到铁锹🏗️可以把基地周围的砖块升级为坚不可摧的钢板！", 400);
         else if (type === POWERUP_TYPES.TIME) this.game.showTip("💡 TIP: 吃到时钟⏳可以冻结所有敌人一段时间！", 400);
         else if (type === POWERUP_TYPES.STAR) this.game.showTip("💡 TIP: 吃到星星⭐可以直接升一级，火力提升！", 400);
+        else if (type === POWERUP_TYPES.W_MISSILE) this.game.showTip("💡 TIP: 吃到🎯切换为【跟踪导弹】，自动追踪敌人！", 400);
+        else if (type === POWERUP_TYPES.W_LASER) this.game.showTip("💡 TIP: 吃到⚡切换为【穿透激光】，拥有极高弹速和穿透力！", 400);
+        else if (type === POWERUP_TYPES.W_EXPLOSIVE) this.game.showTip("💡 TIP: 吃到💥切换为【高爆弹】，拥有巨大爆炸范围！", 400);
+        else if (type === POWERUP_TYPES.W_SPREAD) this.game.showTip("💡 TIP: 吃到🎇切换为【霰弹枪】，近战大范围扇形攻击！", 400);
+        else if (type === POWERUP_TYPES.W_BOUNCE) this.game.showTip("💡 TIP: 吃到🪀切换为【弹射炮】，子弹能在墙壁间疯狂弹射！", 400);
     }
     update() {
         this.timer--; if (this.timer <= 0) this.active = false;
@@ -284,13 +297,18 @@ class PowerUp {
         else if (this.type === POWERUP_TYPES.LIFE) this.game.lives++;
         else if (this.type === POWERUP_TYPES.TIME) this.game.enemyFrozenTimer = 300;
         else if (this.type === POWERUP_TYPES.MAX_WEAPON) {
-            player.level = 4;
-            player.speed = Math.min(8, 4 + 4 * 0.15);
-            player.maxHealth = 1 + 4 * 2;
+            player.level = 9;
+            player.speed = Math.min(8, 4 + 9 * 0.15);
+            player.maxHealth = 1 + 9 * 2;
             player.health = player.maxHealth;
             this.game.showAnnouncement('终极武器 MAX WEAPON!', '#f0f');
             this.game.updateHUD();
         }
+        else if (this.type === POWERUP_TYPES.W_MISSILE) { player.weaponClass = 'MISSILE'; player.upgrade(); this.game.showAnnouncement('获得 跟踪导弹!', '#0f0'); }
+        else if (this.type === POWERUP_TYPES.W_LASER) { player.weaponClass = 'LASER'; player.upgrade(); this.game.showAnnouncement('获得 穿透激光!', '#0ff'); }
+        else if (this.type === POWERUP_TYPES.W_EXPLOSIVE) { player.weaponClass = 'EXPLOSIVE'; player.upgrade(); this.game.showAnnouncement('获得 高爆弹!', '#f00'); }
+        else if (this.type === POWERUP_TYPES.W_SPREAD) { player.weaponClass = 'SPREAD'; player.upgrade(); this.game.showAnnouncement('获得 霰弹枪!', '#ff0'); }
+        else if (this.type === POWERUP_TYPES.W_BOUNCE) { player.weaponClass = 'BOUNCE'; player.upgrade(); this.game.showAnnouncement('获得 弹射炮!', '#f0f'); }
         else if (this.type === POWERUP_TYPES.BOAT) {
             player.canBoat = true;
             this.game.showAnnouncement('获得渡河能力 CAN BOAT!', '#0cf');
@@ -328,6 +346,23 @@ class GameMap {
         }
         if (level.forests) level.forests.forEach(([y,x,h,w]) => { for(let i=0; i<h; i++) for(let j=0; j<w; j++) if (y+i < GRID_SIZE && x+j < GRID_SIZE) this.grid[y+i][x+j] = TILE_TYPES.FOREST; });
         if (level.ices) level.ices.forEach(([y,x,h,w]) => { for(let i=0; i<h; i++) for(let j=0; j<w; j++) if (y+i < GRID_SIZE && x+j < GRID_SIZE) this.grid[y+i][x+j] = TILE_TYPES.ICE; });
+        
+        // Force spawn 4~8 UNBREAKABLE pillars/blocks on every map for guaranteed cover
+        const numPillars = 4 + Math.floor(Math.random() * 5);
+        for (let k = 0; k < numPillars; k++) {
+            const ux = 2 + Math.floor(Math.random() * 20);
+            const uy = 4 + Math.floor(Math.random() * 16);
+            if (Math.random() < 0.5) {
+                this.grid[uy][ux] = TILE_TYPES.UNBREAKABLE;
+                this.grid[uy+1][ux] = TILE_TYPES.UNBREAKABLE;
+            } else {
+                this.grid[uy][ux] = TILE_TYPES.UNBREAKABLE;
+                this.grid[uy][ux+1] = TILE_TYPES.UNBREAKABLE;
+                this.grid[uy+1][ux] = TILE_TYPES.UNBREAKABLE;
+                this.grid[uy+1][ux+1] = TILE_TYPES.UNBREAKABLE;
+            }
+        }
+
         this.clearArea(8, 22, 2, 2); this.clearArea(16, 22, 2, 2); this.clearArea(1, 1, 3, 3); this.clearArea(11, 1, 3, 3); this.clearArea(21, 1, 3, 3);
         this.grid[24][12] = this.grid[24][13] = this.grid[25][12] = this.grid[25][13] = TILE_TYPES.BASE;
         this.setBaseWalls(TILE_TYPES.BRICK);
@@ -359,9 +394,10 @@ class GameMap {
                     ctx.fillStyle = '#A0522D'; ctx.fillRect(px, py, TILE_SIZE, 4); ctx.fillRect(px, py, 4, TILE_SIZE);
                     ctx.fillStyle = '#000'; ctx.fillRect(px + TILE_SIZE/2, py, 2, TILE_SIZE); ctx.fillRect(px, py + TILE_SIZE/2, TILE_SIZE, 2);
                 } else if (tile === TILE_TYPES.UNBREAKABLE) {
-                    ctx.fillStyle = '#222'; ctx.fillRect(px, py, TILE_SIZE, TILE_SIZE);
-                    ctx.fillStyle = '#444'; ctx.fillRect(px + 4, py + 4, TILE_SIZE - 8, TILE_SIZE - 8);
-                    ctx.fillStyle = '#111'; ctx.fillRect(px + 8, py + 8, TILE_SIZE - 16, TILE_SIZE - 16);
+                    ctx.fillStyle = '#1a1a1a'; ctx.fillRect(px, py, TILE_SIZE, TILE_SIZE);
+                    ctx.fillStyle = '#3a3a4a'; ctx.fillRect(px + 4, py + 4, TILE_SIZE - 8, TILE_SIZE - 8);
+                    ctx.fillStyle = '#5a2a7a'; ctx.fillRect(px + 8, py + 8, TILE_SIZE - 16, TILE_SIZE - 16);
+                    ctx.strokeStyle = '#a4f'; ctx.lineWidth = 1; ctx.strokeRect(px + 8, py + 8, TILE_SIZE - 16, TILE_SIZE - 16);
                 } else if (tile === TILE_TYPES.STEEL) {
                     ctx.fillStyle = COLORS.STEEL; ctx.fillRect(px, py, TILE_SIZE, TILE_SIZE);
                     ctx.fillStyle = COLORS.STEEL_LIGHT; ctx.fillRect(px + 4, py + 4, TILE_SIZE - 8, TILE_SIZE - 8);
@@ -458,24 +494,29 @@ class Bullet {
         this.size = 8 + Math.min(level, 5); 
         this.active = true; 
         this.damage = (this.owner instanceof Player) ? 5 + level * 3 : 1;
+        this.bounces = 0;
+        this.piercing = false;
+
         if (this.type === 'LASER' || this.type === 'LASER_MISSILE') { 
             let speedMult = 2; 
-            if (this.owner instanceof Player) {
-                if (level === 5) speedMult = 1.2;
-                else if (level === 6) speedMult = 1.5;
-                else if (level >= 7) speedMult = 2.0;
-            }
+            if (this.owner instanceof Player) speedMult = 1.2 + level * 0.1;
             this.speed *= speedMult; 
             this.damage *= 1.5; 
-        }
-        if (this.type === 'MISSILE') { 
+            this.piercing = true;
+        } else if (this.type === 'MISSILE') { 
             let speedMult = 0.8;
-            if (this.owner instanceof Player) {
-                if (level === 1) speedMult = 0.8;
-                else if (level === 2) speedMult = 1.2;
-                else if (level >= 3) speedMult = 1.5;
-            }
+            if (this.owner instanceof Player) speedMult = 0.8 + level * 0.1;
             this.speed *= speedMult; 
+        } else if (this.type === 'EXPLOSIVE') {
+            this.speed *= 0.6;
+            this.damage *= 2.0;
+            this.size += level;
+        } else if (this.type === 'SPREAD') {
+            this.damage *= 0.8;
+        } else if (this.type === 'BOUNCE') {
+            this.speed *= 1.2;
+            this.bounces = 2 + Math.floor(level / 2);
+            this.piercing = true;
         }
         this.vx = undefined; this.vy = undefined;
     }
@@ -577,6 +618,7 @@ class Bullet {
     }
     triggerExplosion(ex, ey, small = false) {
         let radius = small ? 0.5 : (1 + Math.min(this.level, 10) * 0.2);
+        if (this.type === 'EXPLOSIVE' && !small) radius += 2 + this.level * 0.5;
         if (this.owner instanceof Player && !small) radius += 1.5;
         audio.play('explosion');
         this.game.effects.push(new Effect(ex, ey, 'EXPLOSION', radius));
@@ -614,7 +656,7 @@ class Bullet {
 }
 
 class Tank {
-    constructor(game, x, y, color) { this.game = game; this.x = x; this.y = y; this.width = 60; this.height = 60; this.color = color; this.direction = 'UP'; this.speed = 4; this.cooldown = 0; this.alive = true; this.shieldTimer = 0; this.level = 0; this.score = 0; }
+    constructor(game, x, y, color) { this.game = game; this.x = x; this.y = y; this.width = 60; this.height = 60; this.color = color; this.direction = 'UP'; this.speed = 4; this.cooldown = 0; this.alive = true; this.shieldTimer = 0; this.level = 0; this.score = 0; this.weaponClass = 'MISSILE'; }
     setShield(d) { this.shieldTimer = d; }
     upgrade() { 
         if (this.level >= 9) return;
@@ -704,43 +746,48 @@ class Tank {
         if (this.direction === 'UP') by = this.y - 10; else if (this.direction === 'DOWN') by = this.y + 60; else if (this.direction === 'LEFT') bx = this.x - 10; else if (this.direction === 'RIGHT') bx = this.x + 60;
         if (this instanceof Player) audio.play('shoot');
         
-        let bType = 'NORMAL';
+        let bType = this.weaponClass || 'NORMAL';
         let numShots = 1;
+        let spreadAngle = 0;
+        
         if (this instanceof Player) {
-            if (this.level >= 8) { bType = 'LASER_MISSILE'; numShots = this.level === 8 ? 2 : 3; }
-            else if (this.level >= 5) { bType = 'LASER'; numShots = this.level - 4; }
-            else if (this.level >= 1) { 
-                bType = 'MISSILE'; 
-                if (this.level === 1) numShots = 1;
-                else if (this.level === 2) numShots = 1; // Speed increases at level 2 instead
-                else if (this.level === 3) numShots = 2;
-                else numShots = 3;
+            if (bType === 'MISSILE' || bType === 'LASER' || bType === 'LASER_MISSILE') {
+                if (this.level >= 6) numShots = 3;
+                else if (this.level >= 3) numShots = 2;
+            } else if (bType === 'EXPLOSIVE') {
+                if (this.level >= 8) numShots = 3;
+                else if (this.level >= 4) numShots = 2;
+            } else if (bType === 'SPREAD') {
+                numShots = 3 + Math.floor(this.level / 2) * 2;
+                spreadAngle = 0.15 + (this.level * 0.02);
+            } else if (bType === 'BOUNCE') {
+                if (this.level >= 7) numShots = 4;
+                else if (this.level >= 4) numShots = 3;
+                else if (this.level >= 2) numShots = 2;
+                spreadAngle = 0.2;
             }
             if (this.perks && this.perks.includes('SPREAD')) numShots = Math.max(numShots, 3);
         }
         
-        if (numShots === 1) {
-            let b = new Bullet(this.game, this, bx, by, this.direction, this.level, bType);
-            if (this.perks && this.perks.includes('PIERCING')) b.piercing = true;
-            this.game.bullets.push(b);
-        } else if (numShots === 2) {
-            let bx1 = bx, by1 = by, bx2 = bx, by2 = by;
-            if (this.direction === 'UP' || this.direction === 'DOWN') { bx1 -= 10; bx2 += 10; }
-            else { by1 -= 10; by2 += 10; }
-            let b1 = new Bullet(this.game, this, bx1, by1, this.direction, this.level, bType);
-            let b2 = new Bullet(this.game, this, bx2, by2, this.direction, this.level, bType);
-            if (this.perks && this.perks.includes('PIERCING')) { b1.piercing = true; b2.piercing = true; }
-            this.game.bullets.push(b1, b2);
-        } else {
-            let bx2 = bx, by2 = by, bx3 = bx, by3 = by;
-            if (this.direction === 'UP' || this.direction === 'DOWN') { bx2 -= 15; bx3 += 15; }
-            else { by2 -= 15; by3 += 15; }
-            let b = new Bullet(this.game, this, bx, by, this.direction, this.level, bType);
-            let b2 = new Bullet(this.game, this, bx2, by2, this.direction, this.level, bType);
-            let b3 = new Bullet(this.game, this, bx3, by3, this.direction, this.level, bType);
+        for (let i = 0; i < numShots; i++) {
+            let offset = (numShots === 1) ? 0 : (i - (numShots - 1) / 2);
+            let bx_i = bx, by_i = by;
             
-            if (this.perks && this.perks.includes('PIERCING')) { b.piercing = true; b2.piercing = true; b3.piercing = true; }
-            this.game.bullets.push(b, b2, b3);
+            if (bType === 'SPREAD' || bType === 'BOUNCE') {
+                let b = new Bullet(this.game, this, bx_i, by_i, this.direction, this.level, bType);
+                let currentAngle = (this.direction === 'UP' ? -Math.PI/2 : this.direction === 'DOWN' ? Math.PI/2 : this.direction === 'LEFT' ? Math.PI : 0);
+                let angle = currentAngle + offset * spreadAngle;
+                b.vx = Math.cos(angle) * b.speed;
+                b.vy = Math.sin(angle) * b.speed;
+                if (this.perks && this.perks.includes('PIERCING')) b.piercing = true;
+                this.game.bullets.push(b);
+            } else {
+                if (this.direction === 'UP' || this.direction === 'DOWN') { bx_i += offset * 15; }
+                else { by_i += offset * 15; }
+                let b = new Bullet(this.game, this, bx_i, by_i, this.direction, this.level, bType);
+                if (this.perks && this.perks.includes('PIERCING')) b.piercing = true;
+                this.game.bullets.push(b);
+            }
         }
     }
     destroy(killer, damage = 1) {
@@ -792,17 +839,34 @@ class Tank {
             }
         }
         if (this instanceof Player) this.game.handlePlayerDeath(this);
-        if (this instanceof Enemy && Math.random() < 0.15) {
-            const standardTypes = [
-                POWERUP_TYPES.SHIELD, POWERUP_TYPES.SHIELD,
-                POWERUP_TYPES.BOMB, POWERUP_TYPES.BOMB,
-                POWERUP_TYPES.SHOVEL, POWERUP_TYPES.SHOVEL,
-                POWERUP_TYPES.TIME, POWERUP_TYPES.TIME,
-                POWERUP_TYPES.LIFE,
-                POWERUP_TYPES.STAR
+        if (this instanceof Enemy && !this.isBoss) {
+            let dropChance = 0.15;
+            let dropTypes = [
+                POWERUP_TYPES.SHIELD, POWERUP_TYPES.BOMB, POWERUP_TYPES.SHOVEL, 
+                POWERUP_TYPES.TIME, POWERUP_TYPES.STAR, POWERUP_TYPES.W_MISSILE
             ];
-            const type = standardTypes[Math.floor(Math.random() * standardTypes.length)];
-            this.game.powerUps.push(new PowerUp(this.game, this.x, this.y, type));
+            
+            if (this.variant === 'HEAVY') {
+                dropChance = 0.4;
+                dropTypes = [POWERUP_TYPES.LIFE, POWERUP_TYPES.SHOVEL, POWERUP_TYPES.W_EXPLOSIVE, POWERUP_TYPES.BOMB, POWERUP_TYPES.BOMB];
+            } else if (this.variant === 'FAST') {
+                dropChance = 0.3;
+                dropTypes = [POWERUP_TYPES.TIME, POWERUP_TYPES.SHIELD, POWERUP_TYPES.W_LASER];
+            } else if (this.variant === 'ELITE') {
+                dropChance = 0.8;
+                dropTypes = [POWERUP_TYPES.STAR, POWERUP_TYPES.STAR, POWERUP_TYPES.LIFE, POWERUP_TYPES.W_BOUNCE, POWERUP_TYPES.W_SPREAD];
+            } else if (this.variant === 'SMART') {
+                dropChance = 0.5;
+                dropTypes = [POWERUP_TYPES.STAR, POWERUP_TYPES.W_MISSILE, POWERUP_TYPES.SHIELD];
+            } else if (this.variant === 'RAPID') {
+                dropChance = 0.4;
+                dropTypes = [POWERUP_TYPES.W_SPREAD, POWERUP_TYPES.W_BOUNCE, POWERUP_TYPES.STAR, POWERUP_TYPES.W_LASER];
+            }
+
+            if (Math.random() < dropChance) {
+                const type = dropTypes[Math.floor(Math.random() * dropTypes.length)];
+                this.game.powerUps.push(new PowerUp(this.game, this.x, this.y, type));
+            }
         }
     }
     draw(ctx) {
@@ -1079,34 +1143,88 @@ class Enemy extends Tank {
         super(game, x, y, COLORS.ENEMY); 
         const diffMult = game.difficulty === 'easy' ? 0.8 : (game.difficulty === 'hard' ? 1.2 : 1); 
         const r = Math.random();
-        if (stage > 5 && r < 0.15) this.variant = 'ELITE';
-        else if (stage > 2 && r < 0.4) this.variant = 'HEAVY';
-        else if (r < 0.6) this.variant = 'FAST';
+        
+        if (stage > 4 && r < 0.15) this.variant = 'ELITE';
+        else if (stage > 2 && r < 0.3) this.variant = 'HEAVY';
+        else if (stage > 3 && r < 0.45) this.variant = 'SMART';
+        else if (stage > 5 && r < 0.6) this.variant = 'RAPID';
+        else if (r < 0.75) this.variant = 'FAST';
         else this.variant = 'BASIC';
 
         if (this.variant === 'FAST') { this.speed = (2.5 + Math.min(stage * 0.05, 0.8)) * diffMult; this.health = 1; this.color = '#FF9999'; }
-        else if (this.variant === 'HEAVY') { this.speed = (1.0 + Math.min(stage * 0.02, 0.5)) * diffMult; this.health = 3; this.color = '#777777'; }
-        else if (this.variant === 'ELITE') { this.speed = (1.8 + Math.min(stage * 0.05, 0.8)) * diffMult; this.health = 1; this.level = Math.min(3, 1 + Math.floor(stage / 10)); this.color = '#FF55FF'; }
+        else if (this.variant === 'HEAVY') { this.speed = (1.0 + Math.min(stage * 0.02, 0.5)) * diffMult; this.health = 3 + Math.floor(stage / 10); this.color = '#777777'; }
+        else if (this.variant === 'ELITE') { this.speed = (1.8 + Math.min(stage * 0.05, 0.8)) * diffMult; this.health = 3 + Math.floor(stage / 5); this.level = Math.min(3, 1 + Math.floor(stage / 10)); this.color = '#FF55FF'; }
+        else if (this.variant === 'SMART') { this.speed = (1.6 + Math.min(stage * 0.05, 0.8)) * diffMult; this.health = 2; this.color = '#55FFFF'; }
+        else if (this.variant === 'RAPID') { this.speed = (1.2 + Math.min(stage * 0.05, 0.8)) * diffMult; this.health = 2; this.color = '#FFFF55'; }
         else { this.speed = (1.5 + Math.min(stage * 0.05, 0.8)) * diffMult; this.health = 1; this.level = Math.min(3, Math.floor(stage / 15)); }
         
         this.dirTimer = 0; 
     } 
+    findIncomingBullet() {
+        const range = TILE_SIZE * 6; const cx = this.x + this.width/2; const cy = this.y + this.height/2;
+        for (const b of this.game.bullets) {
+            if (!b.active || b.owner instanceof Enemy) continue;
+            let incoming = false;
+            if (b.dir === 'DOWN' && Math.abs(b.x + b.size/2 - cx) < 24 && b.y < cy && cy - b.y < range) incoming = true;
+            if (b.dir === 'UP' && Math.abs(b.x + b.size/2 - cx) < 24 && b.y > cy && b.y - cy < range) incoming = true;
+            if (b.dir === 'RIGHT' && Math.abs(b.y + b.size/2 - cy) < 24 && b.x < cx && cx - b.x < range) incoming = true;
+            if (b.dir === 'LEFT' && Math.abs(b.y + b.size/2 - cy) < 24 && b.x > cx && b.x - cx < range) incoming = true;
+            if (incoming) return b;
+        }
+        return null;
+    }
+    getSmartDodgeDir(bullet) {
+        const perpDirs = (bullet.dir === 'UP' || bullet.dir === 'DOWN') ? ['LEFT', 'RIGHT'] : ['UP', 'DOWN'];
+        const validDirs = perpDirs.filter(d => !this.isTileBlocked(this.x, this.y, d));
+        if (validDirs.length > 0) return validDirs[Math.floor(Math.random() * validDirs.length)];
+        return perpDirs[0];
+    }
     update() { 
         super.update();
         if (this.canFly && this.flyTimer > 0) {
             this.flyTimer--;
             if (this.flyTimer <= 0) {
                 if (!this.game.map.isBlocked(this.x, this.y, this.width, this.height, false, this.canBoat, false)) {
-                    this.canFly = false;
-                    this.game.showFloatingText('降落！', this.x, this.y, '#ccc');
-                } else {
-                    this.flyTimer = 1;
-                }
+                    this.canFly = false; this.game.showFloatingText('降落！', this.x, this.y, '#ccc');
+                } else this.flyTimer = 1;
             }
         } 
         if (this.game.enemyFrozenTimer > 0) return;
-        if (this.dirTimer <= 0) { this.direction = ['UP', 'DOWN', 'LEFT', 'RIGHT'][Math.floor(Math.random() * 4)]; this.dirTimer = 30 + Math.random() * 60; } else this.dirTimer--; const ox = this.x; const oy = this.y; this.move(this.direction); if (this.x === ox && this.y === oy) this.dirTimer = 0; if (Math.random() * 100 < (this.variant==='ELITE'? 4 : 2)) this.shoot(); 
-    } 
+        
+        if (this.variant === 'SMART' || this.variant === 'ELITE') {
+            const incBullet = this.findIncomingBullet();
+            if (incBullet) {
+                this.direction = this.getSmartDodgeDir(incBullet);
+                this.dirTimer = 10;
+            } else if (this.dirTimer <= 0) {
+                let nearestP = null; let nearestD = Infinity;
+                for (const p of this.game.players) {
+                    if (!p.alive) continue;
+                    const d = Math.hypot(p.x - this.x, p.y - this.y);
+                    if (d < nearestD) { nearestD = d; nearestP = p; }
+                }
+                if (nearestP && Math.random() < 0.6) {
+                    let dx = nearestP.x - this.x; let dy = nearestP.y - this.y;
+                    if (Math.abs(dx) > Math.abs(dy)) this.direction = dx > 0 ? 'RIGHT' : 'LEFT';
+                    else this.direction = dy > 0 ? 'DOWN' : 'UP';
+                } else this.direction = ['UP', 'DOWN', 'LEFT', 'RIGHT'][Math.floor(Math.random() * 4)];
+                this.dirTimer = 30 + Math.random() * 30;
+            } else this.dirTimer--;
+        } else {
+            if (this.dirTimer <= 0) { 
+                this.direction = ['UP', 'DOWN', 'LEFT', 'RIGHT'][Math.floor(Math.random() * 4)]; 
+                this.dirTimer = 30 + Math.random() * 60; 
+            } else this.dirTimer--; 
+        }
+        
+        const ox = this.x; const oy = this.y; 
+        this.move(this.direction); 
+        if (this.x === ox && this.y === oy) this.dirTimer = 0; 
+        
+        let shootChance = this.variant === 'ELITE' ? 4 : 2;
+        if (this.variant === 'RAPID') shootChance = 8;
+        if (Math.random() * 100 < shootChance) this.shoot(); 
+    }
 }
 
 class Boss extends Enemy {
@@ -1114,31 +1232,48 @@ class Boss extends Enemy {
         super(game, x, y, stage);
         const difficulty = Math.min(stage / 50, 1);
         
-        const variants = ['SPREAD', 'HEAVY', 'FAST'];
+        const variants = [
+            'SPREAD', 'HEAVY', 'FAST', 'GREEDY', 'CHASER', 'ENRAGE', 'SNOW_YETI',
+            'LAZY', 'COWARD', 'BOMBER', 'NINJA', 'DANCER', 'SHIELDER', 'SUMMONER',
+            'THIEF', 'GIANT', 'TINY', 'GHOST', 'DRUNK', 'MIMIC'
+        ];
         this.bossVariant = variants[Math.floor(Math.random() * variants.length)];
         
         let scaleMult = 1;
         let hpMult = 1;
         let speedMult = 1;
         
-        if (this.bossVariant === 'HEAVY') {
-            scaleMult = 1.3; hpMult = 1.8; speedMult = 0.5;
-            this.title = ['JUGGERNAUT', 'DOOMSDAY', 'RED FURY'][Math.floor(Math.random()*3)];
-            this.color = `hsl(${0 + Math.random() * 20}, 70%, 40%)`;
-        } else if (this.bossVariant === 'FAST') {
-            scaleMult = 0.8; hpMult = 0.6; speedMult = 1.6;
-            this.title = ['VIPER', 'PHANTOM', 'GHOST'][Math.floor(Math.random()*3)];
-            this.color = `hsl(${100 + Math.random() * 40}, 80%, 40%)`;
-        } else {
-            this.title = ['IRON TITAN', 'WAR MACHINE', 'MECH OVERLORD'][Math.floor(Math.random()*3)];
-            this.color = `hsl(${200 + Math.random() * 40}, 60%, 35%)`;
-        }
+        this.title = 'MECH OVERLORD';
+        this.color = `hsl(${200 + Math.random() * 40}, 60%, 35%)`;
+        this.canFly = false;
+        
+        if (this.bossVariant === 'HEAVY') { scaleMult = 1.3; hpMult = 1.8; speedMult = 0.5; this.title = 'JUGGERNAUT'; this.color = '#700'; }
+        else if (this.bossVariant === 'FAST') { scaleMult = 0.8; hpMult = 0.6; speedMult = 1.6; this.title = 'PHANTOM'; this.color = '#007'; }
+        else if (this.bossVariant === 'GREEDY') { this.title = 'GREEDY GOBLIN'; this.color = '#0a0'; }
+        else if (this.bossVariant === 'CHASER') { speedMult = 1.3; this.title = 'BLOOD HOUND'; this.color = '#a00'; }
+        else if (this.bossVariant === 'ENRAGE') { this.title = 'BERSERKER'; this.color = '#500'; }
+        else if (this.bossVariant === 'SNOW_YETI') { this.title = 'SNOW YETI'; this.color = '#fff'; }
+        else if (this.bossVariant === 'LAZY') { speedMult = 0.6; this.title = 'SLOTHY'; this.color = '#888'; }
+        else if (this.bossVariant === 'COWARD') { speedMult = 1.5; this.title = 'RUNNER'; this.color = '#0aa'; }
+        else if (this.bossVariant === 'BOMBER') { this.title = 'BOMBERMAN'; this.color = '#f80'; }
+        else if (this.bossVariant === 'NINJA') { speedMult = 1.5; hpMult = 0.8; this.title = 'NINJA MASTER'; this.color = '#222'; }
+        else if (this.bossVariant === 'DANCER') { this.title = 'DISCO DANCER'; this.color = '#f0f'; }
+        else if (this.bossVariant === 'SHIELDER') { hpMult = 1.2; this.title = 'TURTLE'; this.color = '#00a'; }
+        else if (this.bossVariant === 'SUMMONER') { this.title = 'NECROMANCER'; this.color = '#a0a'; }
+        else if (this.bossVariant === 'THIEF') { speedMult = 2; hpMult = 0.5; this.title = 'BANDIT'; this.color = '#880'; }
+        else if (this.bossVariant === 'GIANT') { scaleMult = 2.0; hpMult = 3.0; speedMult = 0.3; this.title = 'TITAN'; this.color = '#444'; }
+        else if (this.bossVariant === 'TINY') { scaleMult = 0.5; hpMult = 0.3; speedMult = 2.5; this.title = 'ANT'; this.color = '#ff0'; }
+        else if (this.bossVariant === 'GHOST') { this.canFly = true; this.title = 'POLTERGEIST'; this.color = '#aaa'; }
+        else if (this.bossVariant === 'DRUNK') { this.title = 'DRUNKARD'; this.color = '#a50'; }
+        else if (this.bossVariant === 'MIMIC') { this.title = 'DOPPELGANGER'; this.color = '#ccc'; }
+        else if (this.bossVariant === 'SPREAD') { this.title = 'MACHINE GUNNER'; }
         
         const scale = (1.5 + Math.random() * 0.5 + difficulty * 0.5) * scaleMult;
         this.width = TILE_SIZE * scale; this.height = TILE_SIZE * scale;
         this.health = Math.floor((30 + stage * 5) * scale * hpMult); 
         this.maxHealth = this.health;
         this.speed = (1.0 + difficulty * 0.8) * speedMult; 
+        this.baseSpeed = this.speed;
         this.isBoss = true;
         this.turretAngle = 0; this.turretTargetAngle = 0;
         this.barrelLength = this.width * 0.6;
@@ -1147,22 +1282,48 @@ class Boss extends Enemy {
         
         const weathers = ['RAIN', 'SNOW', 'WIND', 'LIGHTNING'];
         this.game.weather = weathers[Math.floor(Math.random() * weathers.length)];
+        
+        if (this.bossVariant === 'SNOW_YETI' && this.game.weather === 'SNOW') {
+            this.speed *= 1.5;
+            this.baseSpeed = this.speed;
+            this.health *= 1.5;
+            this.maxHealth = this.health;
+        }
+        
+        this.stateTimer = 0;
+        this.ninjaTeleportCd = 300;
+        this.shieldActive = false;
+        this.shieldCooldown = 300;
+        this.summonCooldown = 400;
     }
     shoot() {
-        if (this.cooldown > 0) return; 
+        if (this.cooldown > 0 || (this.bossVariant === 'LAZY' && this.stateTimer > 0)) return; 
+        if (this.bossVariant === 'SHIELDER' && this.shieldActive) return;
         
         let cdBase = 25;
         let offsets = [-0.25, 0, 0.25];
+        let bType = 'NORMAL';
         
-        if (this.bossVariant === 'HEAVY') {
-            cdBase = 45;
-            offsets = [0];
-        } else if (this.bossVariant === 'FAST') {
-            cdBase = 15;
-            offsets = [-0.15, 0.15];
-        } else {
-            cdBase = 25;
-            offsets = [-0.25, 0, 0.25];
+        if (this.bossVariant === 'HEAVY' || this.bossVariant === 'GIANT') {
+            cdBase = 45; offsets = [0];
+        } else if (this.bossVariant === 'FAST' || this.bossVariant === 'TINY') {
+            cdBase = 10; offsets = [-0.15, 0.15];
+        } else if (this.bossVariant === 'SNOW_YETI' && this.game.weather === 'SNOW') {
+            offsets = [-0.75, -0.5, -0.25, 0, 0.25, 0.5, 0.75];
+        } else if (this.bossVariant === 'BOMBER') {
+            bType = 'EXPLOSIVE'; cdBase = 60; offsets = [0];
+        } else if (this.bossVariant === 'DANCER') {
+            cdBase = 8; offsets = [0]; this.turretAngle += 0.5;
+        } else if (this.bossVariant === 'MIMIC') {
+            if (this.game.players.length > 0 && this.game.players[0].alive) {
+                bType = this.game.players[0].weaponClass || 'NORMAL';
+            }
+        } else if (this.bossVariant === 'NINJA') {
+            bType = 'BOUNCE';
+        }
+        
+        if (this.bossVariant === 'ENRAGE' && this.health < this.maxHealth * 0.3) {
+            cdBase /= 2;
         }
         
         this.cooldown = Math.max(cdBase, cdBase + 20 - this.level * 4);
@@ -1170,7 +1331,10 @@ class Boss extends Enemy {
         const cy = this.y + this.height / 2;
         
         for (let offset of offsets) {
-            const angle = this.turretAngle + offset;
+            let angle = this.turretAngle + offset;
+            if (this.bossVariant === 'DRUNK') angle += (Math.random() - 0.5) * 2;
+            if (this.bossVariant === 'DANCER') angle = this.turretAngle;
+
             const bx = cx + Math.cos(angle) * (this.barrelLength + 10);
             const by = cy + Math.sin(angle) * (this.barrelLength + 10);
             
@@ -1185,29 +1349,30 @@ class Boss extends Enemy {
             const gy = Math.floor(by / TILE_SIZE);
             if (gx >= 0 && gx < GRID_SIZE && gy >= 0 && gy < GRID_SIZE) {
                 const tile = this.game.map.grid[gy][gx];
-                if (tile !== TILE_TYPES.BRICK && tile !== TILE_TYPES.STEEL) {
+                if (tile !== TILE_TYPES.BRICK && tile !== TILE_TYPES.STEEL && !this.canFly) {
                     let blvl = this.level;
-                    if (this.bossVariant === 'HEAVY') blvl += 2; // Heavy bullets explode larger
-                    this.game.bullets.push(new Bullet(this.game, this, bx - 8, by - 8, dir, blvl));
+                    if (this.bossVariant === 'HEAVY' || this.bossVariant === 'GIANT') blvl += 2; 
+                    let b = new Bullet(this.game, this, bx - 8, by - 8, dir, blvl, bType);
+                    b.vx = Math.cos(angle) * b.speed;
+                    b.vy = Math.sin(angle) * b.speed;
+                    this.game.bullets.push(b);
+                } else if (this.canFly) {
+                    let blvl = this.level;
+                    let b = new Bullet(this.game, this, bx - 8, by - 8, dir, blvl, bType);
+                    b.vx = Math.cos(angle) * b.speed;
+                    b.vy = Math.sin(angle) * b.speed;
+                    this.game.bullets.push(b);
                 }
             }
         }
         audio.play('shoot');
     }
     update() {
-        super.update();
-        if (this.canFly && this.flyTimer > 0) {
-            this.flyTimer--;
-            if (this.flyTimer <= 0) {
-                if (!this.game.map.isBlocked(this.x, this.y, this.width, this.height, false, this.canBoat, false)) {
-                    this.canFly = false;
-                    this.game.showFloatingText('降落！', this.x, this.y, '#ccc');
-                } else {
-                    this.flyTimer = 1;
-                }
-            }
-        }
+        this.cooldown--;
+        this.shieldTimer--;
+        
         if (this.game.enemyFrozenTimer > 0) return;
+        
         let nearestEnemy = null;
         let nearestDist = Infinity;
         for (const p of this.game.players) {
@@ -1215,11 +1380,115 @@ class Boss extends Enemy {
             const d = Math.hypot(p.x - this.x, p.y - this.y);
             if (d < nearestDist) { nearestDist = d; nearestEnemy = p; }
         }
+        
+        if (this.bossVariant === 'ENRAGE') {
+            if (this.health < this.maxHealth * 0.3) {
+                this.speed = this.baseSpeed * 2.5;
+                this.color = '#f00';
+            }
+        }
+        if (this.bossVariant === 'LAZY') {
+            if (this.stateTimer <= 0) {
+                if (Math.random() < 0.2) this.stateTimer = 180;
+                else this.stateTimer = -300;
+            }
+            if (this.stateTimer > 0) {
+                this.stateTimer--;
+                if (this.stateTimer % 30 === 0) this.game.showFloatingText('Zzz...', this.x + this.width/2, this.y, '#fff');
+                return;
+            }
+            if (this.stateTimer < 0) this.stateTimer++;
+        }
+        if (this.bossVariant === 'NINJA') {
+            this.ninjaTeleportCd--;
+            if (this.ninjaTeleportCd <= 0 && nearestEnemy) {
+                this.x = nearestEnemy.x + (Math.random() > 0.5 ? 150 : -150);
+                this.y = nearestEnemy.y + (Math.random() > 0.5 ? 150 : -150);
+                this.x = Math.max(0, Math.min(CANVAS_SIZE - this.width, this.x));
+                this.y = Math.max(0, Math.min(CANVAS_SIZE - this.height, this.y));
+                this.ninjaTeleportCd = 300;
+                this.game.effects.push(new Effect(this.x + this.width/2, this.y + this.height/2, 'SPAWN', 3));
+            }
+        }
+        if (this.bossVariant === 'SHIELDER') {
+            this.shieldCooldown--;
+            if (this.shieldCooldown <= 0) {
+                this.shieldActive = true;
+                this.shieldCooldown = 400; 
+                this.setShield(180); 
+            }
+            if (this.shieldTimer <= 0) this.shieldActive = false;
+        }
+        if (this.bossVariant === 'SUMMONER') {
+            this.summonCooldown--;
+            if (this.summonCooldown <= 0) {
+                this.summonCooldown = 300;
+                this.game.effects.push(new Effect(this.x + this.width/2, this.y + this.height/2, 'SPAWN', 3));
+                this.game.enemies.push(new Enemy(this.game, this.x, this.y + this.height + 10, this.game.currentStage));
+            }
+        }
+        
+        let targetX = this.x; let targetY = this.y;
+        let moving = false;
+        
+        if (this.bossVariant === 'GREEDY') {
+            let nearestPowerup = null;
+            let pDist = Infinity;
+            for (const p of this.game.powerUps) {
+                const d = Math.hypot(p.x - this.x, p.y - this.y);
+                if (d < pDist) { pDist = d; nearestPowerup = p; }
+            }
+            if (nearestPowerup) {
+                targetX = nearestPowerup.x; targetY = nearestPowerup.y;
+                moving = true;
+                if (pDist < this.width) {
+                    nearestPowerup.active = false; 
+                    this.health = Math.min(this.maxHealth, this.health + 50);
+                    this.game.showFloatingText('+50 HP', this.x, this.y, '#0f0');
+                }
+            }
+        }
+        if (!moving && nearestEnemy) {
+            if (this.bossVariant === 'CHASER' || this.bossVariant === 'ENRAGE') {
+                targetX = nearestEnemy.x; targetY = nearestEnemy.y; moving = true;
+            } else if (this.bossVariant === 'COWARD') {
+                if (nearestDist < TILE_SIZE * 8) {
+                    targetX = this.x + (this.x - nearestEnemy.x);
+                    targetY = this.y + (this.y - nearestEnemy.y);
+                    moving = true;
+                }
+            } else if (this.bossVariant === 'DRUNK' || this.bossVariant === 'DANCER') {
+                if (this.dirTimer <= 0) {
+                    this.dirTimer = 30 + Math.random() * 30;
+                    this.direction = ['UP', 'DOWN', 'LEFT', 'RIGHT'][Math.floor(Math.random() * 4)];
+                } else this.dirTimer--;
+            } else {
+                if (this.dirTimer <= 0) {
+                    this.dirTimer = 30 + Math.random() * 60;
+                    this.direction = ['UP', 'DOWN', 'LEFT', 'RIGHT'][Math.floor(Math.random() * 4)];
+                } else this.dirTimer--;
+            }
+        }
+        
+        if (moving) {
+            let dx = targetX - this.x; let dy = targetY - this.y;
+            if (Math.abs(dx) > Math.abs(dy)) this.direction = dx > 0 ? 'RIGHT' : 'LEFT';
+            else this.direction = dy > 0 ? 'DOWN' : 'UP';
+        }
+        
+        const ox = this.x; const oy = this.y; 
+        if (this.bossVariant !== 'SUMMONER' || !this.shieldActive) {
+            this.move(this.direction); 
+        }
+        if (this.x === ox && this.y === oy) this.dirTimer = 0; 
+        
         if (nearestEnemy) {
             const cx = this.x + this.width / 2;
             const cy = this.y + this.height / 2;
-            this.turretTargetAngle = Math.atan2(nearestEnemy.y + nearestEnemy.height/2 - cy, nearestEnemy.x + nearestEnemy.width/2 - cx);
-            if (nearestDist < TILE_SIZE * 15 && Math.random() < 0.05) this.shoot();
+            if (this.bossVariant !== 'DANCER') {
+                this.turretTargetAngle = Math.atan2(nearestEnemy.y + nearestEnemy.height/2 - cy, nearestEnemy.x + nearestEnemy.width/2 - cx);
+            }
+            if (nearestDist < TILE_SIZE * 15 && Math.random() < 0.1) this.shoot();
         }
         let diff = this.turretTargetAngle - this.turretAngle;
         while (diff > Math.PI) diff -= Math.PI * 2;
@@ -1230,10 +1499,19 @@ class Boss extends Enemy {
             if (!p.alive) continue;
             if (this.x < p.x + p.width && this.x + this.width > p.x && this.y < p.y + p.height && this.y + this.height > p.y) {
                 p.destroy(this, 999);
+                if (this.bossVariant === 'THIEF') {
+                    p.score = Math.max(0, p.score - 500);
+                    this.game.showFloatingText('-500 SCORE!', p.x, p.y, '#f00');
+                }
             }
         }
     }
     destroy(killer, damage = 1) {
+        if (this.shieldTimer > 0) {
+            audio.play('hit');
+            this.game.effects.push(new Effect(this.x + this.width/2, this.y + this.height/2, 'EXPLOSION', 1));
+            return;
+        }
         this.health -= damage; 
         this.game.effects.push(new Effect(this.x + Math.random()*this.width, this.y + Math.random()*this.height, 'EXPLOSION', 2.5));
         audio.play('hit');
@@ -1244,7 +1522,7 @@ class Boss extends Enemy {
         if (this.health <= 0) {
             this.alive = false; this.game.weather = 'NONE';
             for (let i = 0; i < 12; i++) {
-                const standardTypes = [POWERUP_TYPES.SHIELD, POWERUP_TYPES.BOMB, POWERUP_TYPES.SHOVEL, POWERUP_TYPES.TIME, POWERUP_TYPES.LIFE, POWERUP_TYPES.STAR];
+                const standardTypes = [POWERUP_TYPES.SHIELD, POWERUP_TYPES.BOMB, POWERUP_TYPES.SHOVEL, POWERUP_TYPES.TIME, POWERUP_TYPES.LIFE, POWERUP_TYPES.STAR, POWERUP_TYPES.STAR, POWERUP_TYPES.W_MISSILE, POWERUP_TYPES.W_LASER, POWERUP_TYPES.W_EXPLOSIVE, POWERUP_TYPES.W_SPREAD, POWERUP_TYPES.W_BOUNCE];
                 const angle = (i / 12) * Math.PI * 2;
                 const dist = TILE_SIZE * 3;
                 let px = this.x + this.width/2 + Math.cos(angle) * dist - 32;
@@ -1284,6 +1562,10 @@ class Boss extends Enemy {
         const cx = px + w / 2; const cy = py + h / 2;
         ctx.save();
         
+        if (this.bossVariant === 'GHOST') {
+            ctx.globalAlpha = 0.5;
+        }
+        
         const cBase = this.color;
         const cHighlight = this.metalColor;
         
@@ -1292,7 +1574,7 @@ class Boss extends Enemy {
         ctx.strokeStyle = '#222'; ctx.lineWidth = 2;
         for (let i = 0; i < 4; i++) {
             const offset = 8 + i * 6;
-            ctx.strokeRect(px + offset, py + offset, w - offset * 2, h - offset * 2);
+            if (w - offset * 2 > 0) ctx.strokeRect(px + offset, py + offset, w - offset * 2, h - offset * 2);
         }
         
         ctx.fillStyle = '#222';
@@ -1309,14 +1591,14 @@ class Boss extends Enemy {
         ctx.fillStyle = '#333'; ctx.beginPath(); ctx.arc(cx, cy, 10, 0, Math.PI * 2); ctx.fill();
         
         ctx.save(); ctx.translate(cx, cy); ctx.rotate(this.turretAngle);
-        ctx.fillStyle = this.bossVariant === 'HEAVY' ? '#a44' : (this.bossVariant === 'FAST' ? '#4a4' : '#44a'); 
+        ctx.fillStyle = '#444'; 
         ctx.fillRect(0, -5, this.barrelLength, 10);
         
-        if (this.bossVariant === 'SPREAD') {
+        if (this.bossVariant === 'SPREAD' || this.bossVariant === 'SNOW_YETI') {
             ctx.fillStyle = '#4a4a5a'; 
             ctx.rotate(-0.25); ctx.fillRect(0, -3, this.barrelLength - 10, 6); ctx.rotate(0.5);
             ctx.fillRect(0, -3, this.barrelLength - 10, 6); ctx.rotate(-0.25);
-        } else if (this.bossVariant === 'FAST') {
+        } else if (this.bossVariant === 'FAST' || this.bossVariant === 'TINY') {
             ctx.fillStyle = '#4a4a5a';
             ctx.fillRect(0, -12, this.barrelLength, 6);
             ctx.fillRect(0, 6, this.barrelLength, 6);
@@ -1330,7 +1612,17 @@ class Boss extends Enemy {
         ctx.strokeStyle = '#5a5a6a'; ctx.lineWidth = 1; ctx.strokeRect(-8, -8, 16, 16);
         ctx.restore();
         
-        ctx.fillStyle = this.color === '#ffffff' ? '#ffffff' : (this.bossVariant === 'HEAVY' ? '#ff4444' : (this.bossVariant === 'FAST' ? '#44ff44' : '#44aaff')); 
+        if (this.shieldTimer > 0) {
+            ctx.beginPath();
+            ctx.arc(cx, cy, w/2 + 10, 0, Math.PI * 2);
+            ctx.strokeStyle = '#0ff';
+            ctx.lineWidth = 4;
+            ctx.stroke();
+        }
+        
+        ctx.restore();
+        
+        ctx.fillStyle = this.color === '#ffffff' ? '#ffffff' : this.color; 
         ctx.font = 'bold 16px Arial'; ctx.textAlign = 'center';
         ctx.fillText(this.title, cx, py - 25);
         const barW = w * 0.8; const barH = 8;
@@ -1340,7 +1632,6 @@ class Boss extends Enemy {
         ctx.fillStyle = hpRatio > 0.5 ? '#0a0' : (hpRatio > 0.25 ? '#fa0' : '#f00');
         ctx.fillRect(barX, barY, barW * hpRatio, barH);
         ctx.strokeStyle = '#666'; ctx.lineWidth = 1; ctx.strokeRect(barX, barY, barW, barH);
-        ctx.restore();
     }
 }
 
