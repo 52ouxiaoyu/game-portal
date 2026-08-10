@@ -3,8 +3,8 @@ const TILE_SIZE = 32;
 const GRID_SIZE = 26;
 const CANVAS_SIZE = TILE_SIZE * GRID_SIZE; // 832px
 
-const TILE_TYPES = { EMPTY: 0, BRICK: 1, STEEL: 2, WATER: 3, FOREST: 4, ICE: 5, HARD_BRICK: 6, UNBREAKABLE: 7, BASE: 9, BASE_DESTROYED: 10 };
-const COLORS = { BRICK: '#B53120', BRICK_LIGHT: '#DC5341', STEEL: '#AAAAAA', STEEL_LIGHT: '#EEEEEE', WATER: '#2131E7', FOREST: '#21B521', PLAYER1: '#E7E721', PLAYER2: '#63C6FF', ENEMY: '#E7E7E7', BASE: '#E79C21' };
+const TILE_TYPES = { EMPTY: 0, BRICK: 1, STEEL: 2, WATER: 3, FOREST: 4, ICE: 5, HARD_BRICK: 6, UNBREAKABLE: 7, BARREL: 8, BASE: 9, BASE_DESTROYED: 10 };
+const COLORS = { BRICK: '#B53120', BRICK_LIGHT: '#DC5341', STEEL: '#AAAAAA', STEEL_LIGHT: '#EEEEEE', WATER: '#2131E7', FOREST: '#21B521', PLAYER1: '#E7E721', PLAYER2: '#63C6FF', ENEMY: '#E7E7E7', BASE: '#E79C21', BARREL: '#FF4400' };
 const POWERUP_TYPES = { SHIELD: '🛡️', BOMB: '💣', STAR: '⭐', SHOVEL: '🏗️', LIFE: '❤️', TIME: '⏳', MAX_WEAPON: '🚀', BOAT: '🚤', FLY: '🚁', W_MISSILE: '🎯', W_LASER: '⚡', W_EXPLOSIVE: '💥' };
 
 function seededRandom(seed) {
@@ -266,7 +266,7 @@ class PowerUp {
         this.game = game; this.x = x; this.y = y; this.type = type; this.width = 64; this.height = 64; this.timer = 900; this.active = true;
         if (type === POWERUP_TYPES.FLY) this.game.showTip("💡 TIP: 吃到直升机🚁可获得飞行能力，无视地形与子弹，按开火键轰炸！", 600);
         else if (type === POWERUP_TYPES.BOAT) this.game.showTip("💡 TIP: 吃到小艇🚤可在水面上自由移动，利用湖泊躲避不会游泳的敌人！", 600);
-        else if (type === POWERUP_TYPES.MAX_WEAPON) this.game.showTip("💡 TIP: 终极神药来了！吃到🚀直接升至满级9级，火力全开！", 600);
+        else if (type === POWERUP_TYPES.MAX_WEAPON) this.game.showTip("💡 TIP: 遗产火箭！吃到🚀直接升至满级5级，火力全开！", 600);
         else if (type === POWERUP_TYPES.BOMB) this.game.showTip("💡 TIP: 吃到炸弹💣可以瞬间消灭屏幕上的所有敌人！", 400);
         else if (type === POWERUP_TYPES.SHOVEL) this.game.showTip("💡 TIP: 吃到铁锹🏗️可以把基地周围的砖块升级为坚不可摧的钢板！", 400);
         else if (type === POWERUP_TYPES.TIME) this.game.showTip("💡 TIP: 吃到时钟⏳可以冻结所有敌人一段时间！", 400);
@@ -305,9 +305,9 @@ class PowerUp {
         else if (this.type === POWERUP_TYPES.LIFE) this.game.lives++;
         else if (this.type === POWERUP_TYPES.TIME) this.game.enemyFrozenTimer = 300;
         else if (this.type === POWERUP_TYPES.MAX_WEAPON) {
-            player.level = 9;
-            player.speed = Math.min(8, 4 + 9 * 0.15);
-            player.maxHealth = 1 + 9 * 2;
+            player.level = 5;
+            player.speed = Math.min(8, 4 + 5 * 0.15);
+            player.maxHealth = 1 + 5 * 2;
             player.health = player.maxHealth;
             this.game.showAnnouncement('终极武器 MAX WEAPON!', '#f0f');
             this.game.updateHUD();
@@ -354,6 +354,17 @@ class GameMap {
         if (level.forests) level.forests.forEach(([y,x,h,w]) => { for(let i=0; i<h; i++) for(let j=0; j<w; j++) if (y+i < GRID_SIZE && x+j < GRID_SIZE) this.grid[y+i][x+j] = TILE_TYPES.FOREST; });
         if (level.ices) level.ices.forEach(([y,x,h,w]) => { for(let i=0; i<h; i++) for(let j=0; j<w; j++) if (y+i < GRID_SIZE && x+j < GRID_SIZE) this.grid[y+i][x+j] = TILE_TYPES.ICE; });
         
+        
+        // Spawn Explosive Barrels
+        const numBarrels = 3 + Math.floor(Math.random() * 4);
+        for (let k = 0; k < numBarrels; k++) {
+            const bx = 2 + Math.floor(Math.random() * 20);
+            const by = 4 + Math.floor(Math.random() * 16);
+            if (this.grid[by][bx] !== TILE_TYPES.BASE && this.grid[by][bx] !== TILE_TYPES.UNBREAKABLE) {
+                this.grid[by][bx] = TILE_TYPES.BARREL;
+            }
+        }
+        
         // Force spawn 4~8 UNBREAKABLE pillars/blocks on every map for guaranteed cover
         const numPillars = 4 + Math.floor(Math.random() * 5);
         for (let k = 0; k < numPillars; k++) {
@@ -396,6 +407,10 @@ class GameMap {
                     ctx.fillStyle = COLORS.BRICK; ctx.fillRect(px, py, TILE_SIZE, TILE_SIZE);
                     ctx.fillStyle = COLORS.BRICK_LIGHT; ctx.fillRect(px, py, TILE_SIZE, 4); ctx.fillRect(px, py, 4, TILE_SIZE);
                     ctx.fillStyle = '#000'; ctx.fillRect(px + TILE_SIZE/2, py, 2, TILE_SIZE); ctx.fillRect(px, py + TILE_SIZE/2, TILE_SIZE, 2);
+                } else if (tile === TILE_TYPES.BARREL) {
+                    ctx.fillStyle = COLORS.BARREL; ctx.fillRect(px + 4, py + 4, TILE_SIZE - 8, TILE_SIZE - 8);
+                    ctx.fillStyle = '#000'; ctx.fillRect(px + TILE_SIZE/2 - 2, py + 4, 4, TILE_SIZE - 8);
+                    ctx.fillStyle = '#FFF'; ctx.font = '16px Arial'; ctx.textAlign='center'; ctx.fillText('☠️', px+TILE_SIZE/2, py+TILE_SIZE/2+6);
                 } else if (tile === TILE_TYPES.HARD_BRICK) {
                     ctx.fillStyle = '#8B4513'; ctx.fillRect(px, py, TILE_SIZE, TILE_SIZE);
                     ctx.fillStyle = '#A0522D'; ctx.fillRect(px, py, TILE_SIZE, 4); ctx.fillRect(px, py, 4, TILE_SIZE);
@@ -568,9 +583,9 @@ class Bullet {
             return; 
         }
         const tile = this.game.map.grid[ty][tx];
-        if (tile === TILE_TYPES.BRICK || tile === TILE_TYPES.HARD_BRICK || tile === TILE_TYPES.STEEL || tile === TILE_TYPES.UNBREAKABLE || tile === TILE_TYPES.BASE) {
+        if (tile === TILE_TYPES.BRICK || tile === TILE_TYPES.HARD_BRICK || tile === TILE_TYPES.STEEL || tile === TILE_TYPES.UNBREAKABLE || tile === TILE_TYPES.BASE || tile === TILE_TYPES.BARREL) {
             if (this.piercing) {
-                if (tile === TILE_TYPES.BRICK || tile === TILE_TYPES.HARD_BRICK) {
+                if (tile === TILE_TYPES.BRICK || tile === TILE_TYPES.HARD_BRICK || tile === TILE_TYPES.BARREL) {
                     this.game.map.grid[ty][tx] = TILE_TYPES.EMPTY;
                     return;
                 }
@@ -579,7 +594,33 @@ class Bullet {
                     return;
                 }
             }
-            if (tile === TILE_TYPES.BASE) {
+            if (tile === TILE_TYPES.BARREL) {
+                this.game.map.grid[ty][tx] = TILE_TYPES.EMPTY;
+                this.game.hitStopTimer = 6; // Hit Stop!
+                let explosionRadius = 3.5;
+                audio.play('explosion');
+                this.game.effects.push(new Effect(tx*TILE_SIZE+16, ty*TILE_SIZE+16, 'EXPLOSION', explosionRadius));
+                // Destructive AOE
+                for (let iy = ty - 3; iy <= ty + 3; iy++) {
+                    for (let ix = tx - 3; ix <= tx + 3; ix++) {
+                        if (iy >= 0 && iy < GRID_SIZE && ix >= 0 && ix < GRID_SIZE) {
+                            let d = Math.hypot(ix - tx, iy - ty);
+                            if (d <= explosionRadius) {
+                                let t = this.game.map.grid[iy][ix];
+                                if (t === TILE_TYPES.BRICK || t === TILE_TYPES.HARD_BRICK || t === TILE_TYPES.STEEL || t === TILE_TYPES.BARREL) {
+                                    this.game.map.grid[iy][ix] = TILE_TYPES.EMPTY;
+                                }
+                            }
+                        }
+                    }
+                }
+                // Damage tanks
+                for (let tank of [...this.game.players, ...this.game.enemies]) {
+                    if (!tank.alive) continue;
+                    let d = Math.hypot(tank.x/TILE_SIZE - tx, tank.y/TILE_SIZE - ty);
+                    if (d <= explosionRadius + 1) tank.destroy(this.owner || this, 5);
+                }
+            } else if (tile === TILE_TYPES.BASE) {
                 if (this.owner instanceof Enemy) {
                     this.game.baseHealth--;
                     if (this.game.baseHealth === 2 || this.game.baseHealth === 1) {
@@ -812,6 +853,31 @@ class Tank {
             }
         }
         if (this instanceof Player) this.game.handlePlayerDeath(this);
+        
+        if (this instanceof Enemy) {
+            // Wreckage
+            this.game.wreckages.push({x: this.x, y: this.y, timer: 600, type: this.isBoss ? 'BOSS' : 'NORMAL'});
+            
+            // Hit Stop for Boss
+            if (this.isBoss) this.game.hitStopTimer = 10;
+            
+            // Combo
+            if (killer instanceof Player) {
+                this.game.comboCount++;
+                this.game.comboTimer = 180;
+                let comboMsg = '';
+                if (this.game.comboCount === 2) comboMsg = 'DOUBLE KILL!';
+                else if (this.game.comboCount === 3) comboMsg = 'TRIPLE KILL!!';
+                else if (this.game.comboCount === 4) comboMsg = 'DOMINATING!!!';
+                else if (this.game.comboCount >= 5) comboMsg = 'UNSTOPPABLE!!!!';
+                
+                if (comboMsg) {
+                    this.game.showFloatingText(comboMsg, this.x, this.y - 30, '#f0f');
+                    killer.score += this.game.comboCount * 100;
+                    if (this.game.comboCount >= 3) this.game.hitStopTimer = 4;
+                }
+            }
+        }
         if (this instanceof Enemy && !this.isBoss) {
             let dropChance = 0.08;
             let type = null;
@@ -855,7 +921,26 @@ class Tank {
         }
     }
     draw(ctx) {
-        const px = this.x; const py = this.y; const w = this.width; const h = this.height; ctx.save();
+        const px = this.x; const py = this.y; const w = this.width; const h = this.height;
+        
+        // Boss Telegraph
+        if (this.isBoss && this.cooldown > 0 && this.cooldown < 20) {
+            ctx.save();
+            ctx.strokeStyle = `rgba(255, 0, 0, ${(20 - this.cooldown) / 20})`;
+            ctx.lineWidth = 4;
+            ctx.setLineDash([5, 5]);
+            ctx.beginPath();
+            let startX = px + w/2, startY = py + h/2;
+            ctx.moveTo(startX, startY);
+            if (this.direction === 'UP') ctx.lineTo(startX, startY - 800);
+            else if (this.direction === 'DOWN') ctx.lineTo(startX, startY + 800);
+            else if (this.direction === 'LEFT') ctx.lineTo(startX - 800, startY);
+            else if (this.direction === 'RIGHT') ctx.lineTo(startX + 800, startY);
+            ctx.stroke();
+            ctx.restore();
+        }
+        
+        ctx.save();
         if (this.level >= 1) {
             ctx.shadowBlur = 8 + Math.min(this.level, 5) * 4;
             ctx.shadowColor = this.level >= 4 ? '#f0f' : (this.level >= 3 ? '#0ff' : (this.level >= 2 ? '#f00' : (this.level >= 1 ? '#ff0' : '#fff')));
@@ -1639,7 +1724,11 @@ class Game {
         this.canvas = document.getElementById('game-canvas'); this.ctx = this.canvas.getContext('2d');
         this.canvas.width = CANVAS_SIZE; this.canvas.height = CANVAS_SIZE; this.input = new InputHandler(); this.map = new GameMap(this);
         this.players = []; this.enemies = []; this.bullets = []; this.effects = []; this.powerUps = []; this.fortifyTimer = 0; this.spawnTimer = 0; this.enemyFrozenTimer = 0;
-        this.currentStage = 0; this.gameState = 'START'; this.lives = 3; this.paused = false;
+        this.currentStage = 0; this.gameState = 'START'; this.lives = 3;
+        this.hitStopTimer = 0;
+        this.comboCount = 0;
+        this.comboTimer = 0;
+        this.wreckages = []; this.paused = false;
         this.highScore = parseInt(localStorage.getItem('tankBattleHighScore') || '0');
         this.baseHealth = 5; this.maxBaseHealth = 5;
         this.weather = 'NONE'; this.weatherParticles = [];
@@ -1868,6 +1957,8 @@ class Game {
         this.bullets.forEach(b => { try { b.update(); } catch(e) { console.error(e); } });
         this.effects.forEach(e => { try { e.update(); } catch(e) { console.error(e); } });
         this.powerUps.forEach(p => { try { p.update(); } catch(e) { console.error(e); } });
+        this.wreckages.forEach(w => w.timer--);
+        this.wreckages = this.wreckages.filter(w => w.timer > 0);
         this.bullets = this.bullets.filter(b => b.active && !isNaN(b.x) && !isNaN(b.y));
         this.effects = this.effects.filter(e => e.active && !isNaN(e.x) && !isNaN(e.y));
         this.powerUps = this.powerUps.filter(p => p.active && !isNaN(p.x) && !isNaN(p.y));
@@ -1905,6 +1996,16 @@ class Game {
             this.bullets.forEach(b => { try { b.draw(this.ctx); } catch(e) {} }); 
             this.effects.forEach(e => { try { e.draw(this.ctx); } catch(e) {} }); 
             this.powerUps.forEach(p => { try { p.draw(this.ctx); } catch(e) {} });
+            // Draw Wreckages
+            this.wreckages.forEach(w => {
+                this.ctx.save();
+                this.ctx.globalAlpha = Math.min(1, w.timer / 120) * 0.6;
+                this.ctx.fillStyle = '#111';
+                this.ctx.beginPath();
+                this.ctx.arc(w.x + 30, w.y + 30, w.type === 'BOSS' ? 40 : 25, 0, Math.PI * 2);
+                this.ctx.fill();
+                this.ctx.restore();
+            });
             this.drawForest();
             this.ctx.restore();
             if (this.baseHealth > 0 && this.baseHealth <= 2) {
