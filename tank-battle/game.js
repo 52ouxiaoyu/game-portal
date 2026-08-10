@@ -547,8 +547,10 @@ class Bullet {
                 let currentAngle = this.vx !== undefined ? Math.atan2(this.vy, this.vx) : 
                                    (this.dir === 'UP' ? -Math.PI/2 : this.dir === 'DOWN' ? Math.PI/2 : this.dir === 'LEFT' ? Math.PI : 0);
                 let diff = angle - currentAngle;
-                while (diff > Math.PI) diff -= Math.PI * 2;
-                while (diff < -Math.PI) diff += Math.PI * 2;
+                if (isNaN(diff)) diff = 0;
+                diff = (diff + Math.PI) % (Math.PI * 2);
+                if (diff < 0) diff += Math.PI * 2;
+                diff -= Math.PI;
                 let turnSpeed = 0.04;
                 let newAngle = currentAngle + Math.max(-turnSpeed, Math.min(turnSpeed, diff));
                 this.vx = Math.cos(newAngle) * this.speed;
@@ -870,7 +872,7 @@ class Tank {
                 
                 if (this.variant === 'HEAVY') {
                     dropChance = 0.4;
-                    dropTypes = [POWERUP_TYPES.LIFE, POWERUP_TYPES.SHOVEL, POWERUP_TYPES.W_EXPLOSIVE, POWERUP_TYPES.BOMB, POWERUP_TYPES.W_MISSILE];
+                    dropTypes = [POWERUP_TYPES.LIFE, POWERUP_TYPES.SHOVEL, POWERUP_TYPES.W_EXPLOSIVE, POWERUP_TYPES.BOMB, POWERUP_TYPES.W_SPREAD];
                 } else if (this.variant === 'FAST') {
                     dropChance = 0.3;
                     dropTypes = [POWERUP_TYPES.TIME, POWERUP_TYPES.SHIELD, POWERUP_TYPES.W_LASER, POWERUP_TYPES.W_BOUNCE];
@@ -879,7 +881,7 @@ class Tank {
                     dropTypes = [POWERUP_TYPES.STAR, POWERUP_TYPES.STAR, POWERUP_TYPES.LIFE, POWERUP_TYPES.W_BOUNCE, POWERUP_TYPES.W_SPREAD, POWERUP_TYPES.W_EXPLOSIVE];
                 } else if (this.variant === 'SMART') {
                     dropChance = 0.5;
-                    dropTypes = [POWERUP_TYPES.STAR, POWERUP_TYPES.W_MISSILE, POWERUP_TYPES.SHIELD, POWERUP_TYPES.W_LASER];
+                    dropTypes = [POWERUP_TYPES.STAR, POWERUP_TYPES.W_BOUNCE, POWERUP_TYPES.SHIELD, POWERUP_TYPES.W_LASER];
                 } else if (this.variant === 'RAPID') {
                     dropChance = 0.4;
                     dropTypes = [POWERUP_TYPES.W_SPREAD, POWERUP_TYPES.W_BOUNCE, POWERUP_TYPES.STAR, POWERUP_TYPES.W_SPREAD];
@@ -1141,7 +1143,7 @@ class Player extends Tank {
     findIncomingBullet(x, y) {
         const range = TILE_SIZE * 6;
         for (const b of this.game.bullets) {
-            if (!b.active || b.owner instanceof Player) continue;
+            if (!b.active || !(b.owner instanceof Player)) continue;
             let incoming = false;
             if (b.dir === 'DOWN' && Math.abs(b.x + b.size/2 - x) < 24 && b.y < y && y - b.y < range) incoming = true;
             if (b.dir === 'UP' && Math.abs(b.x + b.size/2 - x) < 24 && b.y > y && b.y - y < range) incoming = true;
@@ -1182,7 +1184,7 @@ class Enemy extends Tank {
         }
         else if (this.variant === 'ELITE') { 
             this.speed = (1.8 + Math.min(stage * 0.05, 0.8)) * diffMult; this.health = 3 + Math.floor(stage / 5); this.level = Math.min(3, 1 + Math.floor(stage / 10)); this.color = '#FF55FF'; 
-            const wClasses = ['MISSILE', 'LASER', 'SPREAD', 'BOUNCE'];
+            const wClasses = ['LASER', 'SPREAD', 'BOUNCE'];
             this.weaponClass = wClasses[Math.floor(Math.random() * wClasses.length)];
         }
         else if (this.variant === 'SMART') { this.speed = (1.6 + Math.min(stage * 0.05, 0.8)) * diffMult; this.health = 2; this.color = '#55FFFF'; }
@@ -1525,8 +1527,10 @@ class Boss extends Enemy {
             if (nearestDist < TILE_SIZE * 15 && Math.random() < 0.1) this.shoot();
         }
         let diff = this.turretTargetAngle - this.turretAngle;
-        while (diff > Math.PI) diff -= Math.PI * 2;
-        while (diff < -Math.PI) diff += Math.PI * 2;
+        if (isNaN(diff)) diff = 0;
+        diff = (diff + Math.PI) % (Math.PI * 2);
+        if (diff < 0) diff += Math.PI * 2;
+        diff -= Math.PI;
         this.turretAngle += diff * 0.1;
         
         for (const p of this.game.players) {
@@ -1556,7 +1560,7 @@ class Boss extends Enemy {
         if (this.health <= 0) {
             this.alive = false; this.game.weather = 'NONE';
             for (let i = 0; i < 12; i++) {
-                const standardTypes = [POWERUP_TYPES.SHIELD, POWERUP_TYPES.BOMB, POWERUP_TYPES.SHOVEL, POWERUP_TYPES.TIME, POWERUP_TYPES.LIFE, POWERUP_TYPES.STAR, POWERUP_TYPES.STAR, POWERUP_TYPES.W_MISSILE, POWERUP_TYPES.W_LASER, POWERUP_TYPES.W_EXPLOSIVE, POWERUP_TYPES.W_SPREAD, POWERUP_TYPES.W_BOUNCE];
+                const standardTypes = [POWERUP_TYPES.SHIELD, POWERUP_TYPES.BOMB, POWERUP_TYPES.SHOVEL, POWERUP_TYPES.TIME, POWERUP_TYPES.LIFE, POWERUP_TYPES.STAR, POWERUP_TYPES.STAR, POWERUP_TYPES.W_LASER, POWERUP_TYPES.W_EXPLOSIVE, POWERUP_TYPES.W_SPREAD, POWERUP_TYPES.W_BOUNCE];
                 const angle = (i / 12) * Math.PI * 2;
                 const dist = TILE_SIZE * 3;
                 let px = this.x + this.width/2 + Math.cos(angle) * dist - 32;
