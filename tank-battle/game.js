@@ -585,7 +585,7 @@ class Bullet {
         const tile = this.game.map.grid[ty][tx];
         if (tile === TILE_TYPES.BRICK || tile === TILE_TYPES.HARD_BRICK || tile === TILE_TYPES.STEEL || tile === TILE_TYPES.UNBREAKABLE || tile === TILE_TYPES.BASE) {
             if (tile === TILE_TYPES.BASE) {
-                if (!(this.owner instanceof Player && this.owner.aiActive)) {
+                if (this.owner instanceof Enemy) {
                     this.game.baseHealth--;
                     if (this.game.baseHealth === 2 || this.game.baseHealth === 1) {
                         this.game.showAnnouncement('⚠️ 警告！大本营血量告急！ ⚠️', '#f00');
@@ -773,10 +773,9 @@ class Tank {
                 numShots = 3 + Math.floor(this.level / 2) * 2;
                 spreadAngle = 0.15 + (this.level * 0.02);
             } else if (bType === 'BOUNCE') {
-                if (this.level >= 8) numShots = 5;
-                else if (this.level >= 5) numShots = 4;
-                else if (this.level >= 2) numShots = 3;
-                else numShots = 2;
+                if (this.level >= 6) numShots = 5;
+                else if (this.level >= 3) numShots = 3;
+                else numShots = 1;
                 spreadAngle = 0.25;
             }
             if (this.perks && this.perks.includes('SPREAD')) numShots = Math.max(numShots, 3);
