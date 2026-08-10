@@ -5,7 +5,7 @@ const CANVAS_SIZE = TILE_SIZE * GRID_SIZE; // 832px
 
 const TILE_TYPES = { EMPTY: 0, BRICK: 1, STEEL: 2, WATER: 3, FOREST: 4, ICE: 5, HARD_BRICK: 6, UNBREAKABLE: 7, BASE: 9, BASE_DESTROYED: 10 };
 const COLORS = { BRICK: '#B53120', BRICK_LIGHT: '#DC5341', STEEL: '#AAAAAA', STEEL_LIGHT: '#EEEEEE', WATER: '#2131E7', FOREST: '#21B521', PLAYER1: '#E7E721', PLAYER2: '#63C6FF', ENEMY: '#E7E7E7', BASE: '#E79C21' };
-const POWERUP_TYPES = { SHIELD: '🛡️', BOMB: '💣', STAR: '⭐', SHOVEL: '🏗️', LIFE: '❤️', TIME: '⏳', MAX_WEAPON: '🚀', BOAT: '🚤', FLY: '🚁', W_MISSILE: '🎯', W_LASER: '⚡', W_EXPLOSIVE: '💥', W_SPREAD: '🎇', W_BOUNCE: '🪀' };
+const POWERUP_TYPES = { SHIELD: '🛡️', BOMB: '💣', STAR: '⭐', SHOVEL: '🏗️', LIFE: '❤️', TIME: '⏳', MAX_WEAPON: '🚀', BOAT: '🚤', FLY: '🚁', W_MISSILE: '🎯', W_LASER: '⚡', W_EXPLOSIVE: '💥' };
 
 function seededRandom(seed) {
     let s = seed;
@@ -274,8 +274,7 @@ class PowerUp {
         else if (type === POWERUP_TYPES.W_MISSILE) this.game.showTip("💡 TIP: 吃到🎯切换为【跟踪导弹】，自动追踪敌人！", 400);
         else if (type === POWERUP_TYPES.W_LASER) this.game.showTip("💡 TIP: 吃到⚡切换为【穿透激光】，拥有极高弹速和穿透力！", 400);
         else if (type === POWERUP_TYPES.W_EXPLOSIVE) this.game.showTip("💡 TIP: 吃到💥切换为【高爆弹】，拥有巨大爆炸范围！", 400);
-        else if (type === POWERUP_TYPES.W_SPREAD) this.game.showTip("💡 TIP: 吃到🎇切换为【霰弹枪】，近战大范围扇形攻击！", 400);
-        else if (type === POWERUP_TYPES.W_BOUNCE) this.game.showTip("💡 TIP: 吃到🪀切换为【弹射炮】，子弹能在墙壁间疯狂弹射！", 400);
+                else if (type === POWERUP_TYPES.W_BOUNCE) this.game.showTip("💡 TIP: 吃到🪀切换为【弹射炮】，子弹能在墙壁间疯狂弹射！", 400);
     }
     update() {
         this.timer--; if (this.timer <= 0) this.active = false;
@@ -316,8 +315,7 @@ class PowerUp {
         else if (this.type === POWERUP_TYPES.W_MISSILE) { this.handleWeaponPickup(player, 'MISSILE', '跟踪导弹', '#0f0'); }
         else if (this.type === POWERUP_TYPES.W_LASER) { this.handleWeaponPickup(player, 'LASER', '穿透激光', '#0ff'); }
         else if (this.type === POWERUP_TYPES.W_EXPLOSIVE) { this.handleWeaponPickup(player, 'EXPLOSIVE', '高爆弹', '#f00'); }
-        else if (this.type === POWERUP_TYPES.W_SPREAD) { this.handleWeaponPickup(player, 'SPREAD', '霰弹枪', '#ff0'); }
-        else if (this.type === POWERUP_TYPES.W_BOUNCE) { this.handleWeaponPickup(player, 'BOUNCE', '弹射炮', '#f0f'); }
+                else if (this.type === POWERUP_TYPES.W_BOUNCE) { this.handleWeaponPickup(player, 'BOUNCE', '弹射炮', '#f0f'); }
         else if (this.type === POWERUP_TYPES.BOAT) {
             player.canBoat = true;
             this.game.showAnnouncement('获得渡河能力 CAN BOAT!', '#0cf');
@@ -496,37 +494,29 @@ class InputHandler {
 }
 
 class Bullet {
-    constructor(game, owner, x, y, dir, level = 0, type = 'NORMAL') { 
-        this.game = game; this.owner = owner; this.x = x; this.y = y; this.dir = dir; 
+    constructor(game, owner, x, y, dir, level = 0, type = 'NORMAL') {
+        this.game = game; this.owner = owner; this.x = x; this.y = y; this.dir = dir;
         this.level = level; this.type = type;
-        this.speed = 8 + (level * 0.2); 
-        this.size = 8 + Math.min(level, 5); 
-        this.active = true; 
-        this.damage = (this.owner instanceof Player) ? 5 + level * 3 : 1;
-        this.bounces = 0;
+        this.active = true;
+        this.size = 8;
+        this.speed = 6;
+        this.damage = 1 + Math.floor(level / 2);
         this.piercing = false;
 
-        if (this.type === 'LASER' || this.type === 'LASER_MISSILE') { 
-            let speedMult = 2; 
-            if (this.owner instanceof Player) speedMult = 1.2 + level * 0.1;
-            this.speed *= speedMult; 
-            this.damage *= 1.5; 
+        if (this.type === 'NORMAL') {
+            if (level >= 5) this.speed = 10;
+            else if (level >= 3) this.speed = 8;
+        } else if (this.type === 'LASER') {
+            this.speed = 12;
             this.piercing = true;
-        } else if (this.type === 'MISSILE') { 
-            let speedMult = 0.8;
-            if (this.owner instanceof Player) speedMult = 0.8 + level * 0.1;
-            this.speed *= speedMult; 
+            this.size = level >= 3 ? 14 : 8;
+            if (level >= 3) this.damage *= 1.5;
+        } else if (this.type === 'MISSILE') {
+            this.speed = level >= 5 ? 7 : 5;
         } else if (this.type === 'EXPLOSIVE') {
-            this.speed *= 0.6;
-            this.damage *= 2.0;
-            this.size += level;
-        } else if (this.type === 'SPREAD') {
-            this.damage *= 0.8;
-        } else if (this.type === 'BOUNCE') {
-            this.speed *= 1.4;
-            this.damage *= 1.2;
-            this.bounces = 2 + Math.floor(level / 2);
-            this.piercing = true;
+            this.speed = 5;
+            this.damage *= 2;
+            this.size = 12;
         }
         this.vx = undefined; this.vy = undefined;
     }
@@ -574,16 +564,21 @@ class Bullet {
         }
         const tx = Math.floor((this.x + this.size/2) / TILE_SIZE); const ty = Math.floor((this.y + this.size/2) / TILE_SIZE);
         if (tx < 0 || tx >= GRID_SIZE || ty < 0 || ty >= GRID_SIZE) { 
-            if (this.bounces > 0) { 
-                this.bounces--; 
-                if (this.vx !== undefined && this.vy !== undefined) { this.vx = -this.vx; this.vy = -this.vy; }
-                else { this.dir = this.dir === 'UP' ? 'DOWN' : (this.dir === 'DOWN' ? 'UP' : (this.dir === 'LEFT' ? 'RIGHT' : 'LEFT')); }
-                this.active = true; 
-            } else { this.active = false; }
+            this.active = false;
             return; 
         }
         const tile = this.game.map.grid[ty][tx];
         if (tile === TILE_TYPES.BRICK || tile === TILE_TYPES.HARD_BRICK || tile === TILE_TYPES.STEEL || tile === TILE_TYPES.UNBREAKABLE || tile === TILE_TYPES.BASE) {
+            if (this.piercing) {
+                if (tile === TILE_TYPES.BRICK || tile === TILE_TYPES.HARD_BRICK) {
+                    this.game.map.grid[ty][tx] = TILE_TYPES.EMPTY;
+                    return;
+                }
+                if (tile === TILE_TYPES.STEEL && this.type === 'LASER' && this.level >= 5) {
+                    this.game.map.grid[ty][tx] = TILE_TYPES.EMPTY;
+                    return;
+                }
+            }
             if (tile === TILE_TYPES.BASE) {
                 if (this.owner instanceof Enemy) {
                     this.game.baseHealth--;
@@ -603,17 +598,7 @@ class Bullet {
             } else {
                 this.triggerExplosion(this.x + this.size/2, this.y + this.size/2);
             }
-            if (this.bounces > 0 && tile !== TILE_TYPES.BASE) {
-                this.bounces--;
-                if (this.vx !== undefined && this.vy !== undefined) {
-                    if (Math.abs(this.vx) > Math.abs(this.vy)) this.vx = -this.vx; else this.vy = -this.vy;
-                } else {
-                    this.dir = this.dir === 'UP' ? 'DOWN' : (this.dir === 'DOWN' ? 'UP' : (this.dir === 'LEFT' ? 'RIGHT' : 'LEFT'));
-                }
-                this.active = true;
-            } else {
-                this.active = false;
-            }
+            this.active = false;
             return;
         }
         const isEnemyBullet = this.owner instanceof Enemy;
@@ -629,21 +614,32 @@ class Bullet {
         }
     }
     triggerExplosion(ex, ey, small = false) {
-        let radius = small ? 0.5 : (1 + Math.min(this.level, 10) * 0.2);
-        if (this.type === 'EXPLOSIVE' && !small) radius += 2 + this.level * 0.5;
-        if (this.owner instanceof Player && !small) radius += 1.5;
+        let radius = 0.5;
+        if (!small && this.type === 'EXPLOSIVE') {
+            if (this.level >= 5) radius = 3.5;
+            else if (this.level >= 3) radius = 2.5;
+            else radius = 1.5;
+        }
         audio.play('explosion');
         this.game.effects.push(new Effect(ex, ey, 'EXPLOSION', radius));
-        if (small) return;
+        if (small || this.type !== 'EXPLOSIVE') return;
+        
         const gridX = Math.floor(ex / TILE_SIZE); const gridY = Math.floor(ey / TILE_SIZE); const range = Math.ceil(radius);
         for (let iy = gridY - range; iy <= gridY + range; iy++) {
             for (let ix = gridX - range; ix <= gridX + range; ix++) {
-                if (iy < 0 || iy >= GRID_SIZE || ix < 0 || ix >= GRID_SIZE) continue;
-                const tile = this.game.map.grid[iy][ix];
-                if (iy === 0 || iy === GRID_SIZE - 1 || ix === 0 || ix === GRID_SIZE - 1) continue;
-                if (tile === TILE_TYPES.BRICK) this.game.map.grid[iy][ix] = TILE_TYPES.EMPTY;
-                else if (tile === TILE_TYPES.HARD_BRICK) this.game.map.grid[iy][ix] = TILE_TYPES.BRICK;
-                else if (tile === TILE_TYPES.STEEL && this.level >= 2) this.game.map.grid[iy][ix] = TILE_TYPES.HARD_BRICK;
+                if (iy >= 0 && iy < GRID_SIZE && ix >= 0 && ix < GRID_SIZE) {
+                    let d = Math.hypot(ix - gridX, iy - gridY);
+                    if (d <= radius) {
+                        let t = this.game.map.grid[iy][ix];
+                        if (t === TILE_TYPES.BRICK) {
+                            this.game.map.grid[iy][ix] = TILE_TYPES.EMPTY;
+                        } else if (t === TILE_TYPES.HARD_BRICK && this.level >= 5) {
+                            this.game.map.grid[iy][ix] = TILE_TYPES.EMPTY;
+                        } else if (t === TILE_TYPES.STEEL && this.level >= 5 && d <= radius - 1.5) {
+                            this.game.map.grid[iy][ix] = TILE_TYPES.EMPTY;
+                        }
+                    }
+                }
             }
         }
     }
@@ -679,14 +675,7 @@ class Tank {
             this.health = this.maxHealth;
             this.game.showFloatingText(`LEVEL ${this.level}!`, this.x, this.y, '#0f0');
             
-            if (!this.perks) this.perks = [];
-            const availablePerks = ['SPREAD', 'VAMPIRIC', 'PIERCING', 'RAPID'].filter(p => !this.perks.includes(p) || p === 'RAPID');
-            if (availablePerks.length > 0) {
-                const perk = availablePerks[Math.floor(Math.random() * availablePerks.length)];
-                this.perks.push(perk);
-                this.game.showFloatingText(`获得天赋: ${perk}!`, this.x, this.y - 20, '#0ff');
-                this.game.showTip(`💡 TIP: 你获得了新天赋 [${perk}]！善用散弹、穿甲、吸血、连发等能力！`, 400);
-            }
+
             this.game.updateHUD();
         }
     }
@@ -731,77 +720,49 @@ class Tank {
         }
     }
     shoot() {
-        if (this.canFly) {
-            if (this.flyBombCooldown === undefined || this.flyBombCooldown <= 0) {
-                this.flyBombCooldown = 45;
-                this.game.effects.push(new Effect(this.x + 30, this.y + 30, 'EXPLOSION', 1.5));
-                audio.play('explosion');
-                this.game.enemies.forEach(e => {
-                    if (e.alive && Math.hypot(e.x + e.width/2 - (this.x + 30), e.y + e.height/2 - (this.y + 30)) < TILE_SIZE * 3) e.destroy(this, 100);
-                });
-            }
-            if (this.level < 2) return;
-        }
-        if (this.cooldown > 0) {
-            if (this.perks && this.perks.includes('RAPID') && this.cooldown > 5) this.cooldown -= 1; // Faster cooldown
-            return;
-        }
-        let bulletCount = 0;
-        for (const b of this.game.bullets) { if (b.owner === this && b.active) bulletCount++; }
-        const maxBullets = this.isBoss ? 5 : (this instanceof Player ? 10 + this.level * 2 : 1);
-        if (bulletCount >= maxBullets) return;
-        if (this.game.bullets.length >= 80) return; 
-        this.cooldown = this instanceof Player ? Math.max(5, 35 - this.level * 1.5) : Math.max(30, 60 - this.level * 10);
-        if (this.perks && this.perks.includes('RAPID')) this.cooldown = Math.max(2, this.cooldown / 2);
+        if (!this.alive) return;
+        if (this.cooldown > 0) return;
         
-        let bx = this.x + 26; let by = this.y + 26;
-        if (this.direction === 'UP') by = this.y - 10; else if (this.direction === 'DOWN') by = this.y + 60; else if (this.direction === 'LEFT') bx = this.x - 10; else if (this.direction === 'RIGHT') bx = this.x + 60;
-        if (this instanceof Player) audio.play('shoot');
+        // Cooldown depends on level and type
+        this.cooldown = 20 - Math.min(this.level, 5) * 2;
+        if (this.weaponClass === 'EXPLOSIVE') this.cooldown += 15;
+        if (this.weaponClass === 'LASER') this.cooldown += 10;
+        
+        audio.play('shoot');
+        
+        let bx = this.x + this.width / 2 - 4;
+        let by = this.y + this.height / 2 - 4;
+        if (this.direction === 'UP') by = this.y - 8;
+        else if (this.direction === 'DOWN') by = this.y + this.height;
+        else if (this.direction === 'LEFT') bx = this.x - 8;
+        else if (this.direction === 'RIGHT') bx = this.x + this.width;
         
         let bType = this.weaponClass || 'NORMAL';
         let numShots = 1;
-        let spreadAngle = 0;
         
-        if (this instanceof Player) {
-            if (bType === 'MISSILE' || bType === 'LASER' || bType === 'LASER_MISSILE') {
-                if (this.level >= 6) numShots = 3;
-                else if (this.level >= 3) numShots = 2;
-            } else if (bType === 'EXPLOSIVE') {
-                if (this.level >= 8) numShots = 3;
-                else if (this.level >= 4) numShots = 2;
-            } else if (bType === 'SPREAD') {
-                numShots = 3 + Math.floor(this.level / 2) * 2;
-                spreadAngle = 0.15 + (this.level * 0.02);
-            } else if (bType === 'BOUNCE') {
-                if (this.level >= 6) numShots = 5;
-                else if (this.level >= 3) numShots = 3;
-                else numShots = 1;
-                spreadAngle = 0.25;
-            }
-            if (this.perks && this.perks.includes('SPREAD')) numShots = Math.max(numShots, 3);
+        // Weapon Logic Revamp
+        if (bType === 'NORMAL') {
+            if (this.level >= 5) numShots = 3;
+            else if (this.level >= 3) numShots = 2;
+        } else if (bType === 'MISSILE') {
+            if (this.level >= 3) numShots = 2;
+        } else if (bType === 'LASER') {
+            numShots = 1; // Always 1 thick beam
+        } else if (bType === 'EXPLOSIVE') {
+            numShots = 1; // Always 1 big shell
         }
         
         for (let i = 0; i < numShots; i++) {
             let offset = (numShots === 1) ? 0 : (i - (numShots - 1) / 2);
             let bx_i = bx, by_i = by;
+            if (this.direction === 'UP' || this.direction === 'DOWN') { bx_i += offset * 12; }
+            else { by_i += offset * 12; }
             
-            if (bType === 'SPREAD' || bType === 'BOUNCE') {
-                let b = new Bullet(this.game, this, bx_i, by_i, this.direction, this.level, bType);
-                let currentAngle = (this.direction === 'UP' ? -Math.PI/2 : this.direction === 'DOWN' ? Math.PI/2 : this.direction === 'LEFT' ? Math.PI : 0);
-                let angle = currentAngle + offset * spreadAngle;
-                b.vx = Math.cos(angle) * b.speed;
-                b.vy = Math.sin(angle) * b.speed;
-                if (this.perks && this.perks.includes('PIERCING')) b.piercing = true;
-                this.game.bullets.push(b);
-            } else {
-                if (this.direction === 'UP' || this.direction === 'DOWN') { bx_i += offset * 15; }
-                else { by_i += offset * 15; }
-                let b = new Bullet(this.game, this, bx_i, by_i, this.direction, this.level, bType);
-                if (this.perks && this.perks.includes('PIERCING')) b.piercing = true;
-                this.game.bullets.push(b);
-            }
+            let b = new Bullet(this.game, this, bx_i, by_i, this.direction, Math.min(this.level, 5), bType);
+            this.game.bullets.push(b);
         }
     }
+
     destroy(killer, damage = 1) {
         if (this.shieldTimer > 0) return; 
         this.health = (this.health || 1) - damage;
@@ -852,7 +813,7 @@ class Tank {
         }
         if (this instanceof Player) this.game.handlePlayerDeath(this);
         if (this instanceof Enemy && !this.isBoss) {
-            let dropChance = 0.15;
+            let dropChance = 0.08;
             let type = null;
             
             if (this.weaponClass && this.weaponClass !== 'NORMAL') {
@@ -866,24 +827,24 @@ class Tank {
                 let dropTypes = [
                     POWERUP_TYPES.SHIELD, POWERUP_TYPES.BOMB, POWERUP_TYPES.SHOVEL, 
                     POWERUP_TYPES.TIME, POWERUP_TYPES.STAR, 
-                    POWERUP_TYPES.W_MISSILE, POWERUP_TYPES.W_LASER, POWERUP_TYPES.W_EXPLOSIVE, POWERUP_TYPES.W_SPREAD, POWERUP_TYPES.W_BOUNCE
+                    POWERUP_TYPES.W_MISSILE, POWERUP_TYPES.W_LASER, POWERUP_TYPES.W_EXPLOSIVE
                 ];
                 
                 if (this.variant === 'HEAVY') {
-                    dropChance = 0.4;
-                    dropTypes = [POWERUP_TYPES.LIFE, POWERUP_TYPES.SHOVEL, POWERUP_TYPES.W_EXPLOSIVE, POWERUP_TYPES.BOMB, POWERUP_TYPES.W_SPREAD];
+                    dropChance = 0.2;
+                    dropTypes = [POWERUP_TYPES.LIFE, POWERUP_TYPES.SHOVEL, POWERUP_TYPES.W_EXPLOSIVE, POWERUP_TYPES.BOMB];
                 } else if (this.variant === 'FAST') {
-                    dropChance = 0.3;
-                    dropTypes = [POWERUP_TYPES.TIME, POWERUP_TYPES.SHIELD, POWERUP_TYPES.W_LASER, POWERUP_TYPES.W_BOUNCE];
+                    dropChance = 0.15;
+                    dropTypes = [POWERUP_TYPES.TIME, POWERUP_TYPES.SHIELD, POWERUP_TYPES.W_LASER];
                 } else if (this.variant === 'ELITE') {
-                    dropChance = 0.8;
-                    dropTypes = [POWERUP_TYPES.STAR, POWERUP_TYPES.STAR, POWERUP_TYPES.LIFE, POWERUP_TYPES.W_BOUNCE, POWERUP_TYPES.W_SPREAD, POWERUP_TYPES.W_EXPLOSIVE];
-                } else if (this.variant === 'SMART') {
-                    dropChance = 0.5;
-                    dropTypes = [POWERUP_TYPES.STAR, POWERUP_TYPES.W_BOUNCE, POWERUP_TYPES.SHIELD, POWERUP_TYPES.W_LASER];
-                } else if (this.variant === 'RAPID') {
                     dropChance = 0.4;
-                    dropTypes = [POWERUP_TYPES.W_SPREAD, POWERUP_TYPES.W_BOUNCE, POWERUP_TYPES.STAR, POWERUP_TYPES.W_SPREAD];
+                    dropTypes = [POWERUP_TYPES.STAR, POWERUP_TYPES.STAR, POWERUP_TYPES.LIFE, POWERUP_TYPES.W_EXPLOSIVE];
+                } else if (this.variant === 'SMART') {
+                    dropChance = 0.25;
+                    dropTypes = [POWERUP_TYPES.STAR, POWERUP_TYPES.SHIELD, POWERUP_TYPES.W_LASER];
+                } else if (this.variant === 'RAPID') {
+                    dropChance = 0.2;
+                    dropTypes = [POWERUP_TYPES.STAR];
                 }
                 type = dropTypes[Math.floor(Math.random() * dropTypes.length)];
             }
@@ -1560,7 +1521,7 @@ class Boss extends Enemy {
         if (this.health <= 0) {
             this.alive = false; this.game.weather = 'NONE';
             for (let i = 0; i < 12; i++) {
-                const standardTypes = [POWERUP_TYPES.SHIELD, POWERUP_TYPES.BOMB, POWERUP_TYPES.SHOVEL, POWERUP_TYPES.TIME, POWERUP_TYPES.LIFE, POWERUP_TYPES.STAR, POWERUP_TYPES.STAR, POWERUP_TYPES.W_LASER, POWERUP_TYPES.W_EXPLOSIVE, POWERUP_TYPES.W_SPREAD, POWERUP_TYPES.W_BOUNCE];
+                const standardTypes = [POWERUP_TYPES.SHIELD, POWERUP_TYPES.BOMB, POWERUP_TYPES.SHOVEL, POWERUP_TYPES.TIME, POWERUP_TYPES.LIFE, POWERUP_TYPES.STAR, POWERUP_TYPES.STAR, POWERUP_TYPES.W_LASER, POWERUP_TYPES.W_EXPLOSIVE];
                 const angle = (i / 12) * Math.PI * 2;
                 const dist = TILE_SIZE * 3;
                 let px = this.x + this.width/2 + Math.cos(angle) * dist - 32;
