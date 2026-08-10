@@ -953,6 +953,7 @@ class Player extends Tank {
     }
     update() {
         if (!this.alive) return;
+        if (isNaN(this.x) || isNaN(this.y)) { this.x = TILE_SIZE * 8; this.y = TILE_SIZE * 22; }
         
         if (this.comboTimer > 0) this.comboTimer--; else this.combo = 0;
         
@@ -1906,10 +1907,10 @@ class Game {
         this.bullets.forEach(b => b.update());
         this.effects.forEach(e => e.update());
         this.powerUps.forEach(p => p.update());
-        this.bullets = this.bullets.filter(b => b.active);
-        this.effects = this.effects.filter(e => e.active);
-        this.powerUps = this.powerUps.filter(p => p.active);
-        this.enemies = this.enemies.filter(e => e.alive);
+        this.bullets = this.bullets.filter(b => b.active && !isNaN(b.x) && !isNaN(b.y));
+        this.effects = this.effects.filter(e => e.active && !isNaN(e.x) && !isNaN(e.y));
+        this.powerUps = this.powerUps.filter(p => p.active && !isNaN(p.x) && !isNaN(p.y));
+        this.enemies = this.enemies.filter(e => e.alive && !isNaN(e.x) && !isNaN(e.y));
         if (this.enemies.length !== this.lastEnemyCount) { this.updateHUD(); this.lastEnemyCount = this.enemies.length; }
         if (this.players.every(p => !p.alive) && this.lives === 0) this.gameOver();
     }
@@ -1987,6 +1988,14 @@ class Game {
         }
         this.ctx.restore();
     }
-    loop() { this.update(); this.draw(); requestAnimationFrame(() => this.loop()); }
+    loop() { 
+        try { 
+            this.update(); 
+            this.draw(); 
+        } catch (e) { 
+            console.error('Game loop error:', e); 
+        } 
+        requestAnimationFrame(() => this.loop()); 
+    }
 }
 window.onload = () => new Game();
