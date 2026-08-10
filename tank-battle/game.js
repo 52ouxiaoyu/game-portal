@@ -1903,10 +1903,11 @@ class Game {
             }
         }
         
-        this.players.forEach(p => p.update()); this.enemies.forEach(e => e.update());
-        this.bullets.forEach(b => b.update());
-        this.effects.forEach(e => e.update());
-        this.powerUps.forEach(p => p.update());
+        this.players.forEach(p => { try { p.update(); } catch(e) { console.error(e); } }); 
+        this.enemies.forEach(e => { try { e.update(); } catch(e) { console.error(e); } });
+        this.bullets.forEach(b => { try { b.update(); } catch(e) { console.error(e); } });
+        this.effects.forEach(e => { try { e.update(); } catch(e) { console.error(e); } });
+        this.powerUps.forEach(p => { try { p.update(); } catch(e) { console.error(e); } });
         this.bullets = this.bullets.filter(b => b.active && !isNaN(b.x) && !isNaN(b.y));
         this.effects = this.effects.filter(e => e.active && !isNaN(e.x) && !isNaN(e.y));
         this.powerUps = this.powerUps.filter(p => p.active && !isNaN(p.x) && !isNaN(p.y));
@@ -1939,7 +1940,11 @@ class Game {
                 else if (this.weather === 'LIGHTNING') { if (this.lightningFlash > 0) { this.ctx.fillStyle = `rgba(255, 255, 255, ${this.lightningFlash/10})`; this.ctx.fillRect(0, 0, CANVAS_SIZE, CANVAS_SIZE); } }
                 this.ctx.restore();
             }
-            this.players.forEach(p => { if(p.alive) { p.draw(this.ctx); if (p.aiActive) { this.ctx.save(); this.ctx.fillStyle = 'rgba(0,0,0,0.7)'; this.ctx.beginPath(); this.ctx.arc(p.x + 30, p.y - 12, 14, 0, Math.PI * 2); this.ctx.fill(); this.ctx.fillStyle = '#0f0'; this.ctx.font = 'bold 12px Arial'; this.ctx.textAlign = 'center'; this.ctx.fillText('AI', p.x + 30, p.y - 8); this.ctx.restore(); } } }); this.enemies.forEach(e => e.draw(this.ctx)); this.bullets.forEach(b => b.draw(this.ctx)); this.effects.forEach(e => e.draw(this.ctx)); this.powerUps.forEach(p => p.draw(this.ctx));
+            this.players.forEach(p => { try { if(p.alive) { p.draw(this.ctx); if (p.aiActive) { this.ctx.save(); this.ctx.fillStyle = 'rgba(0,0,0,0.7)'; this.ctx.beginPath(); this.ctx.arc(p.x + 30, p.y - 12, 14, 0, Math.PI * 2); this.ctx.fill(); this.ctx.fillStyle = '#0f0'; this.ctx.font = 'bold 12px Arial'; this.ctx.textAlign = 'center'; this.ctx.fillText('AI', p.x + 30, p.y - 8); this.ctx.restore(); } } } catch(e) {} }); 
+            this.enemies.forEach(e => { try { e.draw(this.ctx); } catch(e) {} }); 
+            this.bullets.forEach(b => { try { b.draw(this.ctx); } catch(e) {} }); 
+            this.effects.forEach(e => { try { e.draw(this.ctx); } catch(e) {} }); 
+            this.powerUps.forEach(p => { try { p.draw(this.ctx); } catch(e) {} });
             this.drawForest();
             this.ctx.restore();
             if (this.baseHealth > 0 && this.baseHealth <= 2) {
@@ -1989,12 +1994,8 @@ class Game {
         this.ctx.restore();
     }
     loop() { 
-        try { 
-            this.update(); 
-            this.draw(); 
-        } catch (e) { 
-            console.error('Game loop error:', e); 
-        } 
+        try { this.update(); } catch (e) { console.error('Game update error:', e); } 
+        try { this.draw(); } catch (e) { console.error('Game draw error:', e); } 
         requestAnimationFrame(() => this.loop()); 
     }
 }
