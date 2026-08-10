@@ -569,7 +569,7 @@ class Bullet {
             if (this.dir === 'UP') this.y -= this.speed; else if (this.dir === 'DOWN') this.y += this.speed; else if (this.dir === 'LEFT') this.x -= this.speed; else if (this.dir === 'RIGHT') this.x += this.speed;
         }
         for (let other of this.game.bullets) {
-            if (other === this || !other.active) continue;
+            if (other === this || !other.active || this.owner === other.owner) continue;
             if (this.x < other.x + other.size && this.x + this.size > other.x && this.y < other.y + other.size && this.y + this.size > other.y) { this.active = false; other.active = false; this.triggerExplosion(this.x, this.y, true); return; }
         }
         const tx = Math.floor((this.x + this.size/2) / TILE_SIZE); const ty = Math.floor((this.y + this.size/2) / TILE_SIZE);
