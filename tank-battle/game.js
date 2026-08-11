@@ -1760,6 +1760,8 @@ class Game {
         this.players = []; this.enemies = []; this.bullets = []; this.effects = []; this.powerUps = []; this.fortifyTimer = 0; this.spawnTimer = 0; this.enemyFrozenTimer = 0;
         this.currentStage = 0; this.gameState = 'START'; this.lives = 3;
         this.hitStopTimer = 0;
+        this.replayHistory = [];
+        this.replayIndex = 0;
         this.comboCount = 0;
         this.comboTimer = 0;
         this.wreckages = []; this.paused = false;
@@ -1879,6 +1881,16 @@ class Game {
     fortifyBase() { this.fortifyTimer = 600; this.map.setBaseWalls(TILE_TYPES.STEEL); }
     unfortifyBase() { this.map.setBaseWalls(TILE_TYPES.BRICK); }
     gameOver() {
+        if (this.replayHistory.length > 0) {
+            this.gameState = 'REPLAY';
+            this.replayIndex = 0;
+            this.showAnnouncement('💀 DEATH REPLAY 💀', '#f00');
+            audio.play('explosion');
+        } else {
+            this.showGameOverScreen();
+        }
+    }
+    showGameOverScreen() {
         this.gameState = 'GAME_OVER';
         const totalScore = this.players.reduce((sum, p) => sum + p.score, 0);
         if (totalScore > this.highScore) {
@@ -1998,6 +2010,22 @@ class Game {
         this.powerUps = this.powerUps.filter(p => p.active && !isNaN(p.x) && !isNaN(p.y));
         this.enemies = this.enemies.filter(e => e.alive && !isNaN(e.x) && !isNaN(e.y));
         if (this.enemies.length !== this.lastEnemyCount) { this.updateHUD(); this.lastEnemyCount = this.enemies.length; }
+        
+        // Record state for Death Replay
+        if (this.gameState === 'PLAYING') {
+            const snapshot = {
+                tanks: [...this.players, ...this.enemies].filter(t => t.alive).map(t => ({ x: t.x, y: t.y, w: t.width, h: t.height, dir: t.direction, color: t.color, isBoss: t.isBoss, level: t.level })),
+                bullets: this.bullets.map(b => ({ x: b.x, y: b.y, size: b.size, type: b.type })),
+                effects: this.effects.map(e => ({ x: e.x, y: e.y, radius: e.radius, type: e.type, color: e.color })),
+                powerUps: this.powerUps.map(p => ({ x: p.x, y: p.y, type: p.type, timer: p.timer })),
+                wreckages: this.wreckages.map(w => ({ x: w.x, y: w.y, timer: w.timer, type: w.type })),
+                mapGrid: this.map.grid.map(row => [...row]),
+                shakeX: this.shakeX, shakeY: this.shakeY
+            };
+            this.replayHistory.push(snapshot);
+            if (this.replayHistory.length > 200) this.replayHistory.shift(); // keep last ~3.3 seconds
+        }
+        
         if (this.players.every(p => !p.alive) && this.lives === 0) this.gameOver();
     }
     draw() {
