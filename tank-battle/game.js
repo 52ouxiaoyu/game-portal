@@ -713,6 +713,13 @@ class Bullet {
                 }
             }
         }
+        
+        const targets = (this.owner instanceof Enemy) ? this.game.players : this.game.enemies;
+        for (const tank of targets) {
+            if (!tank.alive) continue;
+            let d = Math.hypot(tank.x/TILE_SIZE - gridX, tank.y/TILE_SIZE - gridY);
+            if (d <= radius + 0.5) tank.destroy(this.owner || this, this.damage);
+        }
     }
     draw(ctx) { 
         ctx.save(); 
@@ -925,7 +932,8 @@ class Tank {
                 let dropTypes = [
                     POWERUP_TYPES.SHIELD, POWERUP_TYPES.BOMB, POWERUP_TYPES.SHOVEL, 
                     POWERUP_TYPES.TIME, POWERUP_TYPES.STAR, 
-                    POWERUP_TYPES.W_MISSILE, POWERUP_TYPES.W_LASER, POWERUP_TYPES.W_EXPLOSIVE
+                    POWERUP_TYPES.W_MISSILE, POWERUP_TYPES.W_MISSILE, POWERUP_TYPES.W_MISSILE,
+                    POWERUP_TYPES.W_LASER, POWERUP_TYPES.W_EXPLOSIVE
                 ];
                 
                 if (this.variant === 'HEAVY') {
