@@ -557,6 +557,7 @@ class Bullet {
             if (level >= 3) this.damage *= 1.5;
         } else if (this.type === 'MISSILE') {
             this.speed = level >= 5 ? 7 : 5;
+            if (this.owner instanceof Enemy) this.speed *= 0.6; // 40% slower for enemies
         } else if (this.type === 'EXPLOSIVE') {
             this.speed = 5;
             this.damage *= 2;
@@ -585,7 +586,7 @@ class Bullet {
                 diff = (diff + Math.PI) % (Math.PI * 2);
                 if (diff < 0) diff += Math.PI * 2;
                 diff -= Math.PI;
-                let turnSpeed = 0.04;
+                let turnSpeed = this.owner instanceof Player ? 0.05 : 0.015; // Enemies turn much slower
                 let newAngle = currentAngle + Math.max(-turnSpeed, Math.min(turnSpeed, diff));
                 this.vx = Math.cos(newAngle) * this.speed;
                 this.vy = Math.sin(newAngle) * this.speed;
