@@ -2015,7 +2015,7 @@ class Game {
         // Record state for Death Replay
         if (this.gameState === 'PLAYING') {
             const snapshot = {
-                tanks: [...this.players, ...this.enemies].filter(t => t.alive).map(t => ({ x: t.x, y: t.y, w: t.width, h: t.height, dir: t.direction, color: t.color, isBoss: t.isBoss, level: t.level })),
+                tanks: [...this.players, ...this.enemies].filter(t => t.alive).map(t => ({ x: t.x, y: t.y, w: t.width, h: t.height, dir: t.direction, color: t.color, isBoss: t.isBoss, level: t.level, isPlayer: t instanceof Player })),
                 bullets: this.bullets.map(b => ({ x: b.x, y: b.y, size: b.size, type: b.type })),
                 effects: this.effects.map(e => ({ x: e.x, y: e.y, radius: e.radius, type: e.type, color: e.color })),
                 powerUps: this.powerUps.map(p => ({ x: p.x, y: p.y, type: p.type, timer: p.timer })),
@@ -2195,6 +2195,19 @@ class Game {
         // Tanks
         frame.tanks.forEach(t => {
             this.ctx.save();
+            if (t.isPlayer) {
+                this.ctx.shadowBlur = 15 + Math.sin(Date.now() / 100) * 10;
+                this.ctx.shadowColor = '#0f0';
+                this.ctx.strokeStyle = '#0f0';
+                this.ctx.lineWidth = 3;
+                this.ctx.strokeRect(t.x - 4, t.y - 4, t.w + 8, t.h + 8);
+                this.ctx.shadowBlur = 0;
+                this.ctx.fillStyle = '#0f0';
+                this.ctx.font = 'bold 20px Arial';
+                this.ctx.textAlign = 'center';
+                this.ctx.fillText("▼ YOU", t.x + t.w/2, t.y - 12 + Math.sin(Date.now() / 150) * 5);
+                this.ctx.shadowBlur = 15 + Math.sin(Date.now() / 100) * 10;
+            }
             this.ctx.fillStyle = t.color;
             if (t.dir === 'UP' || t.dir === 'DOWN') {
                 this.ctx.fillRect(t.x + 8, t.y + 8, t.w - 16, t.h - 16); this.ctx.fillStyle = '#000'; this.ctx.fillRect(t.x, t.y, 8, t.h); this.ctx.fillRect(t.x + t.w - 8, t.y, 8, t.h);
