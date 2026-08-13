@@ -917,7 +917,7 @@ class Tank {
             }
         }
         if (this instanceof Enemy && !this.isBoss) {
-            let dropChance = 0.08;
+            let dropChance = 0.15; // Increased base drop chance
             let type = null;
             
             if (this.weaponClass && this.weaponClass !== 'NORMAL') {
@@ -931,25 +931,25 @@ class Tank {
                 let dropTypes = [
                     POWERUP_TYPES.SHIELD, POWERUP_TYPES.BOMB, POWERUP_TYPES.SHOVEL, 
                     POWERUP_TYPES.TIME, POWERUP_TYPES.STAR, 
-                    POWERUP_TYPES.W_MISSILE, POWERUP_TYPES.W_MISSILE, POWERUP_TYPES.W_MISSILE,
+                    POWERUP_TYPES.W_MISSILE, POWERUP_TYPES.W_MISSILE, POWERUP_TYPES.W_MISSILE, POWERUP_TYPES.W_MISSILE,
                     POWERUP_TYPES.W_LASER, POWERUP_TYPES.W_EXPLOSIVE
                 ];
                 
                 if (this.variant === 'HEAVY') {
-                    dropChance = 0.2;
-                    dropTypes = [POWERUP_TYPES.LIFE, POWERUP_TYPES.SHOVEL, POWERUP_TYPES.W_EXPLOSIVE, POWERUP_TYPES.BOMB];
+                    dropChance = 0.3;
+                    dropTypes = [POWERUP_TYPES.LIFE, POWERUP_TYPES.SHOVEL, POWERUP_TYPES.W_EXPLOSIVE, POWERUP_TYPES.W_MISSILE, POWERUP_TYPES.BOMB];
                 } else if (this.variant === 'FAST') {
-                    dropChance = 0.15;
-                    dropTypes = [POWERUP_TYPES.TIME, POWERUP_TYPES.SHIELD, POWERUP_TYPES.W_LASER];
-                } else if (this.variant === 'ELITE') {
-                    dropChance = 0.4;
-                    dropTypes = [POWERUP_TYPES.STAR, POWERUP_TYPES.STAR, POWERUP_TYPES.LIFE, POWERUP_TYPES.W_EXPLOSIVE];
-                } else if (this.variant === 'SMART') {
                     dropChance = 0.25;
-                    dropTypes = [POWERUP_TYPES.STAR, POWERUP_TYPES.SHIELD, POWERUP_TYPES.W_LASER];
+                    dropTypes = [POWERUP_TYPES.TIME, POWERUP_TYPES.SHIELD, POWERUP_TYPES.W_LASER, POWERUP_TYPES.W_MISSILE];
+                } else if (this.variant === 'ELITE') {
+                    dropChance = 0.5;
+                    dropTypes = [POWERUP_TYPES.STAR, POWERUP_TYPES.STAR, POWERUP_TYPES.LIFE, POWERUP_TYPES.W_EXPLOSIVE, POWERUP_TYPES.W_MISSILE, POWERUP_TYPES.W_MISSILE];
+                } else if (this.variant === 'SMART') {
+                    dropChance = 0.35;
+                    dropTypes = [POWERUP_TYPES.STAR, POWERUP_TYPES.SHIELD, POWERUP_TYPES.W_LASER, POWERUP_TYPES.W_MISSILE];
                 } else if (this.variant === 'RAPID') {
-                    dropChance = 0.2;
-                    dropTypes = [POWERUP_TYPES.STAR];
+                    dropChance = 0.3;
+                    dropTypes = [POWERUP_TYPES.STAR, POWERUP_TYPES.W_MISSILE];
                 }
                 type = dropTypes[Math.floor(Math.random() * dropTypes.length)];
             }
