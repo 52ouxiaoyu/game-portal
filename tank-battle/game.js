@@ -291,7 +291,7 @@ class PowerUp {
             player.weaponClass = newClass;
             this.game.showAnnouncement(`火力切换: ${name}!`, color);
         }
-        if (player.level < 5) {
+        if (player.level < 9) {
             player.upgrade();
             this.game.showAnnouncement(`${name}升级 (Lv ${player.level})!`, color);
         } else {
@@ -317,9 +317,9 @@ class PowerUp {
         else if (this.type === POWERUP_TYPES.LIFE) this.game.lives++;
         else if (this.type === POWERUP_TYPES.TIME) this.game.enemyFrozenTimer = 300;
         else if (this.type === POWERUP_TYPES.MAX_WEAPON) {
-            player.level = 5;
-            player.speed = Math.min(8, 4 + 5 * 0.15);
-            player.maxHealth = 1 + 5 * 2;
+            player.level = 9;
+            player.speed = Math.min(8, 4 + 9 * 0.15);
+            player.maxHealth = 1 + 9 * 2;
             player.health = player.maxHealth;
             this.game.showAnnouncement('终极武器 MAX WEAPON!', '#f0f');
             this.game.updateHUD();
@@ -821,15 +821,15 @@ class Tank {
         let numShots = 1;
         
         // Weapon Logic Revamp
-        if (bType === 'NORMAL') {
-            if (this.level >= 5) numShots = 3;
+        if (bType === 'NORMAL' || bType === 'MISSILE') {
+            if (this.level >= 9) numShots = 5;
+            else if (this.level >= 7) numShots = 4;
+            else if (this.level >= 5) numShots = 3;
             else if (this.level >= 3) numShots = 2;
-        } else if (bType === 'MISSILE') {
-            if (this.level >= 3) numShots = 2;
-        } else if (bType === 'LASER') {
-            numShots = 1; // Always 1 thick beam
-        } else if (bType === 'EXPLOSIVE') {
-            numShots = 1; // Always 1 big shell
+        } else if (bType === 'LASER' || bType === 'EXPLOSIVE') {
+            if (this.level >= 8) numShots = 3;
+            else if (this.level >= 4) numShots = 2;
+            else numShots = 1;
         }
         
         for (let i = 0; i < numShots; i++) {
@@ -838,7 +838,7 @@ class Tank {
             if (this.direction === 'UP' || this.direction === 'DOWN') { bx_i += offset * 12; }
             else { by_i += offset * 12; }
             
-            let b = new Bullet(this.game, this, bx_i, by_i, this.direction, Math.min(this.level, 5), bType);
+            let b = new Bullet(this.game, this, bx_i, by_i, this.direction, this.level, bType);
             this.game.bullets.push(b);
         }
     }
@@ -851,8 +851,7 @@ class Tank {
             this.game.effects.push(new Effect(this.x + 30, this.y + 30, 'EXPLOSION', 1));
             if (this instanceof Player) {
                 this.game.shakeScreen(4);
-                this.level = Math.max(0, Math.floor((this.health - 1) / 2));
-                this.speed = Math.min(8, 4 + this.level * 0.15);
+                // Level no longer drops when taking damage!
                 this.shieldTimer = 30;
                 this.game.updateHUD();
             } else if (this.variant === 'HEAVY') {
