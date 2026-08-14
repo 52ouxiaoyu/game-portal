@@ -279,7 +279,7 @@ class PowerUp {
     update() {
         this.timer--; if (this.timer <= 0) this.active = false;
         if (!this.active) return;
-        this.game.players.forEach(p => { 
+        [...this.game.players, ...this.game.enemies].forEach(p => { 
             const margin = 20;
             if (this.active && p.alive && this.x - margin < p.x + p.width && this.x + this.width + margin > p.x && this.y - margin < p.y + p.height && this.y + this.height + margin > p.y) { 
                 this.applyEffect(p); this.active = false; 
@@ -287,18 +287,22 @@ class PowerUp {
         });
     }
     handleWeaponPickup(player, newClass, name, color) {
+        const isPlayer = player instanceof Player;
         if (player.weaponClass !== newClass) {
             player.weaponClass = newClass;
-            this.game.showAnnouncement(`火力切换: ${name}!`, color);
+            if (isPlayer) this.game.showAnnouncement(`火力切换: ${name}!`, color);
+            else this.game.showAnnouncement(`⚠️ 敌人获得了: ${name}!`, '#f00');
         }
         if (player.level < 9) {
             player.upgrade();
-            this.game.showAnnouncement(`${name}升级 (Lv ${player.level})!`, color);
+            if (isPlayer) this.game.showAnnouncement(`${name}升级 (Lv ${player.level})!`, color);
         } else {
             player.overdriveTimer = 600; // 10 seconds
-            this.game.showAnnouncement(`火力超载 (OVERDRIVE) 启动!`, '#f0f');
-            this.game.shakeScreen(15);
-            this.game.hitStopTimer = 10;
+            if (isPlayer) {
+                this.game.showAnnouncement(`火力超载 (OVERDRIVE) 启动!`, '#f0f');
+                this.game.shakeScreen(15);
+                this.game.hitStopTimer = 10;
+            }
         }
     }
     applyEffect(player) {
@@ -310,19 +314,36 @@ class PowerUp {
                 this.game.effects.push(new Effect(this.x + 32 + (Math.random() - 0.5) * 60, this.y + 32 + (Math.random() - 0.5) * 60, 'SPARK'));
             }, i * 80);
         }
-        if (this.type === POWERUP_TYPES.BOMB) this.game.enemies.forEach(e => { if (e.isBoss) e.destroy(player, 10); else e.destroy(player, 100); });
+        const isPlayer = player instanceof Player;
+        if (this.type === POWERUP_TYPES.BOMB) {
+            if (isPlayer) { this.game.enemies.forEach(e => { if (e.isBoss) e.destroy(player, 10); else e.destroy(player, 100); }); }
+            else { this.game.players.forEach(p => p.destroy(player, 2)); this.game.showAnnouncement('⚠️ 敌人使用了全屏炸弹!', '#f00'); }
+        }
         else if (this.type === POWERUP_TYPES.SHIELD) player.setShield(360);
         else if (this.type === POWERUP_TYPES.STAR) player.upgrade();
-        else if (this.type === POWERUP_TYPES.SHOVEL) this.game.fortifyBase();
-        else if (this.type === POWERUP_TYPES.LIFE) this.game.lives++;
-        else if (this.type === POWERUP_TYPES.TIME) this.game.enemyFrozenTimer = 300;
+        else if (this.type === POWERUP_TYPES.SHOVEL) {
+            if (isPlayer) this.game.fortifyBase();
+            else { this.game.unfortifyBase(); this.game.showAnnouncement('⚠️ 基地防御被削弱!', '#f00'); }
+        }
+        else if (this.type === POWERUP_TYPES.LIFE) {
+            if (isPlayer) this.game.lives++;
+            else { player.health += 5; player.maxHealth += 5; this.game.showAnnouncement('⚠️ 敌方坦克获得了强效治疗!', '#f00'); }
+        }
+        else if (this.type === POWERUP_TYPES.TIME) {
+            if (isPlayer) this.game.enemyFrozenTimer = 300;
+            else { this.game.playerFrozenTimer = 300; this.game.showAnnouncement('⚠️ 玩家被冻结!', '#f00'); }
+        }
         else if (this.type === POWERUP_TYPES.MAX_WEAPON) {
             player.level = 9;
             player.speed = Math.min(8, 4 + 9 * 0.15);
             player.maxHealth = 1 + 9 * 2;
             player.health = player.maxHealth;
-            this.game.showAnnouncement('终极武器 MAX WEAPON!', '#f0f');
-            this.game.updateHUD();
+            if (isPlayer) {
+                this.game.showAnnouncement('终极武器 MAX WEAPON!', '#f0f');
+                this.game.updateHUD();
+            } else {
+                this.game.showAnnouncement('⚠️ 敌方坦克获得了终极武器!', '#f00');
+            }
         }
         else if (this.type === POWERUP_TYPES.W_MISSILE) { this.handleWeaponPickup(player, 'MISSILE', '跟踪导弹', '#0f0'); }
         else if (this.type === POWERUP_TYPES.W_LASER) { this.handleWeaponPickup(player, 'LASER', '穿透激光', '#0ff'); }
@@ -1040,6 +1061,7 @@ class Player extends Tank {
     }
     update() {
         if (!this.alive) return;
+        if (this.game.playerFrozenTimer > 0) return;
         if (isNaN(this.x) || isNaN(this.y)) { this.x = TILE_SIZE * 8; this.y = TILE_SIZE * 22; }
         
         if (this.comboTimer > 0) this.comboTimer--; else this.combo = 0;
@@ -1765,7 +1787,7 @@ class Game {
     constructor() {
         this.canvas = document.getElementById('game-canvas'); this.ctx = this.canvas.getContext('2d');
         this.canvas.width = CANVAS_SIZE; this.canvas.height = CANVAS_SIZE; this.input = new InputHandler(); this.map = new GameMap(this);
-        this.players = []; this.enemies = []; this.bullets = []; this.effects = []; this.powerUps = []; this.fortifyTimer = 0; this.spawnTimer = 0; this.enemyFrozenTimer = 0;
+        this.players = []; this.enemies = []; this.bullets = []; this.effects = []; this.powerUps = []; this.fortifyTimer = 0; this.spawnTimer = 0; this.enemyFrozenTimer = 0; this.playerFrozenTimer = 0;
         this.currentStage = 0; this.gameState = 'START'; this.lives = 3;
         this.hitStopTimer = 0;
         this.replayHistory = [];
@@ -1830,7 +1852,7 @@ class Game {
         document.getElementById('start-screen').classList.add('hidden'); document.getElementById('game-over-screen').classList.add('hidden');
         document.getElementById('stage-info').innerText = `关卡 Stage ${this.currentStage + 1}`;
 
-        this.map.reset(this.currentStage); this.bullets = []; this.enemies = []; this.effects = []; this.powerUps = []; this.fortifyTimer = 0; this.enemyFrozenTimer = 0;
+        this.map.reset(this.currentStage); this.bullets = []; this.enemies = []; this.effects = []; this.powerUps = []; this.fortifyTimer = 0; this.enemyFrozenTimer = 0; this.playerFrozenTimer = 0;
         this.stageClearTimer = 0;
         this.currentLevel = this.map.currentLevel;
         const diffMult = this.difficulty === 'easy' ? 0.7 : (this.difficulty === 'hard' ? 1.3 : 1);
@@ -1945,6 +1967,10 @@ class Game {
         this.announcements = this.announcements.filter(a => { a.timer--; a.y -= 0.5; return a.timer > 0; });
         this.floatingTexts = this.floatingTexts.filter(t => { t.timer--; t.y += t.vy; return t.timer > 0; });
         if (this.enemyFrozenTimer > 0) this.enemyFrozenTimer--;
+        if (this.playerFrozenTimer > 0) {
+            this.playerFrozenTimer--;
+            if (this.playerFrozenTimer % 30 === 0) this.players.forEach(p => this.effects.push(new Effect(p.x + p.width/2, p.y + p.height/2, 'EXPLOSION', 0.5))); // visual cue
+        }
 
         const bossChance = this.currentStage < 5 ? 0 : (this.currentStage < 20 ? 0.0002 : 0.0005);
         if (Math.random() < bossChance && !this.enemies.some(e => e.isBoss) && !this.bossWarning) {
