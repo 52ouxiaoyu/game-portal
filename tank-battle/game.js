@@ -872,7 +872,12 @@ class Tank {
             this.game.effects.push(new Effect(this.x + 30, this.y + 30, 'EXPLOSION', 1));
             if (this instanceof Player) {
                 this.game.shakeScreen(4);
-                // Level no longer drops when taking damage!
+                if (this.level > 0) {
+                    this.level = Math.max(0, this.level - 1);
+                    this.speed = Math.min(8, 4 + this.level * 0.15);
+                    this.game.effects.push(new Effect(this.x + 30, this.y + 30, 'EXPLOSION', 1));
+                    this.game.showFloatingText('火力下降!', this.x, this.y, '#f00');
+                }
                 this.shieldTimer = 30;
                 this.game.updateHUD();
             } else if (this.variant === 'HEAVY') {
