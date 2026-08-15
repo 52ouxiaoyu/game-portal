@@ -5,7 +5,7 @@ const CANVAS_SIZE = TILE_SIZE * GRID_SIZE; // 832px
 
 const TILE_TYPES = { EMPTY: 0, BRICK: 1, STEEL: 2, WATER: 3, FOREST: 4, ICE: 5, HARD_BRICK: 6, UNBREAKABLE: 7, BARREL: 8, BASE: 9, BASE_DESTROYED: 10 };
 const COLORS = { BRICK: '#B53120', BRICK_LIGHT: '#DC5341', STEEL: '#AAAAAA', STEEL_LIGHT: '#EEEEEE', WATER: '#2131E7', FOREST: '#21B521', PLAYER1: '#E7E721', PLAYER2: '#63C6FF', ENEMY: '#E7E7E7', BASE: '#E79C21', BARREL: '#FF4400' };
-const POWERUP_TYPES = { SHIELD: '🛡️', BOMB: '💣', STAR: '⭐', SHOVEL: '🏗️', LIFE: '❤️', TIME: '⏳', MAX_WEAPON: '🚀', BOAT: '🚤', FLY: '🚁', W_MISSILE: '🎯', W_LASER: '⚡', W_EXPLOSIVE: '💥' };
+const POWERUP_TYPES = { SHIELD: '🛡️', BOMB: '💣', STAR: '⭐', SHOVEL: '🏗️', LIFE: '❤️', TIME: '⏳', MAX_WEAPON: '🚀', BOAT: '🚤', FLY: '🚁', W_MISSILE: '🎯', W_LASER: '⚡', W_EXPLOSIVE: '💥', FAKE_BOMB: '🧨' };
 
 function seededRandom(seed) {
     let s = seed;
@@ -315,7 +315,17 @@ class PowerUp {
             }, i * 80);
         }
         const isPlayer = player instanceof Player;
-        if (this.type === POWERUP_TYPES.BOMB) {
+        if (this.type === POWERUP_TYPES.FAKE_BOMB) {
+            this.game.effects.push(new Effect(this.x + 32, this.y + 32, 'EXPLOSION', 2));
+            if (isPlayer) {
+                this.game.showAnnouncement('💀 中计了！这是敌人的陷阱炸药包！', '#f00');
+                player.destroy(this.game.enemies.find(e => e.isBoss) || player, 5);
+            } else {
+                player.health = Math.min(player.maxHealth, player.health + 5);
+                this.game.showFloatingText('+5 HP', player.x, player.y, '#0f0');
+            }
+        }
+        else if (this.type === POWERUP_TYPES.BOMB) {
             if (isPlayer) { this.game.enemies.forEach(e => { if (e.isBoss) e.destroy(player, 10); else e.destroy(player, 100); }); }
             else { this.game.players.forEach(p => p.destroy(player, 2)); this.game.showAnnouncement('⚠️ 敌人使用了全屏炸弹!', '#f00'); }
         }
@@ -1446,6 +1456,14 @@ class Boss extends Enemy {
         this.shieldActive = false;
         this.shieldCooldown = 300;
         this.summonCooldown = 400;
+        this.trickeryCooldown = 300 + Math.random() * 300;
+        this.stealthTimer = 0;
+    }
+    
+    draw(ctx) {
+        if (this.stealthTimer > 0) ctx.globalAlpha = 0.2;
+        super.draw(ctx);
+        if (this.stealthTimer > 0) ctx.globalAlpha = 1.0;
     }
     shoot() {
         if (this.cooldown > 0 || (this.bossVariant === 'LAZY' && this.stateTimer > 0)) return; 
@@ -1576,6 +1594,32 @@ class Boss extends Enemy {
                 this.summonCooldown = 300;
                 this.game.effects.push(new Effect(this.x + this.width/2, this.y + this.height/2, 'SPAWN', 3));
                 this.game.enemies.push(new Enemy(this.game, this.x, this.y + this.height + 10, this.game.currentStage));
+            }
+        }
+        
+        if (this.game.enemyFrozenTimer <= 0) {
+            if (this.trickeryCooldown > 0) this.trickeryCooldown--;
+            if (this.trickeryCooldown <= 0) {
+                this.stealthTimer = 240; 
+                this.trickeryCooldown = 500 + Math.random() * 500; 
+                this.game.showAnnouncement(`⚠️ 狡猾的Boss使用了隐身术！`, '#f0f');
+                for (let i = 0; i < 3; i++) {
+                    let rx = this.x + (Math.random() - 0.5) * TILE_SIZE * 8;
+                    let ry = this.y + (Math.random() - 0.5) * TILE_SIZE * 8;
+                    rx = Math.max(0, Math.min(CANVAS_SIZE - 32, rx));
+                    ry = Math.max(0, Math.min(CANVAS_SIZE - 32, ry));
+                    this.game.powerUps.push(new PowerUp(this.game, rx, ry, POWERUP_TYPES.FAKE_BOMB));
+                }
+            }
+            if (this.stealthTimer > 0) {
+                this.stealthTimer--;
+                if (this.stealthTimer % 30 === 0 && Math.random() < 0.5) {
+                    let rx = this.x + (Math.random() - 0.5) * TILE_SIZE * 6;
+                    let ry = this.y + (Math.random() - 0.5) * TILE_SIZE * 6;
+                    rx = Math.max(0, Math.min(CANVAS_SIZE - 32, rx));
+                    ry = Math.max(0, Math.min(CANVAS_SIZE - 32, ry));
+                    this.game.powerUps.push(new PowerUp(this.game, rx, ry, POWERUP_TYPES.FAKE_BOMB));
+                }
             }
         }
         
