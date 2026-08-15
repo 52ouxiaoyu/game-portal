@@ -1075,6 +1075,38 @@ class Player extends Tank {
         this.killStreak = 0;
         this.lastKillTime = 0;
     }
+    
+    draw(ctx) {
+        super.draw(ctx);
+        if (!this.alive) return;
+        
+        ctx.save();
+        const bounce = Math.sin(Date.now() / 150) * 5;
+        const textY = this.y - 15 + bounce;
+        const textX = this.x + this.width / 2;
+        
+        ctx.font = 'bold 20px Arial';
+        ctx.textAlign = 'center';
+        ctx.shadowBlur = 10;
+        ctx.shadowColor = this.color;
+        ctx.fillStyle = '#fff';
+        ctx.lineWidth = 3;
+        ctx.strokeStyle = '#000';
+        
+        ctx.strokeText(`P${this.id}`, textX, textY);
+        ctx.fillText(`P${this.id}`, textX, textY);
+        
+        ctx.beginPath();
+        ctx.moveTo(textX - 6, textY + 5);
+        ctx.lineTo(textX + 6, textY + 5);
+        ctx.lineTo(textX, textY + 13);
+        ctx.closePath();
+        ctx.fillStyle = this.color;
+        ctx.fill();
+        ctx.stroke();
+        ctx.restore();
+    }
+    
     update() {
         if (!this.alive) return;
         if (this.game.playerFrozenTimer > 0) return;
