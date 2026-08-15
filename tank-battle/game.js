@@ -2359,7 +2359,11 @@ class Game {
         this.gameState = 'MVP_SHOWCASE';
         this.mvpTimer = 0;
         let sortedPlayers = [...this.players].sort((a, b) => b.score - a.score);
-        this.mvpPlayer = sortedPlayers[0];
+        if (this.players.length >= 2 && sortedPlayers[0].score === sortedPlayers[1].score) {
+            this.mvpPlayer = 'DRAW';
+        } else {
+            this.mvpPlayer = sortedPlayers[0];
+        }
         audio.play('powerup');
         setTimeout(() => {
             this.showGameOverScreen();
@@ -2368,9 +2372,55 @@ class Game {
     
     drawMVP() {
         this.mvpTimer++;
-        this.ctx.fillStyle = 'rgba(0, 0, 0, 0.8)'; // Dim background instead of fully black so it feels like overlay
-        if (this.mvpTimer === 1) this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
-        else this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height); // redraw full black for now
+        this.ctx.fillStyle = 'rgba(0, 0, 0, 0.8)';
+        this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+        
+        if (this.mvpPlayer === 'DRAW') {
+            let cx1 = 250;
+            let cx2 = 582;
+            let cy = 416 + 50;
+            
+            let shakeX = (Math.random() - 0.5) * 8;
+            let shakeY = (Math.random() - 0.5) * 8;
+            
+            this.ctx.font = 'bold 80px Arial';
+            this.ctx.fillStyle = '#ff0';
+            this.ctx.textAlign = 'center';
+            this.ctx.fillText("TIE GAME!", 416, 200);
+            
+            this.ctx.font = 'bold 40px Arial';
+            this.ctx.fillStyle = '#fff';
+            this.ctx.fillText("不分上下！都在哭！😭", 416, 260);
+            
+            for (let i = 0; i < 2; i++) {
+                let p = this.players[i];
+                if (!p) continue;
+                let px = i === 0 ? cx1 : cx2;
+                
+                this.ctx.save();
+                this.ctx.translate(px + shakeX, cy + shakeY);
+                this.ctx.scale(3, 3);
+                
+                this.ctx.fillStyle = p.color;
+                this.ctx.fillRect(-12, -12, 24, 24);
+                this.ctx.fillStyle = '#000'; this.ctx.fillRect(-16, -16, 8, 32); this.ctx.fillRect(8, -16, 8, 32);
+                this.ctx.fillStyle = '#888'; this.ctx.fillRect(-2, -16, 4, 16);
+                
+                // Draw Tears
+                this.ctx.fillStyle = '#0ff';
+                let tear1 = (this.mvpTimer % 20) / 20 * 16;
+                let tear2 = ((this.mvpTimer + 10) % 20) / 20 * 16;
+                this.ctx.fillRect(-8, -4 + tear1, 4, 6);
+                this.ctx.fillRect(4, -4 + tear2, 4, 6);
+                
+                this.ctx.restore();
+                
+                this.ctx.font = 'bold 40px Arial';
+                this.ctx.fillStyle = p.color;
+                this.ctx.fillText(`P${p.id}: ${p.score}`, px, cy + 120);
+            }
+            return;
+        }
         
         if (!this.mvpPlayer) return;
         
