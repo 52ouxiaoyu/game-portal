@@ -875,6 +875,7 @@ class Tank {
     }
 
     destroy(killer, damage = 1) {
+        if (!this.alive) return;
         if (this.shieldTimer > 0) return; 
         this.health = (this.health || 1) - damage;
         if (this.health > 0) {
@@ -1704,6 +1705,7 @@ class Boss extends Enemy {
         }
     }
     destroy(killer, damage = 1) {
+        if (!this.alive) return;
         if (this.shieldTimer > 0) {
             audio.play('hit');
             this.game.effects.push(new Effect(this.x + this.width/2, this.y + this.height/2, 'EXPLOSION', 1));
@@ -2092,6 +2094,11 @@ class Game {
             }
         }
         
+        if (this.comboTimer > 0) {
+            this.comboTimer--;
+            if (this.comboTimer <= 0) this.comboCount = 0;
+        }
+
         this.players.forEach(p => { try { p.update(); } catch(e) { console.error(e); } }); 
         this.enemies.forEach(e => { try { e.update(); } catch(e) { console.error(e); } });
         this.bullets.forEach(b => { try { b.update(); } catch(e) { console.error(e); } });
