@@ -1902,6 +1902,16 @@ class Game {
         document.getElementById('enemies-info').innerText = `敌人 Enemies: ${this.enemiesRemaining + this.enemies.length}`;
     }
     handlePlayerDeath(player) {
+        if (player.level > 0) {
+            player.level = Math.floor(player.level / 2);
+            player.speed = Math.min(8, 4 + player.level * 0.15);
+            player.maxHealth = 1 + player.level * 2;
+            player.health = player.maxHealth;
+            this.showFloatingText('火力减半!', player.x + player.width/2, player.y - 10, '#f00');
+        } else {
+            player.health = 1;
+        }
+
         if (this.lives > 0) {
             this.lives--; this.updateHUD();
             setTimeout(() => {
@@ -1909,6 +1919,7 @@ class Game {
                 player.x = (player.id === 1) ? TILE_SIZE * 8 : TILE_SIZE * 16;
                 player.y = TILE_SIZE * 22;
                 player.setShield(180);
+                this.updateHUD();
             }, 2000);
         }
     }
