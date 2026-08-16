@@ -964,8 +964,15 @@ class Bullet {
             let target = null;
             zombies.forEach(z => {
                 if (!z.active) return;
-                let d = Math.hypot(z.x - this.x, z.y - this.y);
-                if(d < closestDist && hasLineOfSight(this.x, this.y, z.x, z.y)) { closestDist = d; target = z; }
+                let dx = z.x - this.x;
+                let dy = z.y - this.y;
+                if(Math.abs(dx) < closestDist && Math.abs(dy) < closestDist) {
+                    let d = dx*dx + dy*dy;
+                    if(d < closestDist*closestDist) { 
+                        closestDist = Math.sqrt(d); 
+                        target = z; 
+                    }
+                }
             });
             if(target) {
                 let tx = target.x - this.x;
@@ -1247,8 +1254,6 @@ class Zombie {
             ctx.fill();
 
         } else {
-            ctx.shadowBlur = 10;
-            ctx.shadowColor = this.color;
             ctx.fillStyle = '#111';
             ctx.strokeStyle = this.color;
             ctx.lineWidth = 2;
@@ -2039,16 +2044,22 @@ function update() {
             const z = zombies[j];
             if(!z.active) continue;
             
-            const dist = Math.hypot(b.x - z.x, b.y - z.y);
-            if(dist < z.size + b.size) {
+            let dx = b.x - z.x;
+            let dy = b.y - z.y;
+            let totalSize = z.size + b.size;
+            
+            // Fast AABB check before squared distance check
+            if(Math.abs(dx) < totalSize && Math.abs(dy) < totalSize && (dx*dx + dy*dy < totalSize*totalSize)) {
                 z.hp -= b.damage;
                 if(b.isHoming) {
-                    // Missiles explode on impact
                     createParticles(b.x, b.y, '#ff5500', 20);
                     screenShake = 5;
                     audio.shootShotgun();
                     zombies.forEach(z2 => {
-                        if(z2.active && Math.hypot(z2.x - b.x, z2.y - b.y) < 80) {
+                        if(!z2.active) return;
+                        let ddx = z2.x - b.x;
+                        let ddy = z2.y - b.y;
+                        if(Math.abs(ddx) < 80 && Math.abs(ddy) < 80 && (ddx*ddx + ddy*ddy < 6400)) {
                             z2.hp -= b.damage * 0.5;
                             if(z2.hp <= 0) { 
                                 z2.active = false; 
