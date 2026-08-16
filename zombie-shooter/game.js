@@ -1201,11 +1201,8 @@ class Zombie {
             ctx.fillStyle = this.color;
             ctx.beginPath();
             ctx.arc(0, 0, s * 0.3, 0, Math.PI * 2);
-            ctx.fill();
-        }
             ctx.shadowBlur = 0;
         }
-
         ctx.restore();
         
         // Boss Beautiful UI Overlay
