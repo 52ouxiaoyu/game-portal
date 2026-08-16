@@ -157,14 +157,11 @@ class Building {
             ctx.fillStyle = 'rgba(0, 255, 255, 0.05)';
             ctx.fillRect(this.x, this.y, this.w, this.h);
             
-            ctx.shadowBlur = 10;
-            ctx.shadowColor = '#00ffff';
             ctx.strokeStyle = 'rgba(0, 255, 255, 0.5)';
             ctx.setLineDash([10, 10]);
             ctx.lineWidth = 2;
             ctx.strokeRect(this.x, this.y, this.w, this.h);
             ctx.setLineDash([]);
-            ctx.shadowBlur = 0;
             
             ctx.fillStyle = 'rgba(0, 255, 255, 0.5)';
             ctx.font = '14px "Share Tech Mono", monospace';
@@ -173,12 +170,9 @@ class Building {
             ctx.fillStyle = '#000000';
             ctx.fillRect(this.x, this.y, this.w, this.h);
             
-            ctx.shadowBlur = 10;
-            ctx.shadowColor = '#00ffff';
             ctx.strokeStyle = '#00ffff';
             ctx.lineWidth = 2;
             ctx.strokeRect(this.x, this.y, this.w, this.h);
-            ctx.shadowBlur = 0;
         }
     }
 }
@@ -270,8 +264,6 @@ class Barrel {
             ctx.fill();
         }
         
-        ctx.shadowBlur = 10;
-        ctx.shadowColor = '#ff3300';
         ctx.fillStyle = '#000000';
         ctx.strokeStyle = '#ff3300';
         ctx.lineWidth = 2;
@@ -284,7 +276,6 @@ class Barrel {
         ctx.moveTo(this.x - 8, drawY - 8); ctx.lineTo(this.x + 8, drawY + 8);
         ctx.moveTo(this.x + 8, drawY - 8); ctx.lineTo(this.x - 8, drawY + 8);
         ctx.stroke();
-        ctx.shadowBlur = 0;
     }
 }
 
@@ -1065,11 +1056,8 @@ class Player {
         
         // Neon Fill
         let hpRatio = Math.max(0, this.hp / this.maxHp);
-        ctx.shadowBlur = 10;
-        ctx.shadowColor = this.color;
         ctx.fillStyle = this.color;
         ctx.fillRect(this.x - barW/2, this.y + offsetY, barW * hpRatio, barH);
-        ctx.shadowBlur = 0;
         
         // Border
         ctx.strokeStyle = '#fff';
@@ -1095,14 +1083,11 @@ class Player {
 
         // Ultimate Indicator
         if(this.hasUlt) {
-            ctx.shadowBlur = 20;
-            ctx.shadowColor = '#00ffff';
             ctx.strokeStyle = '#00ffff';
             ctx.lineWidth = 2;
             ctx.beginPath();
             ctx.arc(this.x, this.y, 40 + Math.sin(frameCount*0.2)*5, 0, Math.PI*2);
             ctx.stroke();
-            ctx.shadowBlur = 0;
         }
 
     }
@@ -1873,9 +1858,6 @@ class LootBox {
         ctx.fillStyle = '#000000';
         ctx.fillRect(-this.size/2, -this.size/2, this.size, this.size);
         
-        ctx.shadowBlur = glowRadius;
-        ctx.shadowColor = this.color;
-        
         ctx.lineWidth = 2;
         ctx.strokeStyle = this.color;
         ctx.strokeRect(-this.size/2, -this.size/2, this.size, this.size);
@@ -1900,7 +1882,6 @@ class LootBox {
         ctx.fillText(text, 0, 1);
         
         // Explain the item to the player
-        ctx.shadowBlur = 0;
         let fullLabel = label + ` (${text})`;
         ctx.font = 'bold 12px "Share Tech Mono", monospace'; // Increased font size
         
@@ -1987,8 +1968,6 @@ class Geom {
         ctx.save();
         ctx.translate(this.x, this.y);
         ctx.rotate(frameCount * 0.05);
-        ctx.shadowBlur = 10;
-        ctx.shadowColor = '#00ff00';
         ctx.strokeStyle = '#00ff00';
         ctx.lineWidth = 2;
         ctx.beginPath();
@@ -2467,7 +2446,7 @@ function update() {
 
     // Periodic Barrel Drops removed (now a boss-exclusive skill)
 
-    if(frameCount % Math.max(5, spawnRate) === 0 && zombies.length < 200) {
+    if(frameCount % Math.max(5, spawnRate) === 0 && zombies.length < 80) {
         let count = Math.min(5, Math.floor(survivalTime / 30) + 1); // Cap spawn count to reduce lag
         if (gameDifficulty === 'easy') count = Math.max(1, Math.floor(count * 0.5));
         if (gameDifficulty === 'hard') count += 2;
