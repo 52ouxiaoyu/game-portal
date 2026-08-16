@@ -95,9 +95,13 @@ class Building {
         // Solid black box with neon wireframe outline
         ctx.fillStyle = '#000000';
         ctx.fillRect(this.x, this.y, this.w, this.h);
+        
+        ctx.shadowBlur = 10;
+        ctx.shadowColor = '#00ffff';
         ctx.strokeStyle = '#00ffff';
         ctx.lineWidth = 2;
         ctx.strokeRect(this.x, this.y, this.w, this.h);
+        ctx.shadowBlur = 0;
     }
 }
 
@@ -188,6 +192,8 @@ class Barrel {
             ctx.fill();
         }
         
+        ctx.shadowBlur = 10;
+        ctx.shadowColor = '#ff3300';
         ctx.fillStyle = '#000000';
         ctx.strokeStyle = '#ff3300';
         ctx.lineWidth = 2;
@@ -200,6 +206,7 @@ class Barrel {
         ctx.moveTo(this.x - 8, drawY - 8); ctx.lineTo(this.x + 8, drawY + 8);
         ctx.moveTo(this.x + 8, drawY - 8); ctx.lineTo(this.x - 8, drawY + 8);
         ctx.stroke();
+        ctx.shadowBlur = 0;
     }
 }
 
@@ -1540,6 +1547,9 @@ class LootBox {
         // Minimalist Neon Box
         ctx.fillStyle = '#000000';
         ctx.fillRect(-this.size/2, -this.size/2, this.size, this.size);
+        
+        ctx.shadowBlur = glowRadius;
+        ctx.shadowColor = this.color;
         
         ctx.lineWidth = 2;
         ctx.strokeStyle = this.color;
