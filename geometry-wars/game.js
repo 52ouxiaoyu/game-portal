@@ -292,7 +292,7 @@ class Player {
         this.x = CANVAS_W / 2 + (id === 1 ? -50 : 50);
         this.y = CANVAS_H / 2;
         this.size = 20;
-        this.speed = 5;
+        this.speed = 4.0;
         this.color = id === 1 ? '#00bfff' : '#ff9900';
         this.facing = {x: 1, y: 0}; // default facing right
         this.hp = 3;
@@ -1153,15 +1153,15 @@ class Zombie {
             this.damage = 3 + (this.bossId % 2); 
             this._baseScore = 50000;
         } else if(this.type === 'boss') {
-            this.size = 40; this.speed = 0.8; this.hp = 1000 + survivalTime*10; this.color = '#ff00ff'; this.damage = 2; this._baseScore = 500;
+            this.size = 40; this.speed = 0.6; this.hp = 1000 + survivalTime*10; this.color = '#ff00ff'; this.damage = 2; this._baseScore = 500;
         } else if(this.type === 'fast') {
-            this.size = 12 + Math.random()*3; this.speed = 1.5 + Math.random()*0.5 + (survivalTime/180); this.hp = 10 + survivalTime/2; this.color = '#aa00ff'; this.damage = 1; this._baseScore = 15;
+            this.size = 12 + Math.random()*3; this.speed = 1.0 + Math.random()*0.4 + (survivalTime/240); this.hp = 10 + survivalTime/2; this.color = '#aa00ff'; this.damage = 1; this._baseScore = 15;
         } else if(this.type === 'tank') {
-            this.size = 25 + Math.random()*5; this.speed = 0.3 + Math.random()*0.3 + (survivalTime/300); this.hp = 100 + survivalTime*3; this.color = '#00ff00'; this.damage = 2; this._baseScore = 30;
+            this.size = 25 + Math.random()*5; this.speed = 0.2 + Math.random()*0.2 + (survivalTime/400); this.hp = 100 + survivalTime*3; this.color = '#00ff00'; this.damage = 2; this._baseScore = 30;
         } else if(this.type === 'exploder') {
-            this.size = 18 + Math.random()*4; this.speed = 0.8 + Math.random()*0.5 + (survivalTime/180); this.hp = 15 + survivalTime; this.color = '#ffaa00'; this.damage = 1; this._baseScore = 20;
+            this.size = 18 + Math.random()*4; this.speed = 0.5 + Math.random()*0.4 + (survivalTime/240); this.hp = 15 + survivalTime; this.color = '#ffaa00'; this.damage = 1; this._baseScore = 20;
         } else { // normal
-            this.size = 15 + Math.random()*5; this.speed = 0.6 + Math.random()*0.6 + (survivalTime/180); this.hp = 20 + survivalTime; this.color = '#0088ff'; this.damage = 1; this._baseScore = 10;
+            this.size = 15 + Math.random()*5; this.speed = 0.4 + Math.random()*0.4 + (survivalTime/240); this.hp = 20 + survivalTime; this.color = '#0088ff'; this.damage = 1; this._baseScore = 10;
         }
         
         if(activeEvent === 'bloodmoon') this.speed *= 2;
@@ -1651,9 +1651,24 @@ class LootBox {
         
         // Explain the item to the player
         ctx.shadowBlur = 0;
-        ctx.font = '10px "Share Tech Mono", monospace';
+        let fullLabel = label + ` (${text})`;
+        ctx.font = 'bold 12px "Share Tech Mono", monospace'; // Increased font size
+        
+        let textWidth = ctx.measureText(fullLabel).width;
+        let textHeight = 12;
+        
+        // Draw solid background box
+        ctx.fillStyle = 'rgba(0, 0, 0, 0.85)';
+        ctx.strokeStyle = this.color;
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.roundRect(-textWidth/2 - 6, -this.size - 18 - textHeight/2, textWidth + 12, textHeight + 8, 4);
+        ctx.fill();
+        ctx.stroke();
+        
+        // Draw text
         ctx.fillStyle = this.color;
-        ctx.fillText(label + ` (${text})`, 0, -this.size - 10);
+        ctx.fillText(fullLabel, 0, -this.size - 16);
         
         ctx.restore();
     }
@@ -2219,9 +2234,9 @@ function update() {
     barrels.forEach(b => b.update());
     lootBoxes.forEach(lb => lb.update());
     lootTimer++;
-    if(lootTimer > 600) {
+    if(lootTimer > 1200) {
         lootTimer = 0;
-        if(Math.random() < 0.5) lootBoxes.push(new LootBox());
+        if(Math.random() < 0.4) lootBoxes.push(new LootBox());
     }
     floatingTexts.forEach(ft => { ft.y -= 1; ft.life -= 0.02; });
     if(typeof boars !== 'undefined') boars.forEach(b => b.update());
