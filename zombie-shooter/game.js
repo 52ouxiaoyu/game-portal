@@ -92,13 +92,12 @@ class Building {
         this.x = x; this.y = y; this.w = w; this.h = h;
     }
     draw(ctx) {
-        // Neon wireframe outline
-        ctx.shadowBlur = 15;
-        ctx.shadowColor = '#00ffff';
+        // Solid black box with neon wireframe outline
+        ctx.fillStyle = '#000000';
+        ctx.fillRect(this.x, this.y, this.w, this.h);
         ctx.strokeStyle = '#00ffff';
         ctx.lineWidth = 2;
         ctx.strokeRect(this.x, this.y, this.w, this.h);
-        ctx.shadowBlur = 0;
     }
 }
 
@@ -189,14 +188,18 @@ class Barrel {
             ctx.fill();
         }
         
-        ctx.fillStyle = '#ff0000';
-        ctx.fillRect(this.x - 15, drawY - 20, 30, 40);
-        ctx.fillStyle = '#111';
-        ctx.fillRect(this.x - 15, drawY - 10, 30, 5);
-        ctx.fillRect(this.x - 15, drawY + 5, 30, 5);
-        ctx.fillStyle = '#ffaa00';
-        ctx.font = '16px Arial';
-        ctx.fillText('☢️', this.x, drawY+5);
+        ctx.fillStyle = '#000000';
+        ctx.strokeStyle = '#ff3300';
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.arc(this.x, drawY, 15, 0, Math.PI*2);
+        ctx.fill();
+        ctx.stroke();
+        
+        ctx.beginPath();
+        ctx.moveTo(this.x - 8, drawY - 8); ctx.lineTo(this.x + 8, drawY + 8);
+        ctx.moveTo(this.x + 8, drawY - 8); ctx.lineTo(this.x - 8, drawY + 8);
+        ctx.stroke();
     }
 }
 
@@ -1534,31 +1537,29 @@ class LootBox {
         
         ctx.translate(this.x, this.y + floatY);
         
-        ctx.shadowBlur = glowRadius;
-        ctx.shadowColor = this.color;
-        ctx.fillStyle = this.color;
+        // Minimalist Neon Box
+        ctx.fillStyle = '#000000';
         ctx.fillRect(-this.size/2, -this.size/2, this.size, this.size);
         
-        ctx.shadowBlur = 0;
         ctx.lineWidth = 2;
-        ctx.strokeStyle = '#fff';
+        ctx.strokeStyle = this.color;
         ctx.strokeRect(-this.size/2, -this.size/2, this.size, this.size);
         
-        ctx.fillStyle = '#000';
-        ctx.font = '14px Arial';
+        ctx.fillStyle = this.color;
+        ctx.font = 'bold 14px "Share Tech Mono", monospace';
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
         let text = '?';
-        if(this.type === 'heal') text = '💖';
-        else if(this.type === 'shield') text = '🛡️';
-        else if(this.type === 'buff') text = '🌀';
-        else if(this.type === 'weapon_box') text = '🔫';
-        else if(this.type === 'mech') text = '🔴';
-        else if(this.type === 'vehicle') text = '🔵';
-        else if(this.type === 'nuke') text = '☢️';
-        else if(this.type === 'trap') text = '⚠️';
-        else if(this.type === 'revive') text = '👼';
-        else if(this.type === 'ult') text = '⚡';
+        if(this.type === 'heal') text = '+';
+        else if(this.type === 'shield') text = 'O';
+        else if(this.type === 'buff') text = '^';
+        else if(this.type === 'weapon_box') text = 'W';
+        else if(this.type === 'mech') text = 'M';
+        else if(this.type === 'vehicle') text = 'V';
+        else if(this.type === 'nuke') text = '*';
+        else if(this.type === 'trap') text = 'X';
+        else if(this.type === 'revive') text = 'R';
+        else if(this.type === 'ult') text = 'U';
         ctx.fillText(text, 0, 1);
         ctx.restore();
     }
