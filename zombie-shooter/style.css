@@ -31,7 +31,7 @@ canvas {
     height: 100%;
 }
 
-/* HUD */
+/* Modern HUD */
 #hud {
     position: absolute;
     top: 0; left: 0; right: 0;
@@ -40,74 +40,139 @@ canvas {
     justify-content: space-between;
     align-items: flex-start;
     z-index: 10;
-    background: linear-gradient(to bottom, rgba(0, 50, 20, 0.9), transparent);
-    border-bottom: 2px solid rgba(0, 255, 102, 0.4);
-    box-shadow: 0 5px 20px rgba(0, 255, 102, 0.2);
+    background: linear-gradient(to bottom, rgba(10, 10, 10, 0.95), rgba(10,10,10,0.6) 60%, transparent);
     pointer-events: none;
     text-transform: uppercase;
+    font-family: 'Share Tech Mono', 'Courier New', Courier, monospace;
+}
+
+.player-hud {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    width: 250px;
+}
+
+.right-align {
+    align-items: flex-end;
+    text-align: right;
+}
+
+.player-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+.right-align .player-header {
+    flex-direction: row;
+}
+
+.player-title {
+    font-size: 18px;
+    font-weight: bold;
+    color: #fff;
+    text-shadow: 0 0 5px rgba(255,255,255,0.5);
+}
+#p1-hud .player-title { color: #00bfff; text-shadow: 0 0 8px #00bfff; }
+#p2-hud .player-title { color: #ff9900; text-shadow: 0 0 8px #ff9900; }
+
+.player-buffs {
+    font-size: 16px;
+    background: rgba(255,255,255,0.1);
+    padding: 2px 8px;
+    border-radius: 4px;
     letter-spacing: 2px;
 }
 
-#hud::before {
-    content: '';
-    position: fixed;
-    top: 0; left: 0; right: 0; bottom: 0;
-    pointer-events: none;
-    background: repeating-linear-gradient(
-        0deg,
-        rgba(0, 0, 0, 0.15),
-        rgba(0, 0, 0, 0.15) 1px,
-        transparent 1px,
-        transparent 2px
-    );
-    z-index: 100;
+.hp-bar-wrapper {
+    width: 100%;
+    height: 18px;
+    background: rgba(0, 0, 0, 0.7);
+    border: 2px solid #444;
+    border-radius: 4px;
+    position: relative;
+    overflow: hidden;
+    box-shadow: 0 0 10px rgba(0,0,0,0.5);
 }
-.hud-item {
+
+.hp-bar-fill {
+    height: 100%;
+    width: 100%;
+    background: linear-gradient(90deg, #00b33c, #00ff66);
+    transition: width 0.2s ease-out;
+}
+#p2-hp-bar {
+    background: linear-gradient(90deg, #ff6600, #ff9900);
+}
+
+.hp-text {
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 12px;
+    font-weight: bold;
+    color: #fff;
+    text-shadow: 1px 1px 0 #000, -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000;
+}
+
+.stats-row {
+    display: flex;
+    gap: 10px;
+    font-size: 14px;
+    margin-top: 2px;
+}
+
+.weapon-tag {
+    color: #fff;
+    background: rgba(0, 150, 255, 0.2);
+    border: 1px solid rgba(0, 150, 255, 0.5);
+    padding: 2px 8px;
+    border-radius: 3px;
+}
+#p2-hud .weapon-tag {
+    background: rgba(255, 150, 0, 0.2);
+    border: 1px solid rgba(255, 150, 0, 0.5);
+}
+
+.score-tag {
+    color: #ffff00;
+    background: rgba(255, 255, 0, 0.1);
+    border: 1px solid rgba(255, 255, 0, 0.3);
+    padding: 2px 8px;
+    border-radius: 3px;
+}
+
+.center-hud {
     display: flex;
     flex-direction: column;
-}
-
-.center-box {
     align-items: center;
+    gap: 5px;
 }
 
-.right-box {
-    align-items: flex-end;
-}
-
-.label {
-    font-size: 14px;
-    color: #aaa;
-}
-
-#score, #high-score {
-    font-size: 24px;
+#time-display {
+    font-size: 36px;
     font-weight: bold;
+    color: #fff;
+    text-shadow: 0 0 15px rgba(255,255,255,0.8);
+    letter-spacing: 4px;
+}
+
+.team-score-box {
+    font-size: 16px;
     color: #00ff66;
     text-shadow: 0 0 8px rgba(0,255,102,0.8);
 }
 
-#weapon-info {
-    font-size: 18px;
-    color: #00ff66;
-    background: rgba(0, 30, 10, 0.8);
-    padding: 8px 25px;
-    border: 1px solid #00ff66;
-    box-shadow: inset 0 0 10px rgba(0, 255, 102, 0.3), 0 0 10px rgba(0, 255, 102, 0.3);
-    text-shadow: 0 0 5px #00ff66;
-    position: relative;
+.high-score-box {
+    font-size: 12px;
+    color: #888;
 }
-#weapon-info::before {
-    content: '[ ';
-    color: #fff;
-}
-#weapon-info::after {
-    content: ' ]';
-    color: #fff;
-}#kill-combo {
-    font-size: 18px;
+
+#kill-combo {
+    font-size: 16px;
     color: #ff00ff;
-    margin-top: 5px;
     animation: pulse 0.5s infinite alternate;
 }
 
@@ -118,16 +183,19 @@ canvas {
 
 #pause-btn {
     pointer-events: auto;
-    background: rgba(255,255,255,0.2);
-    border: 1px solid #fff;
+    background: rgba(255,255,255,0.1);
+    border: 1px solid rgba(255,255,255,0.3);
     color: #fff;
-    padding: 5px 10px;
-    border-radius: 5px;
+    padding: 4px 12px;
+    font-size: 12px;
+    border-radius: 4px;
     cursor: pointer;
     margin-top: 5px;
+    transition: all 0.2s;
 }
 #pause-btn:hover {
-    background: rgba(255,255,255,0.4);
+    background: rgba(255,255,255,0.3);
+    border-color: #fff;
 }
 
 /* UI Screens */

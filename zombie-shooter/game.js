@@ -158,7 +158,17 @@ class Barrel {
         audio.shootShotgun();
         screenShake = 20;
         zombies.forEach(z => {
-            if(z.active && Math.hypot(z.x - this.x, z.y - this.y) < 150) z.hp -= 500;
+            if(z.active && Math.hypot(z.x - this.x, z.y - this.y) < 150) {
+                z.hp -= 500;
+                if(z.hp <= 0) {
+                    z.active = false;
+                    score += z.scoreVal;
+                    if(this.lastHitBy) {
+                        let owner = players.find(pl => pl.id === this.lastHitBy);
+                        if(owner) owner.score += z.scoreVal;
+                    }
+                }
+            }
         });
         players.forEach(p => {
             if(p.hp > 0 && Math.hypot(p.x - this.x, p.y - this.y) < 100) {
@@ -281,56 +291,56 @@ class Player {
         for(let i=1; i<=30; i++) {
             let w = {name: `Lv.${i} 手枪`, cd: 15, damage: 20, speed: 10, count: 1, spread: 0, pierce: false, isShockwave: false, isHoming: false};
             
-            w.damage = 15 + Math.floor(i / 2) * 5;
-            w.speed = 10 + i * 0.3;
-            w.req = i * 15; // Requires 15 kills per level to rank up quickly
+            w.damage = 20 + Math.floor(i / 2) * 10;
+            w.speed = 10 + i * 0.4;
+            w.req = i * 8; // Faster leveling: Requires only 8 kills per level
             
             if(i <= 5) {
                 w.name = `Lv.${i} 战术手枪`;
                 w.count = 1;
-                w.cd = 16 - i;
+                w.cd = Math.max(5, 14 - i * 1.5);
             } else if (i <= 10) {
                 w.name = `Lv.${i} 霰弹枪`;
-                w.count = 2 + Math.floor((i-5)/2); // 2 to 4 bullets
-                w.spread = 0.5 + (i-5)*0.1;
-                w.cd = 25 - (i-5)*1.5;
-                w.damage = 30 + i;
+                w.count = 3 + Math.floor((i-5)/2); // 3 to 5 bullets
+                w.spread = 0.6 + (i-5)*0.1;
+                w.cd = 20 - (i-5)*1.5;
+                w.damage = 40 + i * 4;
             } else if (i <= 15) {
                 w.name = `Lv.${i} 突击步枪`;
                 w.count = 1;
-                w.cd = 8 - Math.floor((i-10)*0.8); // Very fast
-                w.damage = 25 + i*2;
-                w.speed = 15;
+                w.cd = Math.max(3, 8 - Math.floor((i-10)*1.2)); // Extremely fast
+                w.damage = 35 + i * 5;
+                w.speed = 18;
             } else if (i <= 20) {
                 w.name = `Lv.${i} 高能激光`;
                 w.count = 1;
                 w.pierce = true;
-                w.speed = 25; // Super fast
-                w.size = 8; // Large
-                w.cd = 25 - (i-15);
-                w.damage = 80 + i*5;
+                w.speed = 30; // Super fast
+                w.size = 10; // Larger
+                w.cd = 18 - (i-15);
+                w.damage = 120 + i * 10;
                 w.color = '#00ffff';
             } else if (i <= 25) {
                 w.name = `Lv.${i} 蜂群导弹`;
-                w.count = 2 + Math.floor((i-20)/2); // 2 to 4 missiles
-                w.spread = 1.0;
+                w.count = 3 + Math.floor((i-20)/2); // 3 to 5 missiles
+                w.spread = 1.2;
                 w.isHoming = true;
-                w.cd = 30 - (i-20);
-                w.damage = 120;
-                w.speed = 8;
+                w.cd = 25 - (i-20);
+                w.damage = 180 + i * 5;
+                w.speed = 10;
                 w.color = '#ff0000';
             } else if (i < 30) {
                 w.name = `Lv.${i} 电磁脉冲`;
                 w.isShockwave = true;
-                w.radius = 200 + (i-25)*20;
-                w.damage = 100 + (i-25)*20;
-                w.cd = 20 - (i-25)*2;
+                w.radius = 250 + (i-25)*25;
+                w.damage = 250 + (i-25)*50;
+                w.cd = 18 - (i-25)*2;
             } else { 
                 w.name = "🌌 超新星爆破 🌌";
                 w.isShockwave = true;
-                w.radius = 450;
-                w.damage = 400;
-                w.cd = 12;
+                w.radius = 600;
+                w.damage = 1000;
+                w.cd = 10;
             }
             this.weapons.push(w);
         }
@@ -353,6 +363,7 @@ class Player {
                 if(d < this.size + z.size + 10) {
                     z.active = false;
                     score += z.scoreVal;
+                    this.score += z.scoreVal;
                     killCount++;
                     createParticles(z.x, z.y, '#ff0000', 15);
                     screenShake = Math.max(screenShake, 5);
@@ -360,7 +371,7 @@ class Player {
                     comboCount++; comboTimer = 180;
                     if(comboCount % 10 === 0) { screenShake = 10; addFloatingText(CANVAS_W/2, 100, `${comboCount} COMBO!`, '#ffaa00'); audio.levelUp(); }
                     audio.zombieDie();
-                    addFloatingText(z.x, z.y, "🏍️ 碾压!", "#ffcc00");
+                    addFloatingText(z.x, z.y, "🔵 疾速冲击!", "#00ffff");
                 }
             });
         }
@@ -670,145 +681,79 @@ class Player {
         // Damage flickering (I-frames)
         if (this.invincibleTime > 0 && Math.floor(frameCount / 4) % 2 === 0) return;
 
-        if(this.mechHp > 0) {
-            // Draw Mech - Awesome Cyberpunk Style
-            ctx.save();
-            ctx.translate(this.x, this.y);
-            ctx.rotate(Math.atan2(this.facing.y, this.facing.x));
-            
-            // Base Chassis
-            ctx.fillStyle = '#2b2b2b';
+        ctx.save();
+        ctx.translate(this.x, this.y);
+        ctx.rotate(Math.atan2(this.facing.y, this.facing.x));
+        
+        // Aura states (Mech/Vehicle)
+        if (this.mechHp > 0) {
+            // High-tech Mech Aura (Orange/Red hexagon or rings)
+            ctx.strokeStyle = `rgba(255, 100, 0, ${0.8 + Math.sin(frameCount * 0.2)*0.2})`;
+            ctx.lineWidth = 6;
             ctx.beginPath();
-            ctx.moveTo(-25, -25); ctx.lineTo(10, -30); ctx.lineTo(25, -15);
-            ctx.lineTo(25, 15); ctx.lineTo(10, 30); ctx.lineTo(-25, 25);
-            ctx.closePath();
-            ctx.fill();
+            ctx.arc(0, 0, this.size + 15, 0, Math.PI * 2);
+            ctx.stroke();
             
-            // Armor Plates
-            ctx.fillStyle = '#555';
-            ctx.fillRect(-20, -20, 30, 40);
-            ctx.fillStyle = '#ff9900'; // Accent color
-            ctx.fillRect(5, -15, 10, 30);
-
-            // Left Shoulder & Cannon
-            ctx.fillStyle = '#333';
-            ctx.beginPath(); ctx.roundRect ? ctx.roundRect(-10, -40, 20, 20, 5) : ctx.rect(-10, -40, 20, 20); ctx.fill();
-            ctx.fillStyle = '#111';
-            ctx.fillRect(0, -35, 35, 10);
-            ctx.fillStyle = '#0ff'; // Energy glow
-            ctx.fillRect(30, -33, 5, 6);
-
-            // Right Shoulder & Cannon
-            ctx.fillStyle = '#333';
-            ctx.beginPath(); ctx.roundRect ? ctx.roundRect(-10, 20, 20, 20, 5) : ctx.rect(-10, 20, 20, 20); ctx.fill();
-            ctx.fillStyle = '#111';
-            ctx.fillRect(0, 25, 35, 10);
-            ctx.fillStyle = '#0ff'; // Energy glow
-            ctx.fillRect(30, 27, 5, 6);
-
-            // Cockpit Window (Glowing Red)
-            ctx.fillStyle = '#ff0000';
-            ctx.shadowColor = '#ff0000';
-            ctx.shadowBlur = 15;
+            // Outer dashed ring
+            ctx.setLineDash([10, 15]);
+            ctx.strokeStyle = '#ff3300';
+            ctx.lineWidth = 3;
             ctx.beginPath();
-            ctx.moveTo(10, -10); ctx.lineTo(20, -5); ctx.lineTo(20, 5); ctx.lineTo(10, 10);
-            ctx.closePath();
-            ctx.fill();
-            ctx.shadowBlur = 0; // Reset
+            ctx.arc(0, 0, this.size + 22, frameCount*0.05, Math.PI * 2 + frameCount*0.05);
+            ctx.stroke();
+            ctx.setLineDash([]); // reset
+        } else if (this.vehicleHp > 0) {
+            // Speed Vehicle Aura (Blue/Cyan streamlined rings)
+            ctx.strokeStyle = `rgba(0, 255, 255, ${0.8 + Math.sin(frameCount * 0.4)*0.2})`;
+            ctx.lineWidth = 4;
+            ctx.beginPath();
+            ctx.ellipse(0, 0, this.size + 18, this.size + 10, 0, 0, Math.PI * 2);
+            ctx.stroke();
             
-            ctx.restore();
-        } else if(this.vehicleHp > 0) {
-            // Draw Motorcycle - Akira Style
-            ctx.save();
-            ctx.translate(this.x, this.y);
-            ctx.rotate(Math.atan2(this.facing.y, this.facing.x));
-            
-            // Front Wheel (Extended)
-            ctx.fillStyle = '#111';
-            ctx.beginPath(); ctx.roundRect ? ctx.roundRect(15, -6, 20, 12, 4) : ctx.rect(15, -6, 20, 12); ctx.fill();
-            // Rear Wheel (Thick)
-            ctx.beginPath(); ctx.roundRect ? ctx.roundRect(-30, -8, 20, 16, 4) : ctx.rect(-30, -8, 20, 16); ctx.fill();
-            
-            // Neon wheel rims
-            ctx.strokeStyle = '#0ff';
+            // Speed trail lines
+            ctx.strokeStyle = '#0088ff';
             ctx.lineWidth = 2;
-            ctx.strokeRect(20, -4, 10, 8);
-            ctx.strokeRect(-25, -5, 10, 10);
-            
-            // Body chassis
-            ctx.fillStyle = '#e60000'; // Bright red
             ctx.beginPath();
-            ctx.moveTo(-25, -12); ctx.lineTo(-10, -15); ctx.lineTo(15, -8);
-            ctx.lineTo(20, 0); ctx.lineTo(15, 8); ctx.lineTo(-10, 15);
-            ctx.lineTo(-25, 12); ctx.closePath();
-            ctx.fill();
-            
-            // Windshield / Head section
-            ctx.fillStyle = '#000';
-            ctx.beginPath();
-            ctx.moveTo(0, -8); ctx.lineTo(15, -4); ctx.lineTo(15, 4); ctx.lineTo(0, 8);
-            ctx.closePath();
-            ctx.fill();
-            
-            // Headlight
-            ctx.fillStyle = '#fff';
-            ctx.shadowColor = '#fff';
-            ctx.shadowBlur = 10;
-            ctx.fillRect(18, -3, 3, 6);
-            ctx.shadowBlur = 0;
-            
-            // Exhaust flame (animated)
-            ctx.fillStyle = (frameCount % 4 < 2) ? '#0ff' : '#00f';
-            ctx.beginPath();
-            ctx.moveTo(-25, -6); ctx.lineTo(-35 - Math.random()*10, -8); ctx.lineTo(-25, -2);
-            ctx.closePath(); ctx.fill();
-            ctx.beginPath();
-            ctx.moveTo(-25, 6); ctx.lineTo(-35 - Math.random()*10, 8); ctx.lineTo(-25, 2);
-            ctx.closePath(); ctx.fill();
-            
-            ctx.restore();
-        } else {
-            
-            ctx.save();
-            ctx.translate(this.x, this.y);
-            ctx.rotate(Math.atan2(this.facing.y, this.facing.x));
-            
-            // Shoulders/Torso
-            ctx.fillStyle = this.color;
-            ctx.beginPath();
-            ctx.ellipse(0, 0, Math.max(0.1, this.size - 2), Math.max(0.1, this.size), 0, 0, Math.PI*2);
-            ctx.fill();
-
-            // Backpack
-            ctx.fillStyle = '#333';
-            ctx.fillRect(-this.size-2, -8, 8, 16);
-
-            // Left arm & Hand
-            ctx.fillStyle = this.color;
-            ctx.fillRect(0, -this.size+2, 18, 6);
-            ctx.fillStyle = '#ffccaa'; // skin
-            ctx.beginPath(); ctx.arc(18, -this.size+5, 4, 0, Math.PI*2); ctx.fill();
-
-            // Right arm & Hand
-            ctx.fillStyle = this.color;
-            ctx.fillRect(0, this.size-8, 18, 6);
-            ctx.fillStyle = '#ffccaa'; // skin
-            ctx.beginPath(); ctx.arc(18, this.size-5, 4, 0, Math.PI*2); ctx.fill();
-
-            // Gun
-            ctx.fillStyle = '#222';
-            ctx.fillRect(10, -3, 25, 6); // barrel
-            
-            // Helmet
-            ctx.fillStyle = '#1a3300';
-            ctx.beginPath(); ctx.arc(0, 0, 10, 0, Math.PI*2); ctx.fill();
-            // Visor (Goggles)
-            ctx.fillStyle = '#0ff';
-            ctx.beginPath(); ctx.arc(2, 0, 8, -Math.PI/3, Math.PI/3); ctx.fill();
-
-            ctx.restore();
-
+            ctx.moveTo(-this.size - 25, -10); ctx.lineTo(-this.size - 15, -10);
+            ctx.moveTo(-this.size - 30, 0); ctx.lineTo(-this.size - 12, 0);
+            ctx.moveTo(-this.size - 25, 10); ctx.lineTo(-this.size - 15, 10);
+            ctx.stroke();
         }
+        
+        // Shoulders/Torso
+        ctx.fillStyle = this.color;
+        ctx.beginPath();
+        ctx.ellipse(0, 0, Math.max(0.1, this.size - 2), Math.max(0.1, this.size), 0, 0, Math.PI*2);
+        ctx.fill();
+
+        // Backpack
+        ctx.fillStyle = '#333';
+        ctx.fillRect(-this.size-2, -8, 8, 16);
+
+        // Left arm & Hand
+        ctx.fillStyle = this.color;
+        ctx.fillRect(0, -this.size+2, 18, 6);
+        ctx.fillStyle = '#ffccaa'; // skin
+        ctx.beginPath(); ctx.arc(18, -this.size+5, 4, 0, Math.PI*2); ctx.fill();
+
+        // Right arm & Hand
+        ctx.fillStyle = this.color;
+        ctx.fillRect(0, this.size-8, 18, 6);
+        ctx.fillStyle = '#ffccaa'; // skin
+        ctx.beginPath(); ctx.arc(18, this.size-5, 4, 0, Math.PI*2); ctx.fill();
+
+        // Gun
+        ctx.fillStyle = '#222';
+        ctx.fillRect(10, -3, 25, 6); // barrel
+        
+        // Helmet
+        ctx.fillStyle = '#1a3300';
+        ctx.beginPath(); ctx.arc(0, 0, 10, 0, Math.PI*2); ctx.fill();
+        // Visor (Goggles)
+        ctx.fillStyle = '#0ff';
+        ctx.beginPath(); ctx.arc(2, 0, 8, -Math.PI/3, Math.PI/3); ctx.fill();
+
+        ctx.restore();
 
 
         // Player ID and Lives
@@ -848,13 +793,6 @@ class Player {
             ctx.shadowBlur = 0;
         }
 
-        // Stars
-        if(this.hp > 0 && !this.isDowned) {
-            ctx.font = '12px Arial';
-            ctx.textAlign = 'center';
-            let stars = '❤️'.repeat(this.hp);
-            ctx.fillText(stars, this.x, this.y - 25);
-        }
     }
 }
 
@@ -1009,7 +947,12 @@ class Shockwave {
             if(z.active && !this.hitZombies.has(z) && Math.hypot(z.x - this.x, z.y - this.y) < this.radius + z.size) {
                 this.hitZombies.add(z);
                 z.hp -= this.damage;
-                if(z.hp <= 0) { z.active = false; score += z.scoreVal; }
+                if(z.hp <= 0) { 
+                    z.active = false; 
+                    score += z.scoreVal; 
+                    let owner = players.find(pl => pl.id === this.ownerId);
+                    if(owner) owner.score += z.scoreVal;
+                }
                 createParticles(z.x, z.y, '#00ffff', 3);
             }
         });
@@ -1044,12 +987,10 @@ class Zombie {
         }
 
         if(this.isUltimateBoss) {
-            // Spawn 10 bosses in a massive circle, slowly closing in
             let angle = (this.bossId / 10) * Math.PI * 2;
             this.x = camera.x + Math.cos(angle) * 4500;
             this.y = camera.y + Math.sin(angle) * 4500;
         } else {
-            // Spawn at edges relative to camera
             const edge = Math.floor(Math.random() * 4);
             let cw = canvas.width || window.innerWidth;
             let ch = canvas.height || window.innerHeight;
@@ -1062,7 +1003,6 @@ class Zombie {
         }
 
         if(this.type === 'ultimate_boss') {
-            // Give each of the 10 bosses unique stats based on their bossId!
             this.size = 60 + (this.bossId % 4) * 10; 
             this.speed = 0.8 + (this.bossId % 3) * 0.3; 
             this.hp = 10000 + this.bossId * 1500; 
@@ -1070,7 +1010,7 @@ class Zombie {
             this.damage = 3 + (this.bossId % 2); 
             this.scoreVal = 50000;
         } else if(this.type === 'boss') {
-            this.size = 35; this.speed = 0.8; this.hp = 1000 + survivalTime*10; this.color = '#333333'; this.damage = 2; this.scoreVal = 500;
+            this.size = 40; this.speed = 0.8; this.hp = 1000 + survivalTime*10; this.color = '#333333'; this.damage = 2; this.scoreVal = 500;
         } else if(this.type === 'fast') {
             this.size = 12 + Math.random()*3; this.speed = 1.5 + Math.random()*0.5 + (survivalTime/180); this.hp = 10 + survivalTime/2; this.color = '#778899'; this.damage = 1; this.scoreVal = 15;
         } else if(this.type === 'tank') {
@@ -1085,9 +1025,69 @@ class Zombie {
         this.maxHp = this.hp;
         this.active = true;
         this.facing = {x: 1, y: 0};
+        
+        // Boss Attributes
+        if (this.isBoss) {
+            const ultimateTraits = [
+                { name: "天启·奥米茄 (Omega)", temper: "毁灭倾向 - 极具攻击性，移速快", skill: "dash", color: "#ff0000" },
+                { name: "终焉·尤弥尔 (Ymir)", temper: "坚韧壁垒 - 体型巨大且不断恢复", skill: "heal", color: "#00ff00" },
+                { name: "暴戾·阿瑞斯 (Ares)", temper: "狂暴突进 - 致命的突进连击", skill: "dash", color: "#ffaa00" },
+                { name: "深渊·利维坦 (Leviathan)", temper: "巢穴之主 - 不断召唤机械虫群", skill: "summon", color: "#aa00ff" }
+            ];
+            const normalTraits = [
+                { name: "机械屠夫 (Butcher)", temper: "横冲直撞", skill: "dash", color: "#ff5500" },
+                { name: "主脑 (Mastermind)", temper: "召唤机械群", skill: "summon", color: "#aa00ff" },
+                { name: "重装堡垒 (Fortress)", temper: "护甲恢复", skill: "heal", color: "#00ff00" },
+                { name: "雷霆机甲 (Thunder)", temper: "狂暴加速", skill: "dash", color: "#00ffff" }
+            ];
+
+            let traitList = this.isUltimateBoss ? ultimateTraits : normalTraits;
+            let trait = traitList[Math.floor(Math.random() * traitList.length)];
+            if(this.isUltimateBoss) trait = ultimateTraits[this.bossId % ultimateTraits.length];
+
+            this.bossName = trait.name;
+            this.bossTemper = trait.temper;
+            this.bossSkill = trait.skill;
+            this.color = trait.color;
+            this.skillCooldown = 120;
+            this.isDashing = false;
+        }
     }
     
     update() {
+        if (!this.active) return;
+        
+        // Boss Skills logic
+        if (this.isBoss) {
+            this.skillCooldown--;
+            if (this.skillCooldown <= 0) {
+                if (this.bossSkill === 'dash') {
+                    this.isDashing = true;
+                    this.speed *= 4;
+                    addFloatingText(this.x, this.y - this.size - 40, "!! 突进 !!", "#ff0000");
+                    setTimeout(() => { if(this) { this.speed /= 4; this.isDashing = false; } }, 800);
+                    this.skillCooldown = 240;
+                } else if (this.bossSkill === 'summon') {
+                    for(let i=0; i<4; i++) {
+                        let z = new Zombie();
+                        z.type = 'fast'; z.x = this.x + (Math.random()-0.5)*100; z.y = this.y + (Math.random()-0.5)*100;
+                        zombies.push(z);
+                    }
+                    addFloatingText(this.x, this.y - this.size - 40, "!! 召唤子体 !!", "#aa00ff");
+                    this.skillCooldown = 300;
+                } else if (this.bossSkill === 'heal') {
+                    let healAmt = this.maxHp * 0.1;
+                    this.hp = Math.min(this.maxHp, this.hp + healAmt);
+                    createParticles(this.x, this.y, '#00ff00', 10);
+                    addFloatingText(this.x, this.y - this.size - 40, "+ 护甲修复", "#00ff00");
+                    this.skillCooldown = 360;
+                }
+            }
+            if (this.isDashing) {
+                createParticles(this.x, this.y, this.color, 1);
+            }
+        }
+
         let target = null;
         let minDist = Infinity;
         players.forEach(p => {
@@ -1101,7 +1101,6 @@ class Zombie {
             const dy = target.y - this.y;
             if(minDist > 0) {
                 this.facing = {x: dx/minDist, y: dy/minDist};
-                // Split X and Y movement + jitter for smooth wall sliding behavior
                 let jitterX = (Math.random() - 0.5) * 0.2;
                 let jitterY = (Math.random() - 0.5) * 0.2;
                 
@@ -1131,7 +1130,6 @@ class Zombie {
                 }
                 this.active = false;
                 createParticles(this.x, this.y, '#ff0000', 10);
-
             }
         }
     }
@@ -1143,37 +1141,34 @@ class Zombie {
         ctx.rotate(Math.atan2(this.facing.y, this.facing.x));
         
         let s = this.size;
-        let armSway = Math.sin(frameCount * 0.1) * 5;
 
         if (this.isUltimateBoss || this.isBoss) {
-            // Bio-mechanical mutant spider design
-            let legCount = this.isUltimateBoss ? 8 : 6;
-            let legColor = this.isUltimateBoss ? '#aa0000' : '#4400aa';
-            let coreColor = this.isUltimateBoss ? '#220000' : '#110022';
-            let pulseColor = this.isUltimateBoss ? '#ff0000' : '#aa00ff';
-            let eyeColor = '#ffff00';
+            // Enhanced Boss Design
+            let legCount = this.isUltimateBoss ? 10 : 8;
+            let glow = this.isDashing ? 20 : 10;
+            
+            ctx.shadowBlur = glow;
+            ctx.shadowColor = this.color;
 
             // Draw terrifying legs
-            ctx.strokeStyle = legColor;
-            ctx.lineWidth = this.isUltimateBoss ? 10 : 6;
+            ctx.strokeStyle = this.color;
+            ctx.lineWidth = this.isUltimateBoss ? 12 : 8;
             ctx.lineCap = 'round';
             ctx.lineJoin = 'round';
             for(let i = 0; i < legCount; i++) {
                 let angleOffset = (Math.PI * 2 / legCount) * i;
-                // Animate legs crawling
                 let walkCycle = Math.sin(frameCount * 0.1 + i);
                 let angle = angleOffset + walkCycle * 0.2;
                 
-                let reach = s * 1.5;
-                let kneeDist = s * 0.8;
+                let reach = s * 1.6;
+                let kneeDist = s * 0.9;
                 
-                // Front legs point forward more
-                if (Math.abs(angle) < Math.PI/2) reach = s * 1.8;
+                if (Math.abs(angle) < Math.PI/2) reach = s * 2.0;
                 
                 let lx = Math.cos(angle) * reach;
                 let ly = Math.sin(angle) * reach;
-                let mx = Math.cos(angle) * kneeDist + Math.cos(angle + Math.PI/2) * (walkCycle * 10);
-                let my = Math.sin(angle) * kneeDist + Math.sin(angle + Math.PI/2) * (walkCycle * 10);
+                let mx = Math.cos(angle) * kneeDist + Math.cos(angle + Math.PI/2) * (walkCycle * 12);
+                let my = Math.sin(angle) * kneeDist + Math.sin(angle + Math.PI/2) * (walkCycle * 12);
                 
                 ctx.beginPath();
                 ctx.moveTo(0, 0);
@@ -1183,31 +1178,32 @@ class Zombie {
             }
 
             // Outer Carapace
-            ctx.fillStyle = coreColor;
+            ctx.fillStyle = '#111';
             ctx.beginPath(); 
-            ctx.arc(0, 0, s*0.9, 0, Math.PI*2); 
+            ctx.arc(0, 0, s, 0, Math.PI*2); 
             ctx.fill();
+            
+            // Carapace Details (Tech lines)
+            ctx.strokeStyle = '#333';
+            ctx.lineWidth = 3;
+            ctx.beginPath(); ctx.arc(0, 0, s*0.7, 0, Math.PI*2); ctx.stroke();
+            ctx.beginPath(); ctx.moveTo(-s, 0); ctx.lineTo(s, 0); ctx.stroke();
 
-            // Pulsating organic core
-            ctx.fillStyle = pulseColor;
-            let pulse = Math.abs(Math.sin(frameCount * 0.08));
+            // Pulsating organic/energy core
+            ctx.fillStyle = this.color;
+            let pulse = Math.abs(Math.sin(frameCount * 0.1));
             ctx.beginPath(); 
             ctx.arc(0, 0, s*0.4 + pulse * (s*0.15), 0, Math.PI*2); 
             ctx.fill();
 
             // Multiple glowing eyes facing forward
-            ctx.fillStyle = eyeColor;
-            ctx.shadowColor = eyeColor;
-            ctx.shadowBlur = 10;
-            let eyeSize = this.isUltimateBoss ? 8 : 5;
-            let eyeSpread = this.isUltimateBoss ? 20 : 12;
-            ctx.beginPath(); ctx.arc(s*0.7, 0, eyeSize*1.2, 0, Math.PI*2); ctx.fill();
-            ctx.beginPath(); ctx.arc(s*0.6, -eyeSpread, eyeSize, 0, Math.PI*2); ctx.fill();
-            ctx.beginPath(); ctx.arc(s*0.6, eyeSpread, eyeSize, 0, Math.PI*2); ctx.fill();
-            if(this.isUltimateBoss) {
-                ctx.beginPath(); ctx.arc(s*0.4, -eyeSpread*1.8, eyeSize*0.8, 0, Math.PI*2); ctx.fill();
-                ctx.beginPath(); ctx.arc(s*0.4, eyeSpread*1.8, eyeSize*0.8, 0, Math.PI*2); ctx.fill();
-            }
+            ctx.fillStyle = '#ffffff';
+            let eyeSize = this.isUltimateBoss ? 10 : 6;
+            let eyeSpread = this.isUltimateBoss ? 22 : 14;
+            ctx.beginPath(); ctx.arc(s*0.75, 0, eyeSize*1.3, 0, Math.PI*2); ctx.fill();
+            ctx.beginPath(); ctx.arc(s*0.65, -eyeSpread, eyeSize, 0, Math.PI*2); ctx.fill();
+            ctx.beginPath(); ctx.arc(s*0.65, eyeSpread, eyeSize, 0, Math.PI*2); ctx.fill();
+            
             ctx.shadowBlur = 0;
 
         } else {
@@ -1219,9 +1215,7 @@ class Zombie {
             
             // Tracks (Tank treads)
             ctx.fillStyle = '#222'; 
-            // Left track
             ctx.fillRect(-s, -s, s*2, s*0.4);
-            // Right track
             ctx.fillRect(-s, s - s*0.4, s*2, s*0.4);
             
             // Tread details (animated)
@@ -1246,12 +1240,10 @@ class Zombie {
             if(this.type === 'exploder') eyeColor = '#ff0000'; 
             else if(this.type === 'fast') eyeColor = '#00ff00'; 
             else if(this.type === 'tank') eyeColor = '#ffaa00'; 
-            else if(this.type === 'boss') eyeColor = '#ff00ff'; 
             
             ctx.fillStyle = eyeColor;
             ctx.shadowColor = eyeColor;
             ctx.shadowBlur = 10;
-            // Visor (Facing forward, +X direction)
             ctx.beginPath();
             ctx.arc(s*0.1, 0, s*0.3, -Math.PI/2.5, Math.PI/2.5);
             ctx.lineTo(s*0.1, 0);
@@ -1261,24 +1253,40 @@ class Zombie {
 
         ctx.restore();
         
-        // Boss HP Bar and Text
+        // Boss Beautiful UI Overlay
         if(this.isBoss) {
-            let barW = this.isUltimateBoss ? 120 : 60;
-            let barH = this.isUltimateBoss ? 10 : 6;
-            let offsetY = -this.size - 25; // Above the head
+            let barW = this.isUltimateBoss ? 200 : 120;
+            let barH = this.isUltimateBoss ? 12 : 8;
+            let offsetY = -this.size - 45; 
             
-            // Red background
-            ctx.fillStyle = '#f00';
-            ctx.fillRect(this.x - barW/2, this.y + offsetY, barW, barH);
-            // Green foreground
-            ctx.fillStyle = '#0f0';
-            ctx.fillRect(this.x - barW/2, this.y + offsetY, barW * Math.max(0, this.hp/this.maxHp), barH);
-            
-            // Text representation
-            ctx.fillStyle = '#fff';
-            ctx.font = this.isUltimateBoss ? 'bold 16px Arial' : 'bold 12px Arial';
+            // Floating Boss Name & Temper
+            ctx.fillStyle = this.color;
+            ctx.shadowColor = this.color;
+            ctx.shadowBlur = 5;
+            ctx.font = this.isUltimateBoss ? 'bold 18px "Share Tech Mono", monospace' : 'bold 14px "Share Tech Mono", monospace';
             ctx.textAlign = 'center';
-            ctx.fillText(`${Math.ceil(this.hp)} / ${this.maxHp}`, this.x, this.y + offsetY - 8);
+            ctx.fillText(this.bossName, this.x, this.y + offsetY - 18);
+            
+            ctx.fillStyle = '#aaaaaa';
+            ctx.shadowBlur = 0;
+            ctx.font = '12px "Share Tech Mono", monospace';
+            ctx.fillText(this.bossTemper, this.x, this.y + offsetY - 4);
+            
+            // High-tech HP Bar Background
+            ctx.fillStyle = 'rgba(0, 0, 0, 0.8)';
+            ctx.strokeStyle = this.color;
+            ctx.lineWidth = 2;
+            ctx.fillRect(this.x - barW/2, this.y + offsetY + 6, barW, barH);
+            ctx.strokeRect(this.x - barW/2, this.y + offsetY + 6, barW, barH);
+            
+            // HP Bar Fill
+            ctx.fillStyle = this.color;
+            ctx.fillRect(this.x - barW/2 + 2, this.y + offsetY + 8, (barW - 4) * Math.max(0, this.hp/this.maxHp), barH - 4);
+            
+            // HP Text
+            ctx.fillStyle = '#ffffff';
+            ctx.font = 'bold 10px Arial';
+            ctx.fillText(`${Math.ceil(this.hp)} / ${this.maxHp}`, this.x, this.y + offsetY + 15);
         }
     }
 }
@@ -1385,20 +1393,25 @@ class LootBox {
                     audio.levelUp();
                 } else if(this.type === 'mech') {
                     p.mechHp = 8;
-                    addFloatingText(p.x, p.y - 30, "🤖 战术机甲部署!", "#555555");
+                    addFloatingText(p.x, p.y - 30, "🔴 超载护盾启动!", "#ff3300");
                     audio.levelUp();
                 } else if(this.type === 'vehicle') {
                     p.vehicleHp = 3;
-                    addFloatingText(p.x, p.y - 30, "🏍️ 机动载具就绪!", "#ffaa00");
+                    addFloatingText(p.x, p.y - 30, "🔵 疾步光环加持!", "#00ffff");
                     audio.levelUp();
                 } else if(this.type === 'nuke') {
                     zombies.forEach(z => { 
                         if(z.isUltimateBoss) {
                             z.hp -= 2000;
-                            if(z.hp <= 0) { z.active = false; score += z.scoreVal; }
+                            if(z.hp <= 0) { 
+                                z.active = false; 
+                                score += z.scoreVal; 
+                                p.score += z.scoreVal; 
+                            }
                         } else {
                             z.active = false; 
                             score += z.scoreVal; 
+                            p.score += z.scoreVal;
                         }
                         createParticles(z.x, z.y, z.color, 15); 
                     });
@@ -1451,26 +1464,48 @@ class LootBox {
     
     draw(ctx) {
         if(!this.active) return;
+        
+        // Add floating and glowing effects to make items distinct
+        const time = Date.now() / 200;
+        const floatY = Math.sin(time) * 4;
+        const glowRadius = 15 + Math.sin(time * 2) * 5;
+        
+        ctx.save();
+        
+        // Blink when about to disappear
+        if (this.life < 120 && Math.floor(Date.now() / 150) % 2 === 0) {
+            ctx.globalAlpha = 0.5;
+        }
+        
+        ctx.translate(this.x, this.y + floatY);
+        
+        ctx.shadowBlur = glowRadius;
+        ctx.shadowColor = this.color;
         ctx.fillStyle = this.color;
-        ctx.fillRect(this.x - this.size/2, this.y - this.size/2, this.size, this.size);
+        ctx.fillRect(-this.size/2, -this.size/2, this.size, this.size);
+        
+        ctx.shadowBlur = 0;
+        ctx.lineWidth = 2;
         ctx.strokeStyle = '#fff';
-        ctx.strokeRect(this.x - this.size/2, this.y - this.size/2, this.size, this.size);
+        ctx.strokeRect(-this.size/2, -this.size/2, this.size, this.size);
         
         ctx.fillStyle = '#000';
-        ctx.font = '12px Arial';
+        ctx.font = '14px Arial';
         ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
         let text = '?';
         if(this.type === 'heal') text = '💖';
         else if(this.type === 'shield') text = '🛡️';
         else if(this.type === 'buff') text = '🌀';
         else if(this.type === 'weapon_box') text = '🔫';
-        else if(this.type === 'mech') text = '🤖';
-        else if(this.type === 'vehicle') text = '🏍️';
+        else if(this.type === 'mech') text = '🔴';
+        else if(this.type === 'vehicle') text = '🔵';
         else if(this.type === 'nuke') text = '☢️';
         else if(this.type === 'trap') text = '⚠️';
         else if(this.type === 'revive') text = '👼';
         else if(this.type === 'ult') text = '⚡';
-        ctx.fillText(text, this.x, this.y + 4);
+        ctx.fillText(text, 0, 1);
+        ctx.restore();
     }
 }
 
@@ -1506,9 +1541,18 @@ function addFloatingText(x, y, text, color) {
     floatingTexts.push({x, y, text, color, life: 1.0});
 }
 
+let gameDifficulty = 'normal';
+let gameBossAmount = 'normal';
+
 // --- GAME LOOP ---
 
 function startGame() {
+    let diffSelect = document.getElementById('difficulty-select');
+    if (diffSelect) gameDifficulty = diffSelect.value;
+    
+    let bossSelect = document.getElementById('boss-select');
+    if (bossSelect) gameBossAmount = bossSelect.value;
+
     gameState = 'PLAYING';
     score = 0;
     killCount = 0;
@@ -1520,8 +1564,15 @@ function startGame() {
     players[0].y = CANVAS_H/2;
     players[1].y = CANVAS_H/2;
     zombies = [];
-    for(let i=0; i<10; i++) {
-        zombies.push(new Zombie(true, true, i)); // Spawn 10 ultimate bosses!
+    
+    let initialBossCount = 0;
+    if (gameBossAmount === 'many') initialBossCount = 10;
+    else if (gameBossAmount === 'normal') initialBossCount = 3;
+    else if (gameBossAmount === 'few') initialBossCount = 1;
+    else if (gameBossAmount === 'none') initialBossCount = 0;
+
+    for(let i=0; i<initialBossCount; i++) {
+        zombies.push(new Zombie(true, true, i)); // Spawn ultimate bosses!
     }
     bullets = [];
     particles = [];
@@ -1867,20 +1918,41 @@ function update() {
         addFloatingText(bx, by, "🛬 空投炸弹!", "#ff5500");
     }
 
-    if(frameCount % Math.max(5, spawnRate) === 0) {
+    if(frameCount % Math.max(5, spawnRate) === 0 && zombies.length < 300) {
         let count = Math.floor(survivalTime / 15) + 1;
-        if (count > 10) count = 10;
-        for(let i=0; i<count; i++) zombies.push(new Zombie());
+        if (gameDifficulty === 'easy') count = Math.max(1, Math.floor(count * 0.5));
+        if (gameDifficulty === 'hard') count = Math.floor(count * 1.5);
+        if (count > 10 && gameDifficulty !== 'hard') count = 10;
+        if (count > 15 && gameDifficulty === 'hard') count = 15;
+        
+        for(let i=0; i<count; i++) {
+            let z = new Zombie();
+            if (gameDifficulty === 'easy') z.hp *= 0.5;
+            if (gameDifficulty === 'hard') z.hp *= 1.5;
+            zombies.push(z);
+        }
     }
-    // Boss spawn every 30 seconds
-    if(frameCount % 1800 === 0) {
-        zombies.push(new Zombie(true));
+    
+    // Boss spawn based on settings
+    let bossInterval = 1800; // Normal: 30s
+    if (gameBossAmount === 'few') bossInterval = 3600; // 60s
+    if (gameBossAmount === 'many') bossInterval = 900; // 15s
+    
+    if (gameBossAmount !== 'none' && frameCount > 0 && frameCount % bossInterval === 0) {
+        let b = new Zombie(true);
+        if (gameDifficulty === 'easy') b.hp *= 0.5;
+        if (gameDifficulty === 'hard') b.hp *= 1.5;
+        zombies.push(b);
         addFloatingText(CANVAS_W/2, CANVAS_H/2, "⚠️ 极度危险：首领级变异体出现！ ⚠️", "#ff00ff");
         screenShake = 20;
     }
 
     // Difficulty increase
-    if(frameCount % 300 === 0) {
+    let diffIncreaseInterval = 300;
+    if (gameDifficulty === 'easy') diffIncreaseInterval = 600;
+    if (gameDifficulty === 'hard') diffIncreaseInterval = 200;
+    
+    if(frameCount > 0 && frameCount % diffIncreaseInterval === 0) {
         spawnRate = Math.max(5, spawnRate - 5);
     }
 
@@ -1907,6 +1979,7 @@ function update() {
         barrels.forEach(barrel => {
             if(barrel.active && Math.hypot(b.x - barrel.x, b.y - barrel.y) < barrel.size + b.size) {
                 barrel.hp -= b.damage;
+                barrel.lastHitBy = b.ownerId;
                 if(!b.pierce) b.active = false;
                 if(barrel.hp <= 0) barrel.explode();
             }
@@ -1927,7 +2000,12 @@ function update() {
                     zombies.forEach(z2 => {
                         if(z2.active && Math.hypot(z2.x - b.x, z2.y - b.y) < 80) {
                             z2.hp -= b.damage * 0.5;
-                            if(z2.hp <= 0) { z2.active = false; score += z2.scoreVal; }
+                            if(z2.hp <= 0) { 
+                                z2.active = false; 
+                                score += z2.scoreVal; 
+                                let owner = players.find(pl => pl.id === b.ownerId);
+                                if(owner) owner.score += z2.scoreVal;
+                            }
                         }
                     });
                 }
@@ -2001,27 +2079,46 @@ function update() {
     // Update Player HUD
     if(players.length >= 2) {
         let p1 = players[0];
+        let p1hpElem = document.getElementById('p1-hp-bar');
+        let p1hpText = document.getElementById('p1-hp-text');
+        if(p1hpElem) p1hpElem.style.width = Math.max(0, (p1.hp / p1.maxHp) * 100) + '%';
+        if(p1hpText) p1hpText.textContent = `${Math.ceil(p1.hp)}/${p1.maxHp}`;
         document.getElementById('p1-score').textContent = p1.score;
         document.getElementById('p1-weapon').textContent = p1.weapon.name;
+        
         let p1b = [];
         if(p1.shieldTime > 0) p1b.push('🛡️');
         if(p1.buffTime > 0) p1b.push('🌀');
-        if(p1.mechHp > 0) p1b.push('🤖');
-        if(p1.vehicleHp > 0) p1b.push('🏍️');
+        if(p1.mechHp > 0) p1b.push('🔴超载护盾');
+        if(p1.vehicleHp > 0) p1b.push('🔵疾步光环');
         if(p1.hasUlt) p1b.push('⚡');
-        document.getElementById('p1-buffs').textContent = p1b.length > 0 ? p1b.join(' ') : '无';
+        document.getElementById('p1-buffs').textContent = p1b.length > 0 ? p1b.join(' ') : '常规';
 
         let p2 = players[1];
+        let p2hpElem = document.getElementById('p2-hp-bar');
+        let p2hpText = document.getElementById('p2-hp-text');
+        if(p2hpElem) p2hpElem.style.width = Math.max(0, (p2.hp / p2.maxHp) * 100) + '%';
+        if(p2hpText) p2hpText.textContent = `${Math.ceil(p2.hp)}/${p2.maxHp}`;
         document.getElementById('p2-score').textContent = p2.score;
         document.getElementById('p2-weapon').textContent = p2.weapon.name;
+        
         let p2b = [];
         if(p2.shieldTime > 0) p2b.push('🛡️');
         if(p2.buffTime > 0) p2b.push('🌀');
-        if(p2.mechHp > 0) p2b.push('🤖');
-        if(p2.vehicleHp > 0) p2b.push('🏍️');
+        if(p2.mechHp > 0) p2b.push('🔴超载护盾');
+        if(p2.vehicleHp > 0) p2b.push('🔵疾步光环');
         if(p2.hasUlt) p2b.push('⚡');
-        document.getElementById('p2-buffs').textContent = p2b.length > 0 ? p2b.join(' ') : '无';
+        document.getElementById('p2-buffs').textContent = p2b.length > 0 ? p2b.join(' ') : '常规';
     }
+    
+    // Update Central HUD
+    let tMins = Math.floor(survivalTime / 60).toString().padStart(2, '0');
+    let tSecs = (survivalTime % 60).toString().padStart(2, '0');
+    let timeElem = document.getElementById('time-display');
+    if (timeElem) timeElem.textContent = `${tMins}:${tSecs}`;
+    
+    let scoreElem = document.getElementById('score');
+    if (scoreElem) scoreElem.textContent = score;
 }
 
 function draw() {

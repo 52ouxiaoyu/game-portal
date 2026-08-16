@@ -11,26 +11,42 @@
     <div id="game-container">
         <!-- 抬头显示 -->
         <div id="hud" class="hidden">
-            <div id="p1-stats" class="hud-item left-box" style="color: #00bfff; font-size: 14px;">
-                <div style="font-weight: bold; font-size: 18px; margin-bottom: 5px;">[ P1 ]</div>
-                <div>得分: <span id="p1-score">0</span></div>
-                <div>火力: <span id="p1-weapon">Lv.1</span></div>
-                <div>状态: <span id="p1-buffs">无</span></div>
+            <div id="p1-hud" class="player-hud">
+                <div class="player-header">
+                    <span class="player-title">P1 - 突击手</span>
+                    <span id="p1-buffs" class="player-buffs">无</span>
+                </div>
+                <div class="hp-bar-wrapper">
+                    <div id="p1-hp-bar" class="hp-bar-fill"></div>
+                    <div class="hp-text"><span id="p1-hp-text">5/5</span></div>
+                </div>
+                <div class="stats-row">
+                    <span class="weapon-tag" id="p1-weapon">Lv.1 手枪</span>
+                    <span class="score-tag">⭐ <span id="p1-score">0</span></span>
+                </div>
             </div>
             
-            <div class="hud-item center-box" style="text-align: center;">
-                <div class="label" style="color:#00ff66;">TEAM SCORE</div>
-                <div id="score" style="font-size:32px; color:#00ff66; text-shadow: 0 0 10px #00ff66;">0</div>
-                <div style="font-size: 12px; color: #888;">HIGHSCORE: <span id="high-score">0</span></div>
+            <div class="center-hud">
+                <div id="time-display">00:00</div>
+                <div class="team-score-box">总得分: <span id="score">0</span></div>
+                <div class="high-score-box">最高分: <span id="high-score">0</span></div>
                 <div id="kill-combo" class="hidden glow-text">连击 <span id="combo-count">x1</span></div>
-                <button id="pause-btn" style="margin-top: 10px; background: rgba(0,50,20,0.8); border: 1px solid #00ff66; color: #00ff66; cursor: pointer; padding: 5px 15px;">⏸ 战术面板</button>
+                <button id="pause-btn">⏸ 设置菜单</button>
             </div>
 
-            <div id="p2-stats" class="hud-item right-box" style="color: #ff9900; font-size: 14px; text-align: right;">
-                <div style="font-weight: bold; font-size: 18px; margin-bottom: 5px;">[ P2 ]</div>
-                <div>得分: <span id="p2-score">0</span></div>
-                <div>火力: <span id="p2-weapon">Lv.1</span></div>
-                <div>状态: <span id="p2-buffs">无</span></div>
+            <div id="p2-hud" class="player-hud right-align">
+                <div class="player-header">
+                    <span id="p2-buffs" class="player-buffs">无</span>
+                    <span class="player-title">P2 - 支援手</span>
+                </div>
+                <div class="hp-bar-wrapper">
+                    <div id="p2-hp-bar" class="hp-bar-fill"></div>
+                    <div class="hp-text"><span id="p2-hp-text">5/5</span></div>
+                </div>
+                <div class="stats-row">
+                    <span class="score-tag">⭐ <span id="p2-score">0</span></span>
+                    <span class="weapon-tag" id="p2-weapon">Lv.1 手枪</span>
+                </div>
             </div>
         </div>
         <!-- 游戏UI层 -->
@@ -43,6 +59,25 @@
                     <p>P1: W A S D 移动 Move, 空格 Space 射击 Shoot</p>
                     <p>P2: ↑ ↓ ← → 移动 Move, NumpadEnter 射击 Shoot</p>
                     <p>消灭机械获取升级！ Destroy robots to upgrade!</p>
+                </div>
+                <div class="settings-panel" style="margin: 20px 0; background: rgba(0,0,0,0.5); padding: 15px; border-radius: 8px; border: 1px solid #00ff66;">
+                    <div style="margin-bottom: 10px;">
+                        <label for="difficulty-select" style="color: #00ff66; margin-right: 10px;">游戏难度 Difficulty:</label>
+                        <select id="difficulty-select" style="background: #111; color: #fff; border: 1px solid #00ff66; padding: 5px; font-family: 'Share Tech Mono', monospace;">
+                            <option value="easy">简单 / Easy (x0.5 怪物生成)</option>
+                            <option value="normal" selected>普通 / Normal (x1.0 怪物生成)</option>
+                            <option value="hard">困难 / Hard (x1.5 怪物生成, 血量+)</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label for="boss-select" style="color: #ff9900; margin-right: 10px;">Boss 数量 Boss Amount:</label>
+                        <select id="boss-select" style="background: #111; color: #fff; border: 1px solid #ff9900; padding: 5px; font-family: 'Share Tech Mono', monospace;">
+                            <option value="few">稀少 / Few</option>
+                            <option value="normal" selected>正常 / Normal</option>
+                            <option value="many">密集 / Many</option>
+                            <option value="none">无 Boss / None</option>
+                        </select>
+                    </div>
                 </div>
                 <button id="start-btn" class="big-btn">开始突围 / START</button>
             </div>
