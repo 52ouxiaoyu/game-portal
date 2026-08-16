@@ -851,6 +851,15 @@ class Player {
         ctx.fill();
         ctx.stroke();
 
+        // Faint glowing ring around the player (Geometry Wars style)
+        ctx.beginPath();
+        ctx.arc(0, 0, this.size * 1.5, 0, Math.PI * 2);
+        ctx.strokeStyle = this.color;
+        ctx.globalAlpha = 0.3; // Faint
+        ctx.lineWidth = 1.5;
+        ctx.stroke();
+        ctx.globalAlpha = 1.0;
+
         ctx.shadowBlur = 0;
 
         ctx.restore();
@@ -1171,7 +1180,7 @@ class Zombie {
                 { name: "机械屠夫 (Butcher)", temper: "横冲直撞", skill: "dash", color: "#ff5500" },
                 { name: "主脑 (Mastermind)", temper: "召唤机械群", skill: "summon", color: "#aa00ff" },
                 { name: "重装堡垒 (Fortress)", temper: "护甲恢复", skill: "heal", color: "#00ff00" },
-                { name: "雷霆机甲 (Thunder)", temper: "狂暴加速", skill: "dash", color: "#00ffff" }
+                { name: "雷霆几何 (Thunder)", temper: "狂暴加速", skill: "dash", color: "#00ffff" }
             ];
 
             let traitList = this.isUltimateBoss ? ultimateTraits : normalTraits;
@@ -1269,12 +1278,12 @@ class Zombie {
                         target.mechHp -= 1;
                         target.invincibleTime = 30; // 0.5s I-frames
                         audio.playerHit();
-                        if(target.mechHp <= 0) addFloatingText(target.x, target.y - 30, "🔥 机甲损毁!", "#ff0000");
+                        if(target.mechHp <= 0) addFloatingText(target.x, target.y - 30, "🔥 防护罩过载!", "#ff0000");
                     } else if(target.vehicleHp > 0) {
                         target.vehicleHp -= 1;
                         target.invincibleTime = 30; // 0.5s I-frames
                         audio.playerHit();
-                        if(target.vehicleHp <= 0) addFloatingText(target.x, target.y - 30, "🔥 摩托车损毁!", "#ff0000");
+                        if(target.vehicleHp <= 0) addFloatingText(target.x, target.y - 30, "🔥 加速护盾碎裂!", "#ff0000");
                     } else if(target.vehicleHp <= 0) {
                         target.hp -= this.damage;
                         scoreMultiplier = 1; // Reset multiplier on hit!
