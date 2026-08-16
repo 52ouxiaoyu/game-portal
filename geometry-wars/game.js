@@ -453,6 +453,10 @@ class Player {
                             if(this.reviveProgress >= 120) { // 2 seconds to revive
                                 this.isDowned = false;
                                 this.hp = this.maxHp / 2;
+                                this.mechHp = 0;
+                                this.vehicleHp = 0;
+                                this.shieldTime = 0;
+                                this.buffTime = 0;
                                 this.reviveProgress = 0;
                                 addFloatingText(this.x, this.y - 40, "💉 重生协议启动!", "#00ff00");
                                 audio.levelUp();
@@ -1401,8 +1405,18 @@ class Zombie {
                         audio.playerHit();
                     }
                 }
-                this.active = false;
-                createParticles(this.x, this.y, '#ff0000', 10);
+                if(!this.isBoss && !this.isUltimateBoss) {
+                    this.active = false;
+                    createParticles(this.x, this.y, '#ff0000', 10);
+                } else {
+                    let dx = this.x - target.x;
+                    let dy = this.y - target.y;
+                    let len = Math.hypot(dx, dy);
+                    if(len > 0) {
+                        target.x -= (dx/len) * 30;
+                        target.y -= (dy/len) * 30;
+                    }
+                }
             }
         }
     }
