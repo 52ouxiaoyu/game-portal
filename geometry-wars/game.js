@@ -705,8 +705,8 @@ class Player {
         audio.levelUp(); // ultimate sound
         screenShake = 20;
         let levelScale = 1 + (this.ultLevel * 0.3);
-        let ultNames = ["", "Neon Nova", "Time Flux", "Homing Swarm", "Laser Grid", "Orbital Strike", "Plasma Mines", "Blade Vortex", "Heal Burst", "God Mode", "Chain Lightning"];
-        addFloatingText(this.x, this.y - 50, `ULT: ${ultNames[this.ultType]}!`, "#ff00ff");
+        let ultNames = ["", "霓虹新星 (Neon Nova)", "时光裂隙 (Time Flux)", "追踪光刃 (Homing Swarm)", "电磁网阵 (Laser Grid)", "轨道打击 (Orbital Strike)", "等离子雷 (Plasma Mines)", "剑气风暴 (Blade Vortex)", "治愈波纹 (Heal Burst)", "绝对领域 (God Mode)", "闪电链 (Chain Lightning)"];
+        addFloatingText(this.x, this.y - 50, `大招: ${ultNames[this.ultType]}!`, "#ff00ff");
 
         switch(this.ultType) {
             case 1: // Neon Nova
@@ -1574,7 +1574,7 @@ class LootBox {
                         p.score += 1000;
                     }
                     p.ultCooldown = 0; // Instantly refresh cooldown
-                    let ultNames = ["", "Neon Nova", "Time Flux", "Homing Swarm", "Laser Grid", "Orbital Strike", "Plasma Mines", "Blade Vortex", "Heal Burst", "God Mode", "Chain Lightning"];
+                    let ultNames = ["", "霓虹新星 (Neon Nova)", "时光裂隙 (Time Flux)", "追踪光刃 (Homing Swarm)", "电磁网阵 (Laser Grid)", "轨道打击 (Orbital Strike)", "等离子雷 (Plasma Mines)", "剑气风暴 (Blade Vortex)", "治愈波纹 (Heal Burst)", "绝对领域 (God Mode)", "闪电链 (Chain Lightning)"];
                     addFloatingText(p.x, p.y - 30, `⚡ 大招: ${ultNames[p.ultType]} (Lv.${p.ultLevel})`, "#ff00ff");
                     audio.levelUp();
                 }
@@ -2356,7 +2356,7 @@ function update() {
         document.getElementById('p1-score').textContent = p1.score;
         document.getElementById('p1-weapon').textContent = p1.weapon.name;
         
-        let ultNames = ["无大招", "Nova", "Time", "Swarm", "Laser", "Strike", "Mines", "Blades", "Heal", "God", "Chain"];
+        let ultNames = ["无大招", "霓虹新星(Nova)", "时光裂隙(Time)", "追踪光刃(Swarm)", "电磁网阵(Laser)", "轨道打击(Strike)", "等离子雷(Mines)", "剑气风暴(Blades)", "治愈波纹(Heal)", "绝对领域(God)", "闪电链(Chain)"];
         
         let p1b = [];
         if(p1.shieldTime > 0) p1b.push('🛡️');

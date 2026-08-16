@@ -124,11 +124,15 @@ canvas {
 
 .stats-row {
     display: flex;
-    flex-wrap: wrap;
+    flex-direction: column;
+    align-items: flex-start;
     gap: 8px;
-    font-size: 12px;
+    font-size: 13px;
     margin-top: 15px;
     letter-spacing: 1px;
+}
+.right-align .stats-row {
+    align-items: flex-end;
 }
 
 .weapon-tag, .score-tag {
