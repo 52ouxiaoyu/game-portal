@@ -2205,12 +2205,22 @@ function update() {
         }
     }
 
-    // Check for ultimate boss
-    if(!zombies.some(z => z.isUltimateBoss && z.active)) {
-        if(gameState === 'PLAYING') {
-            score += 50000;
-            gameWon();
-            return;
+    // Check for ultimate win condition
+    if (gameBossAmount !== 'none') {
+        // Must kill all Ultimate Bosses AND all regular Bosses to win
+        let ultimateBossesAlive = zombies.some(z => z.isUltimateBoss && z.active);
+        let regularBossesAlive = zombies.some(z => z.isBoss && z.active);
+        
+        // We only trigger win if Ultimate Bosses were spawned and are now dead, 
+        // AND no regular bosses are currently alive.
+        // Wait, we also need to make sure the game doesn't instantly win on frame 1 before they spawn.
+        // initialBossCount tells us if they were spawned.
+        if (frameCount > 10 && !ultimateBossesAlive && !regularBossesAlive) {
+            if(gameState === 'PLAYING') {
+                score += 50000;
+                gameWon();
+                return;
+            }
         }
     }
 
