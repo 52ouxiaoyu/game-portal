@@ -138,7 +138,7 @@ class Barrel {
             this.dropY += 15;
             if(this.dropY >= 0) {
                 this.dropY = 0;
-                screenShake = 5;
+                screenShake = 2;
             }
             return; // Don't explode while dropping
         }
@@ -160,7 +160,7 @@ class Barrel {
         this.active = false;
         createParticles(this.x, this.y, '#ffaa00', 50);
         audio.shootShotgun();
-        screenShake = 20;
+        
         zombies.forEach(z => {
             if(z.active && Math.hypot(z.x - this.x, z.y - this.y) < 150) {
                 z.hp -= 500;
@@ -269,7 +269,7 @@ window.addEventListener('keydown', e => {
                 p.hasUlt = false;
                 // Fire Ultimate: 360 degree lasers
                 audio.levelUp();
-                screenShake = 30;
+                screenShake = 10;
                 addFloatingText(p.x, p.y - 50, "⚡ 万剑归宗 ⚡", "#00ffff");
                 for(let angle=0; angle<Math.PI*2; angle+=Math.PI/16) {
                     let b = new Bullet(p.x, p.y, Math.cos(angle), Math.sin(angle), 20, 150, '#00ffff', true, p.id);
@@ -416,7 +416,7 @@ class Player {
                     screenShake = Math.max(screenShake, 5);
                     for(let b=0; b<5; b++) bloodStains.push(new Blood(z.x + (Math.random()-0.5)*40, z.y + (Math.random()-0.5)*40, Math.random()*8+4, Math.random()*8+4, '#800000'));
                     comboCount++; comboTimer = 180;
-                    if(comboCount % 10 === 0) { screenShake = 10; addFloatingText(CANVAS_W/2, 100, `${comboCount} 连杀 (COMBO)!`, '#00ccff'); audio.levelUp(); }
+                    if(comboCount % 10 === 0) { addFloatingText(CANVAS_W/2, 100, `${comboCount} 连杀 (COMBO)!`, '#00ccff'); audio.levelUp(); }
                     audio.zombieDie();
                     addFloatingText(z.x, z.y, "🔵 疾速冲击!", "#00ffff");
                 }
@@ -764,7 +764,7 @@ class Player {
         if (w.isShockwave) {
             shockwaves.push(new Shockwave(this.x, this.y, w.color || '#00ffff', w.damage, w.radius, this.id));
             audio.shootShotgun();
-            screenShake = 5;
+            screenShake = 2;
             return;
         }
 
@@ -801,8 +801,8 @@ class Player {
         
         audio.levelUp(); 
         createParticles(this.x, this.y, '#00ffff', 50); 
-        screenShake = 30;
-        screenShake = 20;
+        screenShake = 10;
+        
         let levelScale = 1 + (this.ultLevel * 0.3);
         let ultNames = ["", "霓虹新星 (Neon Nova)", "时光裂隙 (Time Flux)", "追踪光刃 (Homing Swarm)", "电磁网阵 (Laser Grid)", "轨道打击 (Orbital Strike)", "等离子雷 (Plasma Mines)", "剑气风暴 (Blade Vortex)", "治愈波纹 (Heal Burst)", "绝对领域 (God Mode)", "闪电链 (Chain Lightning)"];
         addFloatingText(this.x, this.y - 50, `大招: ${ultNames[this.ultType]}!`, "#00ffff");
@@ -1668,7 +1668,7 @@ class LootBox {
                         }
                         createParticles(z.x, z.y, z.color, 15); 
                     });
-                    screenShake = 30;
+                    screenShake = 10;
                     audio.shootShotgun();
                     addFloatingText(CANVAS_W/2, CANVAS_H/2, "☢️ 战术核打击!", "#00ffff");
                 } else if(this.type === 'trap') {
@@ -1849,6 +1849,7 @@ class Geom {
                 if(dist < p.size + this.size) {
                     this.active = false;
                     scoreMultiplier = Math.min(999, scoreMultiplier + 1);
+                    if (p.hp < p.maxHp) p.hp = Math.min(p.maxHp, p.hp + 0.2); // Heal 0.2 HP per Geom!
                     audio.shootPistol(); // Use a subtle sound for pickup
                 }
             }
@@ -2130,7 +2131,7 @@ function update() {
         currentWave++;
         waveTimer = 0;
         addFloatingText(camera.x, camera.y, `🚨 第 ${currentWave} 波 尸潮来袭! 🚨`, "#ff0000");
-        screenShake = 20;
+        
         audio.levelUp();
         // Spawn Wave Boss
         for(let i=0; i<Math.floor(currentWave/2)+1; i++) {
@@ -2156,7 +2157,7 @@ function update() {
         if(activeEvent === 'swarm') {
             addFloatingText(camera.x, camera.y, "⚠️ 警告：侦测到大规模感染者群！ ⚠️", "#ff0000");
             audio.levelUp();
-            screenShake = 30;
+            screenShake = 10;
             for(let i=0; i<30; i++) {
                 let z = new Zombie();
                 z.x = camera.x + (Math.random()-0.5)*CANVAS_W*1.5;
@@ -2166,11 +2167,11 @@ function update() {
         } else if(activeEvent === 'bloodmoon') {
             addFloatingText(camera.x, camera.y, "🌙 战地预警：目标进入狂暴状态！ 🌙", "#ff0000");
             audio.levelUp();
-            screenShake = 20;
+            
         } else if(activeEvent === 'orbital') {
             addFloatingText(camera.x, camera.y, "🚀 轨道打击火力覆盖中！ 🚀", "#ff4400");
             audio.levelUp();
-            screenShake = 20;
+            
         }
     }
     
@@ -2182,7 +2183,7 @@ function update() {
             let bx = camera.x + (Math.random()-0.5)*CANVAS_W*1.5;
             let by = camera.y + (Math.random()-0.5)*CANVAS_H*1.5;
             createParticles(bx, by, '#ffaa00', 30);
-            screenShake = 5;
+            screenShake = 2;
             audio.shootShotgun();
             zombies.forEach(z => {
                 if(Math.hypot(z.x - bx, z.y - by) < 150) {
@@ -2337,7 +2338,7 @@ function update() {
         if (gameDifficulty === 'hard') b.hp *= 1.5;
         zombies.push(b);
         addFloatingText(CANVAS_W/2, CANVAS_H/2, "⚠️ 极度危险：首领级变异体出现！ ⚠️", "#ff0000");
-        screenShake = 20;
+        
     }
 
     // Difficulty increase
@@ -2462,24 +2463,10 @@ function update() {
                 b.hitZombies.add(z);
                 z.hp -= b.damage;
                 if(b.isHoming) {
-                    createParticles(b.x, b.y, '#ff5500', 20);
-                    screenShake = 5;
+                    createParticles(b.x, b.y, '#ff5500', 10);
                     audio.shootShotgun();
-                    zombies.forEach(z2 => {
-                        if(!z2.active) return;
-                        let ddx = z2.x - b.x;
-                        let ddy = z2.y - b.y;
-                        if(Math.abs(ddx) < 80 && Math.abs(ddy) < 80 && (ddx*ddx + ddy*ddy < 6400)) {
-                            z2.hp -= b.damage * 0.5;
-                            if(z2.hp <= 0) { 
-                                z2.active = false; 
-                                score += z2.scoreVal; 
-                                let owner = players.find(pl => pl.id === b.ownerId);
-                                if(owner) owner.score += z2.scoreVal;
-                                geoms.push(new Geom(z2.x, z2.y));
-                            }
-                        }
-                    });
+                    // Removed splash damage O(N) loop here to fix late-game lag!
+                    // Homing missiles are already strong enough.
                 }
                 if(!b.pierce) b.active = false;
                 createParticles(b.x, b.y, '#fff', 3);
@@ -2499,7 +2486,7 @@ function update() {
                         lootBoxes.push(new LootBox(z.x-30, z.y-30));
                         hitStopFrames = 12; // 0.2s freeze
                         flashFrames = 15;
-                        screenShake = 30;
+                        screenShake = 10;
                         addFloatingText(camera.x, camera.y, "🌟 斩杀目标! 🌟", "#00ff00");
                     } else if(Math.random() < 0.15) {
                         lootBoxes.push(new LootBox(z.x, z.y));
@@ -2530,7 +2517,7 @@ function update() {
                     }
                     for(let b=0; b<5; b++) bloodStains.push(new Blood(z.x + (Math.random()-0.5)*40, z.y + (Math.random()-0.5)*40, Math.random()*8+4, Math.random()*8+4, '#800000'));
                     comboCount++; comboTimer = 180;
-                    if(comboCount % 10 === 0) { screenShake = 10; addFloatingText(CANVAS_W/2, 100, `🔥 ${comboCount} 连杀 (COMBO)!`, '#00ccff'); audio.levelUp(); }
+                    if(comboCount % 10 === 0) { addFloatingText(CANVAS_W/2, 100, `🔥 ${comboCount} 连杀 (COMBO)!`, '#00ccff'); audio.levelUp(); }
                     audio.zombieDie();
                     if(z.isBoss) {
                         addFloatingText(z.x, z.y, `+${z.scoreVal} BOSS击杀!`, '#00bfff');
