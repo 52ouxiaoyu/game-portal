@@ -81,12 +81,24 @@ canvas {
     text-shadow: 0 0 10px rgba(255,255,255,0.8);
 }
 
-.hp-bar-wrapper {
+.hp-bar-container {
+    display: flex;
+    align-items: center;
     width: 100%;
-    height: 4px;
-    background: rgba(255, 255, 255, 0.1);
+    gap: 10px;
+    margin-top: 5px;
+    margin-bottom: 5px;
+}
+
+.hp-bar-wrapper {
+    flex-grow: 1;
+    height: 14px;
+    background: rgba(0, 0, 0, 0.5);
+    border: 2px solid; /* color set inline per player */
+    border-radius: 4px;
     position: relative;
-    overflow: visible;
+    overflow: hidden;
+    box-shadow: inset 0 0 5px rgba(255, 255, 255, 0.2);
 }
 
 .hp-bar-fill {
@@ -94,7 +106,7 @@ canvas {
     width: 100%;
     background: #00ffff;
     box-shadow: 0 0 10px #00ffff, 0 0 20px #00ffff;
-    transition: width 0.1s linear;
+    transition: width 0.15s ease-out;
 }
 #p2-hp-bar {
     background: #ff00ff;
@@ -102,15 +114,12 @@ canvas {
 }
 
 .hp-text {
-    position: absolute;
-    top: 10px; left: 0; right: 0;
-    display: flex;
-    justify-content: center;
-    font-size: 12px;
+    font-size: 16px;
     font-weight: bold;
     color: #fff;
     letter-spacing: 2px;
-    opacity: 0.8;
+    text-shadow: 0 0 5px #fff;
+    min-width: 45px;
 }
 
 .stats-row {

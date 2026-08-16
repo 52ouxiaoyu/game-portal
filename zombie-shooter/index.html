@@ -16,9 +16,11 @@
                     <span class="player-title">P1 - 突击手</span>
                     <span id="p1-buffs" class="player-buffs">无</span>
                 </div>
-                <div class="hp-bar-wrapper">
-                    <div id="p1-hp-bar" class="hp-bar-fill"></div>
-                    <div class="hp-text"><span id="p1-hp-text">5/5</span></div>
+                <div class="hp-bar-container">
+                    <div class="hp-bar-wrapper" style="border-color: #00ffff;">
+                        <div id="p1-hp-bar" class="hp-bar-fill"></div>
+                    </div>
+                    <div class="hp-text" id="p1-hp-text">5/5</div>
                 </div>
                 <div class="stats-row">
                     <span class="weapon-tag" id="p1-weapon">Lv.1 手枪</span>
@@ -40,9 +42,11 @@
                     <span id="p2-buffs" class="player-buffs">无</span>
                     <span class="player-title">P2 - 支援手</span>
                 </div>
-                <div class="hp-bar-wrapper">
-                    <div id="p2-hp-bar" class="hp-bar-fill"></div>
-                    <div class="hp-text"><span id="p2-hp-text">5/5</span></div>
+                <div class="hp-bar-container" style="justify-content: flex-end;">
+                    <div class="hp-text" id="p2-hp-text" style="margin-right: 10px;">5/5</div>
+                    <div class="hp-bar-wrapper" style="border-color: #ff00ff;">
+                        <div id="p2-hp-bar" class="hp-bar-fill"></div>
+                    </div>
                 </div>
                 <div class="stats-row">
                     <span class="score-tag">⭐ <span id="p2-score">0</span></span>

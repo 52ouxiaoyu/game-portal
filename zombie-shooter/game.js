@@ -1650,7 +1650,14 @@ function startGame() {
     shockwaves = [];
     generatedChunks.clear();
     camera = {x: CANVAS_W/2, y: CANVAS_H/2};
-    for(let i=0; i<5; i++) barrels.push(new Barrel(Math.random()*(CANVAS_W-200)+100, Math.random()*(CANVAS_H-200)+100));
+    for(let i=0; i<5; i++) {
+        let bx, by;
+        do {
+            bx = Math.random()*(CANVAS_W-200)+100;
+            by = Math.random()*(CANVAS_H-200)+100;
+        } while(Math.hypot(bx - CANVAS_W/2, by - CANVAS_H/2) < 300); // Keep away from spawn center
+        barrels.push(new Barrel(bx, by));
+    }
     currentWave = 1;
     waveTimer = 0;
     hitStopFrames = 0;
