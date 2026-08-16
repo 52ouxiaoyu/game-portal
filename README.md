@@ -1,6 +1,6 @@
-# Game Portal (网页游戏大厅) 🎮
+# Nexus Hub (综合娱乐学习大厅) 🌌
 
-这是一个充满复古乐趣与现代创新的网页游戏集合大厅！本项目包含了 5 款由 HTML5 Canvas 和原生 JavaScript 驱动的经典游戏，支持中英文双语界面（Bilingual UI）。无需安装，点开即玩！
+这是一个充满复古乐趣与现代创新的综合平台！本项目不仅包含了多款由 HTML5 Canvas 和原生 JavaScript 驱动的经典网页游戏，还融合了音视频播放（TVBox）以及学习工具。支持中英文双语界面（Bilingual UI）。无需安装，点开即玩！
 
 ## 🌟 游戏列表 (Games List)
 
