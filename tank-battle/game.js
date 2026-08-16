@@ -336,7 +336,10 @@ class PowerUp {
             else { this.game.unfortifyBase(); this.game.showAnnouncement('⚠️ 基地防御被削弱!', '#f00'); }
         }
         else if (this.type === POWERUP_TYPES.LIFE) {
-            if (isPlayer) this.game.lives++;
+            if (isPlayer) {
+                player.lives++;
+                this.game.updateHUD();
+            }
             else { player.health += 5; player.maxHealth += 5; this.game.showAnnouncement('⚠️ 敌方坦克获得了强效治疗!', '#f00'); }
         }
         else if (this.type === POWERUP_TYPES.TIME) {
