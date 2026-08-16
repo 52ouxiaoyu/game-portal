@@ -92,14 +92,13 @@ class Building {
         this.x = x; this.y = y; this.w = w; this.h = h;
     }
     draw(ctx) {
-        // Solid Black Fill for walls/obstacles
-        ctx.fillStyle = '#000000';
-        ctx.fillRect(this.x, this.y, this.w, this.h);
-        
-        // Pure black border to cover seams
-        ctx.strokeStyle = '#000000';
-        ctx.lineWidth = 1;
+        // Neon wireframe outline
+        ctx.shadowBlur = 15;
+        ctx.shadowColor = '#00ffff';
+        ctx.strokeStyle = '#00ffff';
+        ctx.lineWidth = 2;
         ctx.strokeRect(this.x, this.y, this.w, this.h);
+        ctx.shadowBlur = 0;
     }
 }
 
@@ -2078,12 +2077,8 @@ function update() {
 }
 
 function draw() {
-    // Clear background before any translations to prevent edge ghosting
-    if(activeEvent === 'bloodmoon') {
-        ctx.fillStyle = '#4a0000'; // Brighter dark red for bloodmoon
-    } else {
-        ctx.fillStyle = '#2b2b2b'; // Brighter concrete floor
-    }
+    // Solid Black Background for pure neon contrast
+    ctx.fillStyle = '#000000';
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
     ctx.save();
@@ -2094,19 +2089,22 @@ function draw() {
     // Apply Camera Translation (rounded to prevent subpixel drifting of walls)
     ctx.translate(Math.round(canvas.width/2 - camera.x), Math.round(canvas.height/2 - camera.y));
 
-    // Draw Grid (Infinite scrolling floor)
-    ctx.strokeStyle = '#3a3a3a'; // Brighter grid lines
+    // Draw Geometric Grid (Geometry Wars style)
+    ctx.strokeStyle = 'rgba(0, 255, 255, 0.15)'; // Faint glowing cyan grid
     ctx.lineWidth = 1;
     let startX = camera.x - canvas.width/2;
     let startY = camera.y - canvas.height/2;
-    let offsetX = startX % 40;
-    let offsetY = startY % 40;
-    for(let i = -offsetX; i < canvas.width + 40; i+=40) { 
-        ctx.beginPath(); ctx.moveTo(startX + i, startY); ctx.lineTo(startX + i, startY + canvas.height); ctx.stroke(); 
+    let offsetX = startX % 60; // Larger grid squares
+    let offsetY = startY % 60;
+    
+    ctx.beginPath();
+    for(let i = -offsetX; i < canvas.width + 60; i+=60) { 
+        ctx.moveTo(startX + i, startY); ctx.lineTo(startX + i, startY + canvas.height); 
     }
-    for(let i = -offsetY; i < canvas.height + 40; i+=40) { 
-        ctx.beginPath(); ctx.moveTo(startX, startY + i); ctx.lineTo(startX + canvas.width, startY + i); ctx.stroke(); 
+    for(let i = -offsetY; i < canvas.height + 60; i+=60) { 
+        ctx.moveTo(startX, startY + i); ctx.lineTo(startX + canvas.width, startY + i); 
     }
+    ctx.stroke();
     
     // Draw Buildings
     buildings.forEach(b => b.draw(ctx));
