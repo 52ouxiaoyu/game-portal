@@ -1938,6 +1938,7 @@ class Game {
 
         this.map.reset(this.currentStage); this.bullets = []; this.enemies = []; this.effects = []; this.powerUps = []; this.fortifyTimer = 0; this.enemyFrozenTimer = 0; this.playerFrozenTimer = 0;
         this.stageClearTimer = 0;
+        this.spawningEnemies = 0;
         this.currentLevel = this.map.currentLevel;
         const diffMult = this.difficulty === 'easy' ? 0.7 : (this.difficulty === 'hard' ? 1.3 : 1);
         this.enemiesRemaining = Math.floor(this.currentLevel.totalEnemies * diffMult);
@@ -1982,7 +1983,7 @@ class Game {
         
         const livesInfo = document.getElementById('lives-info');
         if (livesInfo) livesInfo.innerText = '';
-        document.getElementById('enemies-info').innerText = `敌人 Enemies: ${this.enemiesRemaining + this.enemies.length}`;
+        document.getElementById('enemies-info').innerText = `敌人 Enemies: ${this.enemiesRemaining + this.enemies.length + (this.spawningEnemies || 0)}`;
     }
     handlePlayerDeath(player) {
         if (player.level > 0) {
@@ -1997,7 +1998,9 @@ class Game {
 
         if (player.lives > 0) {
             player.lives--; this.updateHUD();
+            player.respawning = true;
             setTimeout(() => {
+                player.respawning = false;
                 this.respawnPlayer(player);
             }, 2000);
         } else {
@@ -2109,7 +2112,8 @@ class Game {
                     spawnPos = spawnPositions.find(p => !this.map.isBlocked(p.x, p.y, bossSize, bossSize) && !this.players.some(pl => pl.alive && Math.hypot(pl.x - p.x, pl.y - p.y) < TILE_SIZE * 5)) || spawnPositions[0];
                 }
                 this.effects.push(new Effect(spawnPos.x + bossSize/2, spawnPos.y + bossSize/2, 'SPAWN', 5));
-                setTimeout(() => { if (this.gameState === 'PLAYING') { this.enemies.push(new Boss(this, spawnPos.x, spawnPos.y, this.currentStage)); this.updateHUD(); } }, 1000);
+                this.spawningEnemies = (this.spawningEnemies || 0) + 1;
+                setTimeout(() => { this.spawningEnemies--; if (this.gameState === 'PLAYING') { this.enemies.push(new Boss(this, spawnPos.x, spawnPos.y, this.currentStage)); this.updateHUD(); } }, 1000);
             }
         }
 
@@ -2131,12 +2135,13 @@ class Game {
             if (this.spawnTimer <= 0) {
                 const sx = [TILE_SIZE * 2, TILE_SIZE * 12, TILE_SIZE * 22][Math.floor(Math.random() * 3)]; const sy = TILE_SIZE * 2; this.effects.push(new Effect(sx + TILE_SIZE, sy + TILE_SIZE, 'SPAWN'));
                 this.enemiesRemaining--;
-                setTimeout(() => { if (this.gameState === 'PLAYING') { this.enemies.push(new Enemy(this, sx, sy, this.currentStage)); this.updateHUD(); } }, 1000); 
+                this.spawningEnemies = (this.spawningEnemies || 0) + 1;
+                setTimeout(() => { this.spawningEnemies--; if (this.gameState === 'PLAYING') { this.enemies.push(new Enemy(this, sx, sy, this.currentStage)); this.updateHUD(); } }, 1000); 
                 let interval = Math.max(20, Math.floor(2400 / Math.max(1, this.initialEnemies || 1)));
                 if (this.difficulty === 'hard') interval = Math.floor(interval * 0.7);
                 this.spawnTimer = interval;
             }
-        } else if (this.enemiesRemaining === 0 && this.enemies.length === 0) {
+        } else if (this.enemiesRemaining === 0 && this.enemies.length === 0 && (!this.spawningEnemies || this.spawningEnemies === 0)) {
             if (this.stageClearTimer === 0) {
                 this.stageClearTimer = 300;
                 this.showAnnouncement('奖励时间 BONUS TIME: 5s!', '#0f0');
@@ -2202,7 +2207,7 @@ class Game {
             }
         }
         
-        if (this.players.every(p => !p.alive && p.lives === 0)) this.gameOver();
+        if (this.players.every(p => !p.alive && !p.respawning)) this.gameOver();
     }
     draw() {
         this.ctx.fillStyle = '#000'; this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
