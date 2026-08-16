@@ -2050,9 +2050,9 @@ document.addEventListener('DOMContentLoaded', () => {
         
         ctx.fillStyle = color;
         ctx.strokeStyle = '#ffffff';
-        ctx.lineWidth = 1.5; // thinner line for smaller icon
+        ctx.lineWidth = 2.5;
         ctx.beginPath();
-        shipDesigns[index].draw(ctx, 8); // size = 8 for a smaller, neater preview
+        shipDesigns[index].draw(ctx, 22); // size = 22 to beautifully fit the 80x80 canvas
         ctx.fill();
         ctx.stroke();
         ctx.restore();

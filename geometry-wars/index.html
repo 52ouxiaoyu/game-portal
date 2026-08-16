@@ -60,7 +60,7 @@
             <!-- 开始屏幕 -->
             <div id="start-screen" class="screen">
                 <div class="title-art" style="line-height:1.2;">几何大战<br><span style="font-size:36px;">Geometry Wars</span></div>
-                <p class="subtitle">抵御无尽的几何狂潮！ Survive the geometry swarm! <span style="color: #00ffcc; margin-left: 10px; font-weight: bold; border: 1px solid #00ffcc; padding: 2px 6px; border-radius: 4px; font-size: 14px;">v1.1.13</span></p>
+                <p class="subtitle">抵御无尽的几何狂潮！ Survive the geometry swarm! <span style="color: #00ffcc; margin-left: 10px; font-weight: bold; border: 1px solid #00ffcc; padding: 2px 6px; border-radius: 4px; font-size: 14px;">v1.1.14</span></p>
                 <div class="controls-info">
                     <p>P1: W A S D 移动 Move, 空格 Space 射击 Shoot</p>
                     <p>P2: ↑ ↓ ← → 移动 Move, NumpadEnter 射击 Shoot</p>
@@ -86,19 +86,18 @@
                     </div>
                     
                     <div style="display: flex; gap: 15px; margin-top: 15px; padding-top: 15px; border-top: 1px dashed #444;">
-                        <div style="flex: 1; display: flex; align-items: flex-end; gap: 8px;">
-                            <div style="flex: 1; min-width: 0;">
-                                <label for="p1-ship-select" style="color: #00bfff; display: block; margin-bottom: 5px; white-space: nowrap; font-size: 13px;">P1 战机款式:</label>
-                                <select id="p1-ship-select" style="background: #111; color: #00bfff; border: 1px solid #00bfff; padding: 5px; width: 100%; font-family: 'Share Tech Mono', monospace;"></select>
-                            </div>
-                            <canvas id="p1-preview" width="30" height="30" style="border: 1px solid #00bfff; border-radius: 4px; background: #000; flex-shrink: 0;"></canvas>
+                        <!-- P1 Card -->
+                        <div style="flex: 1; text-align: center; border: 1px solid #00bfff; border-radius: 8px; padding: 10px; background: rgba(0, 191, 255, 0.05);">
+                            <label style="color: #00bfff; display: block; margin-bottom: 10px; font-size: 14px; font-weight: bold;">P1 战机 / P1 Ship</label>
+                            <canvas id="p1-preview" width="80" height="80" style="display: block; margin: 0 auto 10px auto;"></canvas>
+                            <select id="p1-ship-select" style="background: #111; color: #00bfff; border: 1px solid #00bfff; padding: 5px; width: 100%; font-family: 'Share Tech Mono', monospace;"></select>
                         </div>
-                        <div style="flex: 1; display: flex; align-items: flex-end; gap: 8px;">
-                            <div style="flex: 1; min-width: 0;">
-                                <label for="p2-ship-select" style="color: #00ff00; display: block; margin-bottom: 5px; white-space: nowrap; font-size: 13px;">P2 战机款式:</label>
-                                <select id="p2-ship-select" style="background: #111; color: #00ff00; border: 1px solid #00ff00; padding: 5px; width: 100%; font-family: 'Share Tech Mono', monospace;"></select>
-                            </div>
-                            <canvas id="p2-preview" width="30" height="30" style="border: 1px solid #00ff00; border-radius: 4px; background: #000; flex-shrink: 0;"></canvas>
+                        
+                        <!-- P2 Card -->
+                        <div style="flex: 1; text-align: center; border: 1px solid #00ff00; border-radius: 8px; padding: 10px; background: rgba(0, 255, 0, 0.05);">
+                            <label style="color: #00ff00; display: block; margin-bottom: 10px; font-size: 14px; font-weight: bold;">P2 战机 / P2 Ship</label>
+                            <canvas id="p2-preview" width="80" height="80" style="display: block; margin: 0 auto 10px auto;"></canvas>
+                            <select id="p2-ship-select" style="background: #111; color: #00ff00; border: 1px solid #00ff00; padding: 5px; width: 100%; font-family: 'Share Tech Mono', monospace;"></select>
                         </div>
                     </div>
                 </div>
