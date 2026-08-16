@@ -720,38 +720,25 @@ class Player {
             ctx.stroke();
         }
         
-        // Shoulders/Torso
-        ctx.fillStyle = this.color;
+        // Draw the player as a sleek glowing geometric arrow/ship
+        ctx.shadowBlur = 10;
+        ctx.shadowColor = this.color;
+        ctx.fillStyle = '#050505';
+        ctx.strokeStyle = this.color;
+        ctx.lineWidth = 3;
+
         ctx.beginPath();
-        ctx.ellipse(0, 0, Math.max(0.1, this.size - 2), Math.max(0.1, this.size), 0, 0, Math.PI*2);
+        // Pointy tip at the front (facing direction)
+        ctx.moveTo(this.size, 0); 
+        // Back corners
+        ctx.lineTo(-this.size * 0.7, this.size * 0.8);
+        ctx.lineTo(-this.size * 0.3, 0); // Indent at the back
+        ctx.lineTo(-this.size * 0.7, -this.size * 0.8);
+        ctx.closePath();
         ctx.fill();
+        ctx.stroke();
 
-        // Backpack
-        ctx.fillStyle = '#333';
-        ctx.fillRect(-this.size-2, -8, 8, 16);
-
-        // Left arm & Hand
-        ctx.fillStyle = this.color;
-        ctx.fillRect(0, -this.size+2, 18, 6);
-        ctx.fillStyle = '#ffccaa'; // skin
-        ctx.beginPath(); ctx.arc(18, -this.size+5, 4, 0, Math.PI*2); ctx.fill();
-
-        // Right arm & Hand
-        ctx.fillStyle = this.color;
-        ctx.fillRect(0, this.size-8, 18, 6);
-        ctx.fillStyle = '#ffccaa'; // skin
-        ctx.beginPath(); ctx.arc(18, this.size-5, 4, 0, Math.PI*2); ctx.fill();
-
-        // Gun
-        ctx.fillStyle = '#222';
-        ctx.fillRect(10, -3, 25, 6); // barrel
-        
-        // Helmet
-        ctx.fillStyle = '#1a3300';
-        ctx.beginPath(); ctx.arc(0, 0, 10, 0, Math.PI*2); ctx.fill();
-        // Visor (Goggles)
-        ctx.fillStyle = '#0ff';
-        ctx.beginPath(); ctx.arc(2, 0, 8, -Math.PI/3, Math.PI/3); ctx.fill();
+        ctx.shadowBlur = 0;
 
         ctx.restore();
 
@@ -1143,111 +1130,80 @@ class Zombie {
         let s = this.size;
 
         if (this.isUltimateBoss || this.isBoss) {
-            // Enhanced Boss Design
-            let legCount = this.isUltimateBoss ? 10 : 8;
-            let glow = this.isDashing ? 20 : 10;
+            // Huge pulsing Star/Polygon for Boss
+            let points = this.isUltimateBoss ? 12 : 8;
+            let outerRadius = s * (1.5 + Math.sin(frameCount * 0.1) * 0.2);
+            let innerRadius = s * 0.8;
             
-            ctx.shadowBlur = glow;
+            ctx.shadowBlur = 20;
             ctx.shadowColor = this.color;
-
-            // Draw terrifying legs
-            ctx.strokeStyle = this.color;
-            ctx.lineWidth = this.isUltimateBoss ? 12 : 8;
-            ctx.lineCap = 'round';
-            ctx.lineJoin = 'round';
-            for(let i = 0; i < legCount; i++) {
-                let angleOffset = (Math.PI * 2 / legCount) * i;
-                let walkCycle = Math.sin(frameCount * 0.1 + i);
-                let angle = angleOffset + walkCycle * 0.2;
-                
-                let reach = s * 1.6;
-                let kneeDist = s * 0.9;
-                
-                if (Math.abs(angle) < Math.PI/2) reach = s * 2.0;
-                
-                let lx = Math.cos(angle) * reach;
-                let ly = Math.sin(angle) * reach;
-                let mx = Math.cos(angle) * kneeDist + Math.cos(angle + Math.PI/2) * (walkCycle * 12);
-                let my = Math.sin(angle) * kneeDist + Math.sin(angle + Math.PI/2) * (walkCycle * 12);
-                
-                ctx.beginPath();
-                ctx.moveTo(0, 0);
-                ctx.lineTo(mx, my);
-                ctx.lineTo(lx, ly);
-                ctx.stroke();
-            }
-
-            // Outer Carapace
             ctx.fillStyle = '#111';
-            ctx.beginPath(); 
-            ctx.arc(0, 0, s, 0, Math.PI*2); 
-            ctx.fill();
-            
-            // Carapace Details (Tech lines)
-            ctx.strokeStyle = '#333';
-            ctx.lineWidth = 3;
-            ctx.beginPath(); ctx.arc(0, 0, s*0.7, 0, Math.PI*2); ctx.stroke();
-            ctx.beginPath(); ctx.moveTo(-s, 0); ctx.lineTo(s, 0); ctx.stroke();
+            ctx.strokeStyle = this.color;
+            ctx.lineWidth = 4;
 
-            // Pulsating organic/energy core
+            ctx.beginPath();
+            for (let i = 0; i < points * 2; i++) {
+                let radius = i % 2 === 0 ? outerRadius : innerRadius;
+                let angle = (i * Math.PI) / points + (frameCount * 0.02);
+                if (i === 0) ctx.moveTo(Math.cos(angle) * radius, Math.sin(angle) * radius);
+                else ctx.lineTo(Math.cos(angle) * radius, Math.sin(angle) * radius);
+            }
+            ctx.closePath();
+            ctx.fill();
+            ctx.stroke();
+
+            // Core
             ctx.fillStyle = this.color;
-            let pulse = Math.abs(Math.sin(frameCount * 0.1));
-            ctx.beginPath(); 
-            ctx.arc(0, 0, s*0.4 + pulse * (s*0.15), 0, Math.PI*2); 
+            ctx.beginPath();
+            ctx.arc(0, 0, s * 0.5, 0, Math.PI * 2);
             ctx.fill();
-
-            // Multiple glowing eyes facing forward
-            ctx.fillStyle = '#ffffff';
-            let eyeSize = this.isUltimateBoss ? 10 : 6;
-            let eyeSpread = this.isUltimateBoss ? 22 : 14;
-            ctx.beginPath(); ctx.arc(s*0.75, 0, eyeSize*1.3, 0, Math.PI*2); ctx.fill();
-            ctx.beginPath(); ctx.arc(s*0.65, -eyeSpread, eyeSize, 0, Math.PI*2); ctx.fill();
-            ctx.beginPath(); ctx.arc(s*0.65, eyeSpread, eyeSize, 0, Math.PI*2); ctx.fill();
-            
-            ctx.shadowBlur = 0;
 
         } else {
-            // Pixel Robot Design (Crawler Bots)
-            ctx.fillStyle = this.color; 
-            
-            // Main Chassis (Square)
-            ctx.fillRect(-s*0.7, -s*0.7, s*1.4, s*1.4);
-            
-            // Tracks (Tank treads)
-            ctx.fillStyle = '#222'; 
-            ctx.fillRect(-s, -s, s*2, s*0.4);
-            ctx.fillRect(-s, s - s*0.4, s*2, s*0.4);
-            
-            // Tread details (animated)
-            ctx.fillStyle = '#444';
-            let treadOffset = (frameCount * this.speed * 2) % (s*0.4);
-            for(let i = -s; i < s; i += s*0.4) {
-                let px = i + treadOffset;
-                if(px < s) {
-                    ctx.fillRect(px, -s, 2, s*0.4);
-                    ctx.fillRect(px, s - s*0.4, 2, s*0.4);
-                }
-            }
-
-            // Head / Turret
-            ctx.fillStyle = '#555';
-            ctx.beginPath();
-            ctx.arc(0, 0, s*0.5, 0, Math.PI*2);
-            ctx.fill();
-
-            // Glowing Visor / Sensor Eye
-            let eyeColor = '#00ffff'; 
-            if(this.type === 'exploder') eyeColor = '#ff0000'; 
-            else if(this.type === 'fast') eyeColor = '#00ff00'; 
-            else if(this.type === 'tank') eyeColor = '#ffaa00'; 
-            
-            ctx.fillStyle = eyeColor;
-            ctx.shadowColor = eyeColor;
             ctx.shadowBlur = 10;
+            ctx.shadowColor = this.color;
+            ctx.fillStyle = '#111';
+            ctx.strokeStyle = this.color;
+            ctx.lineWidth = 2;
+
             ctx.beginPath();
-            ctx.arc(s*0.1, 0, s*0.3, -Math.PI/2.5, Math.PI/2.5);
-            ctx.lineTo(s*0.1, 0);
+            if (this.type === 'fast') {
+                // Sleek Triangle pointing forward
+                ctx.moveTo(s, 0);
+                ctx.lineTo(-s, s * 0.8);
+                ctx.lineTo(-s, -s * 0.8);
+                ctx.closePath();
+            } else if (this.type === 'tank') {
+                // Hexagon
+                for (let i = 0; i < 6; i++) {
+                    let angle = (i * Math.PI) / 3;
+                    if (i === 0) ctx.moveTo(Math.cos(angle) * s * 1.2, Math.sin(angle) * s * 1.2);
+                    else ctx.lineTo(Math.cos(angle) * s * 1.2, Math.sin(angle) * s * 1.2);
+                }
+                ctx.closePath();
+            } else if (this.type === 'exploder') {
+                // Diamond
+                ctx.moveTo(s * 1.2, 0);
+                ctx.lineTo(0, s * 1.2);
+                ctx.lineTo(-s * 1.2, 0);
+                ctx.lineTo(0, -s * 1.2);
+                ctx.closePath();
+                // Flashing effect
+                if (Math.floor(frameCount / 10) % 2 === 0) {
+                    ctx.fillStyle = this.color;
+                }
+            } else {
+                // Normal: Square
+                ctx.rect(-s, -s, s * 2, s * 2);
+            }
             ctx.fill();
+            ctx.stroke();
+            
+            // Glowing core/eye
+            ctx.fillStyle = this.color;
+            ctx.beginPath();
+            ctx.arc(0, 0, s * 0.3, 0, Math.PI * 2);
+            ctx.fill();
+        }
             ctx.shadowBlur = 0;
         }
 
