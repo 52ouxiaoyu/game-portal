@@ -152,29 +152,6 @@ class Building {
         this.x = x; this.y = y; this.w = w; this.h = h;
         this.type = type;
     }
-    draw(ctx) {
-        if (this.type === 'shelter') {
-            ctx.fillStyle = 'rgba(0, 255, 255, 0.05)';
-            ctx.fillRect(this.x, this.y, this.w, this.h);
-            
-            ctx.strokeStyle = 'rgba(0, 255, 255, 0.5)';
-            ctx.setLineDash([10, 10]);
-            ctx.lineWidth = 2;
-            ctx.strokeRect(this.x, this.y, this.w, this.h);
-            ctx.setLineDash([]);
-            
-            ctx.fillStyle = 'rgba(0, 255, 255, 0.5)';
-            ctx.font = '14px "Share Tech Mono", monospace';
-            ctx.fillText('避难所 (Shelter)', this.x + 10, this.y + 20);
-        } else {
-            ctx.fillStyle = '#000000';
-            ctx.fillRect(this.x, this.y, this.w, this.h);
-            
-            ctx.strokeStyle = '#00ffff';
-            ctx.lineWidth = 2;
-            ctx.strokeRect(this.x, this.y, this.w, this.h);
-        }
-    }
 }
 
 class Blood {
@@ -2801,12 +2778,25 @@ function draw() {
     }
     ctx.stroke();
     
-    // Draw Buildings
-    buildings.forEach(b => b.draw(ctx));
+    // Draw all buildings as a merged seamless polygon
+    ctx.beginPath();
+    buildings.forEach(b => {
+        // Optimization: only add to path if visible on screen
+        if(b.x < camera.x + canvas.width && b.x + b.w > camera.x && 
+           b.y < camera.y + canvas.height && b.y + b.h > camera.y) {
+            ctx.rect(b.x, b.y, b.w, b.h);
+        }
+    });
+    // First stroke (thick enough so outer half is 2px)
+    ctx.strokeStyle = '#00ffff';
+    ctx.lineWidth = 4;
+    ctx.stroke();
+    // Then fill black (this covers all internal overlapping strokes!)
+    ctx.fillStyle = '#000000';
+    ctx.fill();
 
     ctx.globalCompositeOperation = 'lighter';
     particles.forEach(p => p.draw(ctx));
-    buildings.forEach(b => b.draw(ctx));
     bloodStains.forEach(b => b.draw(ctx));
     lootBoxes.forEach(lb => lb.draw(ctx));
     barrels.forEach(b => b.draw(ctx));
