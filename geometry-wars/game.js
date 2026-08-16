@@ -305,7 +305,7 @@ class Player {
         this.y = CANVAS_H / 2;
         this.size = 20;
         this.speed = 4.0;
-        this.color = id === 1 ? '#00bfff' : '#ff9900';
+        this.color = id === 1 ? '#00bfff' : '#00ffcc';
         this.facing = {x: 1, y: 0}; // default facing right
         this.hp = 3;
         this.score = 0;
@@ -368,7 +368,7 @@ class Player {
                 w.cd = 25 - (i-20);
                 w.damage = 180 + i * 5;
                 w.speed = 10;
-                w.color = '#ff0000';
+                w.color = '#00ff00';
             } else if (i < 30) {
                 w.name = `Lv.${i} 电磁脉冲`;
                 w.isShockwave = true;
@@ -409,7 +409,7 @@ class Player {
                     screenShake = Math.max(screenShake, 5);
                     for(let b=0; b<5; b++) bloodStains.push(new Blood(z.x + (Math.random()-0.5)*40, z.y + (Math.random()-0.5)*40, Math.random()*8+4, Math.random()*8+4, '#800000'));
                     comboCount++; comboTimer = 180;
-                    if(comboCount % 10 === 0) { screenShake = 10; addFloatingText(CANVAS_W/2, 100, `${comboCount} 连杀 (COMBO)!`, '#ffaa00'); audio.levelUp(); }
+                    if(comboCount % 10 === 0) { screenShake = 10; addFloatingText(CANVAS_W/2, 100, `${comboCount} 连杀 (COMBO)!`, '#00ccff'); audio.levelUp(); }
                     audio.zombieDie();
                     addFloatingText(z.x, z.y, "🔵 疾速冲击!", "#00ffff");
                 }
@@ -660,7 +660,7 @@ class Player {
                 if(this.weaponLevel !== i) {
                     this.weaponLevel = i;
                     audio.levelUp();
-                    addFloatingText(this.x, this.y - 30, "🔫 火力升级!", "#ffff00");
+                    addFloatingText(this.x, this.y - 30, "🔫 火力升级!", "#00ff00");
                     if(this.id === 1) document.getElementById('p1-weapon').textContent = this.weapons[i].name;
                 }
                 break;
@@ -676,9 +676,9 @@ class Player {
             audio.shootLaser();
             // Motorcycle fires multiple homing missiles
             let angle = Math.atan2(this.facing.y, this.facing.x);
-            bullets.push(new Bullet(this.x, this.y, Math.cos(angle), Math.sin(angle), 12, 150, '#ff0000', false, this.id, true));
-            bullets.push(new Bullet(this.x, this.y, Math.cos(angle-0.3), Math.sin(angle-0.3), 12, 150, '#ff0000', false, this.id, true));
-            bullets.push(new Bullet(this.x, this.y, Math.cos(angle+0.3), Math.sin(angle+0.3), 12, 150, '#ff0000', false, this.id, true));
+            bullets.push(new Bullet(this.x, this.y, Math.cos(angle), Math.sin(angle), 12, 150, '#00bfff', false, this.id, true));
+            bullets.push(new Bullet(this.x, this.y, Math.cos(angle-0.3), Math.sin(angle-0.3), 12, 150, '#00bfff', false, this.id, true));
+            bullets.push(new Bullet(this.x, this.y, Math.cos(angle+0.3), Math.sin(angle+0.3), 12, 150, '#00bfff', false, this.id, true));
             return;
         }
 
@@ -686,26 +686,26 @@ class Player {
             if(this.mechType === 1) { 
                 this.cooldown = 20;
                 audio.shootLaser();
-                let b = new Bullet(this.x, this.y, this.facing.x, this.facing.y, 10, 400, '#ff5500', true, this.id);
+                let b = new Bullet(this.x, this.y, this.facing.x, this.facing.y, 10, 400, '#00ff88', true, this.id);
                 b.size = 15;
                 bullets.push(b);
                 let angle = Math.atan2(this.facing.y, this.facing.x);
-                bullets.push(new Bullet(this.x, this.y, Math.cos(angle-0.2), Math.sin(angle-0.2), 12, 200, '#ff0000', false, this.id, true));
-                bullets.push(new Bullet(this.x, this.y, Math.cos(angle+0.2), Math.sin(angle+0.2), 12, 200, '#ff0000', false, this.id, true));
+                bullets.push(new Bullet(this.x, this.y, Math.cos(angle-0.2), Math.sin(angle-0.2), 12, 200, '#00ffff', false, this.id, true));
+                bullets.push(new Bullet(this.x, this.y, Math.cos(angle+0.2), Math.sin(angle+0.2), 12, 200, '#00ffff', false, this.id, true));
             } else if(this.mechType === 2) { 
                 this.cooldown = 10;
                 audio.shootLaser();
                 for(let i=0; i<8; i++) {
                     let angle = Math.PI/4 * i + (frameCount*0.1);
-                    bullets.push(new Bullet(this.x, this.y, Math.cos(angle), Math.sin(angle), 15, 50, '#ff0000', false, this.id, true));
+                    bullets.push(new Bullet(this.x, this.y, Math.cos(angle), Math.sin(angle), 15, 50, '#00ffff', false, this.id, true));
                 }
-                bullets.push(new Bullet(this.x, this.y, this.facing.x, this.facing.y, 12, 100, '#ff00ff', false, this.id, true));
+                bullets.push(new Bullet(this.x, this.y, this.facing.x, this.facing.y, 12, 100, '#00ffcc', false, this.id, true));
             } else if(this.mechType === 3) { 
                 this.cooldown = 3;
                 audio.shootMachine();
                 let angle = Math.atan2(this.facing.y, this.facing.x) + (Math.random()-0.5)*0.15;
                 bullets.push(new Bullet(this.x, this.y, Math.cos(angle), Math.sin(angle), 25, 30, '#00ffff', true, this.id));
-                bullets.push(new Bullet(this.x, this.y, Math.cos(angle), Math.sin(angle), 15, 80, '#ff00ff', false, this.id, true));
+                bullets.push(new Bullet(this.x, this.y, Math.cos(angle), Math.sin(angle), 15, 80, '#00ffcc', false, this.id, true));
             }
             return;
         }
@@ -732,8 +732,8 @@ class Player {
             let b = new Bullet(this.x, this.y, Math.cos(angle), Math.sin(angle), w.speed, w.damage, w.color || '#fff', w.pierce, this.id, w.isHoming);
             
             if(!w.color) {
-                if(this.weaponLevel >= 29) b.color = '#ff00ff';
-                else if(count >= 5) b.color = '#ffaa00';
+                if(this.weaponLevel >= 29) b.color = '#00ffcc';
+                else if(count >= 5) b.color = '#00ff00';
                 else if(w.pierce) b.color = '#00ffff';
             }
             
@@ -755,11 +755,11 @@ class Player {
         screenShake = 20;
         let levelScale = 1 + (this.ultLevel * 0.3);
         let ultNames = ["", "霓虹新星 (Neon Nova)", "时光裂隙 (Time Flux)", "追踪光刃 (Homing Swarm)", "电磁网阵 (Laser Grid)", "轨道打击 (Orbital Strike)", "等离子雷 (Plasma Mines)", "剑气风暴 (Blade Vortex)", "治愈波纹 (Heal Burst)", "绝对领域 (God Mode)", "闪电链 (Chain Lightning)"];
-        addFloatingText(this.x, this.y - 50, `大招: ${ultNames[this.ultType]}!`, "#ff00ff");
+        addFloatingText(this.x, this.y - 50, `大招: ${ultNames[this.ultType]}!`, "#00ffff");
 
         switch(this.ultType) {
             case 1: // Neon Nova
-                shockwaves.push(new Shockwave(this.x, this.y, '#ff00ff', 2000 * levelScale, 400 * levelScale, this.id));
+                shockwaves.push(new Shockwave(this.x, this.y, '#00ffff', 2000 * levelScale, 400 * levelScale, this.id));
                 break;
             case 2: // Time Flux
                 hitStopFrames = Math.floor(180 * levelScale); // Freeze all zombies
@@ -767,7 +767,7 @@ class Player {
             case 3: // Homing Swarm
                 for(let i=0; i<20 * levelScale; i++) {
                     let a = Math.random() * Math.PI * 2;
-                    let b = new Bullet(this.x, this.y, Math.cos(a), Math.sin(a), 15, 300, '#ff00ff', false, this.id, true);
+                    let b = new Bullet(this.x, this.y, Math.cos(a), Math.sin(a), 15, 300, '#00ffcc', false, this.id, true);
                     b.size = 8;
                     bullets.push(b);
                 }
@@ -782,7 +782,7 @@ class Player {
                 break;
             case 5: // Orbital Strike
                 let ang = Math.atan2(this.facing.y, this.facing.x);
-                let beam = new Bullet(this.x, this.y, Math.cos(ang), Math.sin(ang), 40, 3000 * levelScale, '#ffff00', true, this.id);
+                let beam = new Bullet(this.x, this.y, Math.cos(ang), Math.sin(ang), 40, 3000 * levelScale, '#00ff00', true, this.id);
                 beam.size = 80 * levelScale;
                 bullets.push(beam);
                 break;
@@ -1202,15 +1202,15 @@ class Zombie {
             this.damage = 3 + (this.bossId % 2); 
             this._baseScore = 50000;
         } else if(this.type === 'boss') {
-            this.size = 40; this.speed = 0.6; this.hp = 1000 + survivalTime*10; this.color = '#ff00ff'; this.damage = 2; this._baseScore = 500;
+            this.size = 40; this.speed = 0.6; this.hp = 1000 + survivalTime*10; this.color = '#ff0044'; this.damage = 2; this._baseScore = 500;
         } else if(this.type === 'fast') {
-            this.size = 12 + Math.random()*3; this.speed = 1.0 + Math.random()*0.4 + (survivalTime/240); this.hp = 10 + survivalTime/2; this.color = '#aa00ff'; this.damage = 1; this._baseScore = 15;
+            this.size = 12 + Math.random()*3; this.speed = 1.0 + Math.random()*0.4 + (survivalTime/240); this.hp = 10 + survivalTime/2; this.color = '#ff8800'; this.damage = 1; this._baseScore = 15;
         } else if(this.type === 'tank') {
-            this.size = 25 + Math.random()*5; this.speed = 0.2 + Math.random()*0.2 + (survivalTime/400); this.hp = 100 + survivalTime*3; this.color = '#00ff00'; this.damage = 2; this._baseScore = 30;
+            this.size = 25 + Math.random()*5; this.speed = 0.2 + Math.random()*0.2 + (survivalTime/400); this.hp = 100 + survivalTime*3; this.color = '#aa3300'; this.damage = 2; this._baseScore = 30;
         } else if(this.type === 'exploder') {
-            this.size = 18 + Math.random()*4; this.speed = 0.5 + Math.random()*0.4 + (survivalTime/240); this.hp = 15 + survivalTime; this.color = '#ffaa00'; this.damage = 1; this._baseScore = 20;
+            this.size = 18 + Math.random()*4; this.speed = 0.5 + Math.random()*0.4 + (survivalTime/240); this.hp = 15 + survivalTime; this.color = '#ff4400'; this.damage = 1; this._baseScore = 20;
         } else { // normal
-            this.size = 15 + Math.random()*5; this.speed = 0.4 + Math.random()*0.4 + (survivalTime/240); this.hp = 20 + survivalTime; this.color = '#0088ff'; this.damage = 1; this._baseScore = 10;
+            this.size = 15 + Math.random()*5; this.speed = 0.4 + Math.random()*0.4 + (survivalTime/240); this.hp = 20 + survivalTime; this.color = '#ff3300'; this.damage = 1; this._baseScore = 10;
         }
         
         if(activeEvent === 'bloodmoon') this.speed *= 2;
@@ -1222,17 +1222,17 @@ class Zombie {
         if (this.isBoss) {
             const ultimateTraits = [
                 { name: "天启·奥米茄 (Omega)", temper: "毁灭倾向 - 极具攻击性，移速快", skill: "dash", color: "#ff0000" },
-                { name: "终焉·尤弥尔 (Ymir)", temper: "坚韧壁垒 - 体型巨大且不断恢复", skill: "heal", color: "#00ff00" },
+                { name: "终焉·尤弥尔 (Ymir)", temper: "坚韧壁垒 - 体型巨大且不断恢复", skill: "heal", color: "#cc0000" },
                 { name: "暴戾·阿瑞斯 (Ares)", temper: "狂暴突进 - 致命的突进连击", skill: "dash", color: "#ffaa00" },
                 { name: "深渊·利维坦 (Leviathan)", temper: "巢穴之主 - 不断召唤机械虫群", skill: "summon", color: "#aa00ff" },
-                { name: "湮灭·赛博 (Cyber)", temper: "弹幕核心 - 发射密集的死亡弹幕", skill: "shoot", color: "#ff00ff" }
+                { name: "湮灭·赛博 (Cyber)", temper: "弹幕核心 - 发射密集的死亡弹幕", skill: "shoot", color: "#ff0055" }
             ];
             const normalTraits = [
                 { name: "机械屠夫 (Butcher)", temper: "横冲直撞", skill: "dash", color: "#ff5500" },
                 { name: "主脑 (Mastermind)", temper: "召唤机械群", skill: "summon", color: "#aa00ff" },
-                { name: "重装堡垒 (Fortress)", temper: "护甲恢复", skill: "heal", color: "#00ff00" },
-                { name: "雷霆几何 (Thunder)", temper: "狂暴加速", skill: "dash", color: "#00ffff" },
-                { name: "弹幕矩阵 (Matrix)", temper: "发射弹幕", skill: "shoot", color: "#ff00ff" }
+                { name: "重装堡垒 (Fortress)", temper: "护甲恢复", skill: "heal", color: "#aa3300" },
+                { name: "雷霆几何 (Thunder)", temper: "狂暴加速", skill: "dash", color: "#ffaa00" },
+                { name: "弹幕矩阵 (Matrix)", temper: "发射弹幕", skill: "shoot", color: "#ff0055" }
             ];
 
             let traitList = this.isUltimateBoss ? ultimateTraits : normalTraits;
@@ -1267,23 +1267,23 @@ class Zombie {
                         z.type = 'fast'; z.x = this.x + (Math.random()-0.5)*100; z.y = this.y + (Math.random()-0.5)*100;
                         zombies.push(z);
                     }
-                    addFloatingText(this.x, this.y - this.size - 40, "!! 召唤子体 !!", "#aa00ff");
+                    addFloatingText(this.x, this.y - this.size - 40, "!! 召唤子体 !!", "#ff3300");
                     this.skillCooldown = 300;
                 } else if (this.bossSkill === 'heal') {
                     let healAmt = this.maxHp * 0.1;
                     this.hp = Math.min(this.maxHp, this.hp + healAmt);
                     createParticles(this.x, this.y, '#00ff00', 10);
-                    addFloatingText(this.x, this.y - this.size - 40, "+ 护甲修复", "#00ff00");
+                    addFloatingText(this.x, this.y - this.size - 40, "+ 护甲修复", "#ff0000");
                     this.skillCooldown = 360;
                 } else if (this.bossSkill === 'shoot') {
                     for(let i=0; i<12; i++) {
                         let angle = (i / 12) * Math.PI * 2;
-                        let b = new Bullet(this.x, this.y, Math.cos(angle), Math.sin(angle), 2.5, 1, '#ff00ff', true, -1, false);
+                        let b = new Bullet(this.x, this.y, Math.cos(angle), Math.sin(angle), 2.5, 1, '#ff0000', true, -1, false);
                         b.size = 8;
                         bullets.push(b);
                     }
                     audio.shootLaser();
-                    addFloatingText(this.x, this.y - this.size - 40, "!! 能量弹幕 !!", "#ff00ff");
+                    addFloatingText(this.x, this.y - this.size - 40, "!! 能量弹幕 !!", "#ff0044");
                     this.skillCooldown = 180;
                 }
             }
@@ -1500,13 +1500,13 @@ class LootBox {
         }
 
         this.color = '#fff';
-        if(this.type === 'heal') this.color = '#0f0';
-        else if(this.type === 'shield') this.color = '#00f';
-        else if(this.type === 'buff') this.color = '#0ff';
-        else if(this.type === 'weapon_box') this.color = '#aa00ff';
-        else if(this.type === 'mech') this.color = '#555';
-        else if(this.type === 'vehicle') this.color = '#ffaa00';
-        else if(this.type === 'nuke') this.color = '#ff0000';
+        if(this.type === 'heal') this.color = '#00ff00';
+        else if(this.type === 'shield') this.color = '#0088ff';
+        else if(this.type === 'buff') this.color = '#00ffff';
+        else if(this.type === 'weapon_box') this.color = '#00bfff';
+        else if(this.type === 'mech') this.color = '#00ffaa';
+        else if(this.type === 'vehicle') this.color = '#00ccff';
+        else if(this.type === 'nuke') this.color = '#00ffff';
         else if(this.type === 'trap') this.color = '#880000';
         else if(this.type === 'revive') this.color = '#ffffff';
         else if(this.type === 'ult') this.color = '#00ffff';
@@ -1569,7 +1569,7 @@ class LootBox {
                     audio.levelUp();
                 } else if(this.type === 'shield') {
                     p.shieldTime = 300;
-                    addFloatingText(p.x, p.y - 30, "🛡️ 能量偏导盾!", "#0000ff");
+                    addFloatingText(p.x, p.y - 30, "🛡️ 能量偏导盾!", "#0088ff");
                     audio.levelUp();
                 } else if(this.type === 'buff') {
                     p.buffTime = 300;
@@ -1579,11 +1579,11 @@ class LootBox {
                     if(p.weaponLevel < 29) p.weaponLevel++;
                     p.weapon = p.weapons[p.weaponLevel];
                     
-                    addFloatingText(p.x, p.y - 30, `🔫 火力升级! ${p.weapon.name}`, "#aa00ff");
+                    addFloatingText(p.x, p.y - 30, `🔫 火力升级! ${p.weapon.name}`, "#00bfff");
                     audio.levelUp();
                 } else if(this.type === 'mech') {
                     p.mechHp = 8;
-                    addFloatingText(p.x, p.y - 30, "🔴 重力护盾启动!", "#ff3300");
+                    addFloatingText(p.x, p.y - 30, "🔴 重力护盾启动!", "#00ffaa");
                     audio.levelUp();
                 } else if(this.type === 'vehicle') {
                     p.vehicleHp = 3;
@@ -1609,7 +1609,7 @@ class LootBox {
                     });
                     screenShake = 30;
                     audio.shootShotgun();
-                    addFloatingText(CANVAS_W/2, CANVAS_H/2, "☢️ 战术核打击!", "#ff0000");
+                    addFloatingText(CANVAS_W/2, CANVAS_H/2, "☢️ 战术核打击!", "#00ffff");
                 } else if(this.type === 'trap') {
                     this.triggerTrap();
                 } else if(this.type === 'revive') {
@@ -1618,11 +1618,11 @@ class LootBox {
                         deadPlayer.hp = 3;
                         deadPlayer.isDowned = false;
                         deadPlayer.x = p.x; deadPlayer.y = p.y;
-                        addFloatingText(p.x, p.y - 30, "👼 战地救援!", "#ffffff");
+                        addFloatingText(p.x, p.y - 30, "👼 战地救援!", "#00ff00");
                         audio.levelUp();
                     } else {
                         p.hp = Math.min(p.maxHp, p.hp + 1);
-                        addFloatingText(p.x, p.y - 30, "❤️ 护甲+1", "#ff3333");
+                        addFloatingText(p.x, p.y - 30, "❤️ 护甲+1", "#00ff00");
                         audio.levelUp();
                     }
                 } else if(this.type === 'ult') {
@@ -1636,7 +1636,7 @@ class LootBox {
                     }
                     p.ultCooldown = 0; // Instantly refresh cooldown
                     let ultNames = ["", "霓虹新星 (Neon Nova)", "时光裂隙 (Time Flux)", "追踪光刃 (Homing Swarm)", "电磁网阵 (Laser Grid)", "轨道打击 (Orbital Strike)", "等离子雷 (Plasma Mines)", "剑气风暴 (Blade Vortex)", "治愈波纹 (Heal Burst)", "绝对领域 (God Mode)", "闪电链 (Chain Lightning)"];
-                    addFloatingText(p.x, p.y - 30, `⚡ 大招: ${ultNames[p.ultType]} (Lv.${p.ultLevel})`, "#ff00ff");
+                    addFloatingText(p.x, p.y - 30, `⚡ 大招: ${ultNames[p.ultType]} (Lv.${p.ultLevel})`, "#00ccff");
                     audio.levelUp();
                 }
             }
@@ -2091,7 +2091,7 @@ function update() {
             audio.levelUp();
             screenShake = 20;
         } else if(activeEvent === 'orbital') {
-            addFloatingText(camera.x, camera.y, "🚀 轨道打击火力覆盖中！ 🚀", "#00ffff");
+            addFloatingText(camera.x, camera.y, "🚀 轨道打击火力覆盖中！ 🚀", "#ff4400");
             audio.levelUp();
             screenShake = 20;
         }
@@ -2144,7 +2144,7 @@ function update() {
     if(comboTimer > 0) {
         comboTimer--;
         if(comboTimer <= 0) {
-            if(comboCount >= 10) addFloatingText(CANVAS_W/2, 150, `🔥 ${comboCount} 连杀终结!`, '#ffaa00');
+            if(comboCount >= 10) addFloatingText(CANVAS_W/2, 150, `🔥 ${comboCount} 连杀终结!`, '#00ccff');
             comboCount = 0;
         }
     }
@@ -2235,7 +2235,7 @@ function update() {
         if (gameDifficulty === 'easy') b.hp *= 0.5;
         if (gameDifficulty === 'hard') b.hp *= 1.5;
         zombies.push(b);
-        addFloatingText(CANVAS_W/2, CANVAS_H/2, "⚠️ 极度危险：首领级变异体出现！ ⚠️", "#ff00ff");
+        addFloatingText(CANVAS_W/2, CANVAS_H/2, "⚠️ 极度危险：首领级变异体出现！ ⚠️", "#ff0000");
         screenShake = 20;
     }
 
@@ -2282,7 +2282,7 @@ function update() {
                         z1._baseScore *= 3;
                         
                         createParticles(z1.x, z1.y, z1.color, 30);
-                        addFloatingText(z1.x, z1.y - z1.size - 10, `LV${z1.tier} 聚合体!`, "#ffffff");
+                        addFloatingText(z1.x, z1.y - z1.size - 10, `LV${z1.tier} 聚合体!`, "#ff3300");
                         screenShake = Math.max(screenShake, 5);
                         break;
                     }
@@ -2329,7 +2329,7 @@ function update() {
                         }
                     }
                     b.active = false;
-                    createParticles(b.x, b.y, '#ff00ff', 10);
+                    createParticles(b.x, b.y, '#ff0000', 10);
                 }
             });
             if(!b.active) continue;
@@ -2396,7 +2396,7 @@ function update() {
                         hitStopFrames = 12; // 0.2s freeze
                         flashFrames = 15;
                         screenShake = 30;
-                        addFloatingText(camera.x, camera.y, "🌟 斩杀目标! 🌟", "#ffff00");
+                        addFloatingText(camera.x, camera.y, "🌟 斩杀目标! 🌟", "#00ff00");
                     } else if(Math.random() < 0.15) {
                         lootBoxes.push(new LootBox(z.x, z.y));
                     }
@@ -2426,12 +2426,12 @@ function update() {
                     }
                     for(let b=0; b<5; b++) bloodStains.push(new Blood(z.x + (Math.random()-0.5)*40, z.y + (Math.random()-0.5)*40, Math.random()*8+4, Math.random()*8+4, '#800000'));
                     comboCount++; comboTimer = 180;
-                    if(comboCount % 10 === 0) { screenShake = 10; addFloatingText(CANVAS_W/2, 100, `🔥 ${comboCount} 连杀 (COMBO)!`, '#ffaa00'); audio.levelUp(); }
+                    if(comboCount % 10 === 0) { screenShake = 10; addFloatingText(CANVAS_W/2, 100, `🔥 ${comboCount} 连杀 (COMBO)!`, '#00ccff'); audio.levelUp(); }
                     audio.zombieDie();
                     if(z.isBoss) {
-                        addFloatingText(z.x, z.y, `+${z.scoreVal} BOSS击杀!`, '#ff00ff');
+                        addFloatingText(z.x, z.y, `+${z.scoreVal} BOSS击杀!`, '#00bfff');
                     } else if(Math.random() < 0.1) {
-                        addFloatingText(z.x, z.y, `+${z.scoreVal}`, '#0f0');
+                        addFloatingText(z.x, z.y, `+${z.scoreVal}`, '#00ff00');
                     }
                 } else {
                     audio.zombieHit();
@@ -2477,7 +2477,7 @@ function update() {
             } else {
                 let readyText = p1.ultCooldown > 0 ? `CD:${Math.ceil(p1.ultCooldown/60)}s` : 'READY';
                 p1ultElem.textContent = `${ultNames[p1.ultType]} Lv.${p1.ultLevel} [${readyText}]`;
-                p1ultElem.style.color = p1.ultCooldown > 0 ? '#ff0000' : '#ff00ff';
+                p1ultElem.style.color = p1.ultCooldown > 0 ? '#ff0000' : '#00ccff';
                 p1ultElem.style.borderColor = p1ultElem.style.color;
             }
         }
