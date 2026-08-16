@@ -305,7 +305,7 @@ class Player {
         this.y = CANVAS_H / 2;
         this.size = 20;
         this.speed = 4.0;
-        this.color = id === 1 ? '#00bfff' : '#00ffcc';
+        this.color = id === 1 ? '#00bfff' : '#00ff00';
         this.facing = {x: 1, y: 0}; // default facing right
         this.hp = 3;
         this.score = 0;
@@ -333,7 +333,7 @@ class Player {
             
             w.damage = 20 + Math.floor(i / 2) * 10;
             w.speed = 10 + i * 0.4;
-            w.req = i * 8; // Faster leveling: Requires only 8 kills per level
+            w.req = i * 4; // Much faster leveling // Faster leveling: Requires only 8 kills per level
             
             if(i <= 5) {
                 w.name = `Lv.${i} 战术手枪`;
@@ -788,7 +788,9 @@ class Player {
         let baseCooldown = 900; // 15 seconds base
         this.ultCooldown = Math.max(120, baseCooldown - (this.ultLevel * 100)); // Reduces with level
         
-        audio.levelUp(); // ultimate sound
+        audio.levelUp(); 
+        createParticles(this.x, this.y, '#00ffff', 50); 
+        screenShake = 30;
         screenShake = 20;
         let levelScale = 1 + (this.ultLevel * 0.3);
         let ultNames = ["", "霓虹新星 (Neon Nova)", "时光裂隙 (Time Flux)", "追踪光刃 (Homing Swarm)", "电磁网阵 (Laser Grid)", "轨道打击 (Orbital Strike)", "等离子雷 (Plasma Mines)", "剑气风暴 (Blade Vortex)", "治愈波纹 (Heal Burst)", "绝对领域 (God Mode)", "闪电链 (Chain Lightning)"];
@@ -797,6 +799,7 @@ class Player {
         switch(this.ultType) {
             case 1: // Neon Nova
                 shockwaves.push(new Shockwave(this.x, this.y, '#00ffff', 2000 * levelScale, 400 * levelScale, this.id));
+                for(let i=0; i<30; i++) createParticles(this.x, this.y, '#00ffff', 5);
                 break;
             case 2: // Time Flux
                 hitStopFrames = Math.floor(180 * levelScale); // Freeze all zombies
@@ -2263,17 +2266,31 @@ function update() {
         addFloatingText(bx, by, "🛬 空投炸弹!", "#ff5500");
     }
 
-    if(frameCount % Math.max(5, spawnRate) === 0 && zombies.length < 300) {
-        let count = Math.floor(survivalTime / 15) + 1;
+    if(frameCount % Math.max(5, spawnRate) === 0 && zombies.length < 200) {
+        let count = Math.min(5, Math.floor(survivalTime / 30) + 1); // Cap spawn count to reduce lag
         if (gameDifficulty === 'easy') count = Math.max(1, Math.floor(count * 0.5));
-        if (gameDifficulty === 'hard') count = Math.floor(count * 1.5);
-        if (count > 10 && gameDifficulty !== 'hard') count = 10;
-        if (count > 15 && gameDifficulty === 'hard') count = 15;
+        if (gameDifficulty === 'hard') count += 2;
+        
+        let baseTier = Math.floor(survivalTime / 60); // Increase base tier every 60 seconds
         
         for(let i=0; i<count; i++) {
             let z = new Zombie();
             if (gameDifficulty === 'easy') z.hp *= 0.5;
             if (gameDifficulty === 'hard') z.hp *= 1.5;
+            
+            // Instantly level up zombie based on survival time to create large enemies late game
+            if (baseTier > 0) {
+                let tierBoost = Math.floor(Math.random() * (baseTier + 1)); 
+                for(let t=0; t<tierBoost; t++) {
+                    z.tier++;
+                    z.maxHp *= 3;
+                    z.hp = z.maxHp;
+                    z.damage *= 2; 
+                    z.size = Math.min(z.size * 1.5, 120);
+                    z._baseScore *= 3;
+                    z.speed *= 0.98; // slightly slower
+                }
+            }
             zombies.push(z);
         }
     }
@@ -2316,29 +2333,32 @@ function update() {
             
             for(let j=i+1; j<zombies.length; j++) {
                 let z2 = zombies[j];
-                if(!z2.active || z1.type !== z2.type || z1.tier !== z2.tier) continue;
+                if(!z2.active || z1.type !== z2.type) continue;
                 
                 let dx = z1.x - z2.x;
                 let dy = z1.y - z2.y;
-                if(dx*dx + dy*dy < maxMergeDistSq) {
-                    z1.mergeTimer += 1.5; // Net +1 per second
-                    z2.mergeTimer += 1.5;
-                    
-                    if(z1.mergeTimer >= 3) { // 3 seconds of contact
-                        z2.active = false;
-                        z1.mergeTimer = 0;
-                        z1.tier++;
-                        z1.maxHp *= 3;
-                        z1.hp = z1.maxHp;
-                        z1.damage *= 2; 
-                        z1.size *= 1.5;
-                        z1._baseScore *= 3;
-                        
-                        createParticles(z1.x, z1.y, z1.color, 30);
-                        addFloatingText(z1.x, z1.y - z1.size - 10, `LV${z1.tier} 聚合体!`, "#ff3300");
-                        screenShake = Math.max(screenShake, 5);
-                        break;
+                let mergeDistSq = (z1.size + z2.size) * (z1.size + z2.size) * 1.5;
+                if(dx*dx + dy*dy < mergeDistSq) {
+                    let survivor, consumed;
+                    if(z1.tier > z2.tier || (z1.tier === z2.tier && z1.size >= z2.size)) {
+                        survivor = z1; consumed = z2;
+                    } else {
+                        survivor = z2; consumed = z1;
                     }
+                    
+                    consumed.active = false;
+                    survivor.tier++;
+                    survivor.maxHp += consumed.hp;
+                    survivor.hp += consumed.hp;
+                    survivor.damage += consumed.damage * 0.5;
+                    survivor.size = Math.min(survivor.size + consumed.size * 0.25, 120);
+                    survivor._baseScore += consumed._baseScore;
+                    
+                    createParticles(survivor.x, survivor.y, survivor.color, 15);
+                    if(survivor.tier % 3 === 0) {
+                        addFloatingText(survivor.x, survivor.y - survivor.size - 10, `LV${survivor.tier} 巨型体!`, "#ff3300");
+                    }
+                    if (z1 === consumed) break;
                 }
             }
         }
