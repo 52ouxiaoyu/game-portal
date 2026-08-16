@@ -2256,25 +2256,25 @@ function update() {
                     buildings.push(new Building(cx + 150, cy + 150, CHUNK_SIZE - 300, CHUNK_SIZE - 300));
                 } else {
                     // Physical Bunker chunk (narrow slits that only players/small zombies can pass)
-                    // Box size 400x400. Center is cx + 500. Wall thickness 40. Slit 32px.
-                    // A 32px gap allows players (size 12, diam 24) but blocks bosses (diam 70+)
+                    // Box size 400x400. Center is cx + 500. Wall thickness 40. Slit 64px.
+                    // A 64px gap allows players (size 20, diam 40) but blocks bosses (diam 80+)
                     let bx = cx + 300, by = cy + 300;
                     
-                    // Top Wall (Two segments with 32px gap in middle)
-                    buildings.push(new Building(bx, by, 184, 40));
-                    buildings.push(new Building(bx + 216, by, 184, 40));
+                    // Top Wall (Two segments with 64px gap in middle)
+                    buildings.push(new Building(bx, by, 168, 40));
+                    buildings.push(new Building(bx + 232, by, 168, 40));
                     
                     // Bottom Wall
-                    buildings.push(new Building(bx, by + 360, 184, 40));
-                    buildings.push(new Building(bx + 216, by + 360, 184, 40));
+                    buildings.push(new Building(bx, by + 360, 168, 40));
+                    buildings.push(new Building(bx + 232, by + 360, 168, 40));
                     
                     // Left Wall
-                    buildings.push(new Building(bx, by, 40, 184));
-                    buildings.push(new Building(bx, by + 216, 40, 184));
+                    buildings.push(new Building(bx, by, 40, 168));
+                    buildings.push(new Building(bx, by + 232, 40, 168));
                     
                     // Right Wall
-                    buildings.push(new Building(bx + 360, by, 40, 184));
-                    buildings.push(new Building(bx + 360, by + 216, 40, 184));
+                    buildings.push(new Building(bx + 360, by, 40, 168));
+                    buildings.push(new Building(bx + 360, by + 232, 40, 168));
                 }
             }
         }
@@ -2804,10 +2804,15 @@ function draw() {
     
     // Draw all buildings as a merged seamless polygon
     ctx.beginPath();
+    let screenLeft = camera.x - canvas.width/2 - 200;
+    let screenRight = camera.x + canvas.width/2 + 200;
+    let screenTop = camera.y - canvas.height/2 - 200;
+    let screenBottom = camera.y + canvas.height/2 + 200;
+    
     buildings.forEach(b => {
         // Optimization: only add to path if visible on screen
-        if(b.x < camera.x + canvas.width && b.x + b.w > camera.x && 
-           b.y < camera.y + canvas.height && b.y + b.h > camera.y) {
+        if(b.x < screenRight && b.x + b.w > screenLeft && 
+           b.y < screenBottom && b.y + b.h > screenTop) {
             ctx.rect(b.x, b.y, b.w, b.h);
         }
     });
