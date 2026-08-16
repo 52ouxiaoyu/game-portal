@@ -108,6 +108,7 @@ try {
     console.warn("localStorage not available", e);
 }
 let survivalTime = 0;
+let hasSpawnedUltimateBoss = false;
 let killCount = 0;
 let startTime = 0;
 let lastTime = 0;
@@ -2073,6 +2074,9 @@ function startGame() {
     flashFrames = 0;
     lootTimer = 0;
     spawnRate = 100;
+    score = 0;
+    survivalTime = 0;
+    hasSpawnedUltimateBoss = false;
     frameCount = 0;
 
     document.getElementById('start-screen').classList.add('hidden');
@@ -2391,15 +2395,10 @@ function update() {
 
     // Check for ultimate win condition
     if (gameBossAmount !== 'none') {
-        // Must kill all Ultimate Bosses AND all regular Bosses to win
         let ultimateBossesAlive = zombies.some(z => z.isUltimateBoss && z.active);
         let regularBossesAlive = zombies.some(z => z.isBoss && z.active);
         
-        // We only trigger win if Ultimate Bosses were spawned and are now dead, 
-        // AND no regular bosses are currently alive.
-        // Wait, we also need to make sure the game doesn't instantly win on frame 1 before they spawn.
-        // initialBossCount tells us if they were spawned.
-        if (frameCount > 10 && !ultimateBossesAlive && !regularBossesAlive) {
+        if (typeof hasSpawnedUltimateBoss !== 'undefined' && hasSpawnedUltimateBoss && !ultimateBossesAlive && !regularBossesAlive) {
             if(gameState === 'PLAYING') {
                 score += 50000;
                 gameWon();
@@ -2424,6 +2423,20 @@ function update() {
 
     // Time
     survivalTime = Math.floor((Date.now() - startTime) / 1000);
+    
+    // Spawn Ultimate Bosses at 3 minutes
+    if (survivalTime >= 180 && !hasSpawnedUltimateBoss && gameBossAmount !== 'none') {
+        hasSpawnedUltimateBoss = true;
+        let count = 1;
+        if (gameBossAmount === 'normal') count = 3;
+        else if (gameBossAmount === 'many') count = 10;
+        
+        for(let i=0; i<count; i++) {
+            zombies.push(new Zombie(true, true, i));
+        }
+        addFloatingText(camera.x, camera.y - 100, "⚠️ 终极 Boss 降临 ⚠️", "#ff0000");
+    }
+
 
     players.forEach(p => p.update());
 
