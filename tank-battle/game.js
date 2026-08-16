@@ -1053,7 +1053,15 @@ class Tank {
         }
         ctx.fillStyle = 'rgba(255,255,255,0.3)'; ctx.fillRect(px + 12, py + 12, 4, 4); ctx.restore();
         if (this.canBoat) { ctx.strokeStyle = '#00ffff'; ctx.lineWidth = 6; ctx.setLineDash([10, 5]); ctx.strokeRect(px - 6, py - 6, w + 12, h + 12); ctx.setLineDash([]); }
-        if (this.canFly) { ctx.strokeStyle = '#ffaa00'; ctx.lineWidth = 4; ctx.beginPath(); ctx.arc(px + 30, py + 30, 45, 0, Math.PI * 2); ctx.stroke(); }
+        if (this.canFly) {
+            let drawAura = true;
+            if (this.flyTimer && this.flyTimer <= 600) {
+                drawAura = (this.flyTimer % 10) < 5;
+            }
+            if (drawAura) {
+                ctx.strokeStyle = '#ffaa00'; ctx.lineWidth = 4; ctx.beginPath(); ctx.arc(px + 30, py + 30, 45, 0, Math.PI * 2); ctx.stroke();
+            }
+        }
         if (this.shieldTimer > 0) { ctx.strokeStyle = '#fff'; ctx.lineWidth = 4; ctx.beginPath(); ctx.arc(px + 30, py + 30, 38, 0, Math.PI * 2); ctx.stroke(); }
     }
 }
