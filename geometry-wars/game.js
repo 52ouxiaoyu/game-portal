@@ -224,14 +224,26 @@ const keys = {
 
 let mouse = {x: 0, y: 0, isDown: false, screenX: 0, screenY: 0};
 
+function resetP1AI() {
+    if(gameState === 'PLAYING') {
+        players.forEach(p => {
+            if(p.id === 1) {
+                p.lastInputTime = Date.now();
+                p.isAI = false;
+            }
+        });
+    }
+}
+
 window.addEventListener('mousemove', e => {
     let rect = canvas.getBoundingClientRect();
     let scaleX = canvas.width / rect.width;
     let scaleY = canvas.height / rect.height;
     mouse.screenX = (e.clientX - rect.left) * scaleX;
     mouse.screenY = (e.clientY - rect.top) * scaleY;
+    resetP1AI();
 });
-window.addEventListener('mousedown', e => { if(e.button === 0) mouse.isDown = true; });
+window.addEventListener('mousedown', e => { if(e.button === 0) { mouse.isDown = true; resetP1AI(); } });
 window.addEventListener('mouseup', e => { if(e.button === 0) mouse.isDown = false; });
 
 window.addEventListener('keydown', e => {
@@ -1175,13 +1187,15 @@ class Zombie {
                 { name: "天启·奥米茄 (Omega)", temper: "毁灭倾向 - 极具攻击性，移速快", skill: "dash", color: "#ff0000" },
                 { name: "终焉·尤弥尔 (Ymir)", temper: "坚韧壁垒 - 体型巨大且不断恢复", skill: "heal", color: "#00ff00" },
                 { name: "暴戾·阿瑞斯 (Ares)", temper: "狂暴突进 - 致命的突进连击", skill: "dash", color: "#ffaa00" },
-                { name: "深渊·利维坦 (Leviathan)", temper: "巢穴之主 - 不断召唤机械虫群", skill: "summon", color: "#aa00ff" }
+                { name: "深渊·利维坦 (Leviathan)", temper: "巢穴之主 - 不断召唤机械虫群", skill: "summon", color: "#aa00ff" },
+                { name: "湮灭·赛博 (Cyber)", temper: "弹幕核心 - 发射密集的死亡弹幕", skill: "shoot", color: "#ff00ff" }
             ];
             const normalTraits = [
                 { name: "机械屠夫 (Butcher)", temper: "横冲直撞", skill: "dash", color: "#ff5500" },
                 { name: "主脑 (Mastermind)", temper: "召唤机械群", skill: "summon", color: "#aa00ff" },
                 { name: "重装堡垒 (Fortress)", temper: "护甲恢复", skill: "heal", color: "#00ff00" },
-                { name: "雷霆几何 (Thunder)", temper: "狂暴加速", skill: "dash", color: "#00ffff" }
+                { name: "雷霆几何 (Thunder)", temper: "狂暴加速", skill: "dash", color: "#00ffff" },
+                { name: "弹幕矩阵 (Matrix)", temper: "发射弹幕", skill: "shoot", color: "#ff00ff" }
             ];
 
             let traitList = this.isUltimateBoss ? ultimateTraits : normalTraits;
@@ -1224,6 +1238,16 @@ class Zombie {
                     createParticles(this.x, this.y, '#00ff00', 10);
                     addFloatingText(this.x, this.y - this.size - 40, "+ 护甲修复", "#00ff00");
                     this.skillCooldown = 360;
+                } else if (this.bossSkill === 'shoot') {
+                    for(let i=0; i<12; i++) {
+                        let angle = (i / 12) * Math.PI * 2;
+                        let b = new Bullet(this.x, this.y, Math.cos(angle), Math.sin(angle), 2.5, 1, '#ff00ff', true, -1, false);
+                        b.size = 8;
+                        bullets.push(b);
+                    }
+                    audio.shootLaser();
+                    addFloatingText(this.x, this.y - this.size - 40, "!! 能量弹幕 !!", "#ff00ff");
+                    this.skillCooldown = 180;
                 }
             }
             if (this.isDashing) {
@@ -2245,6 +2269,34 @@ function update() {
     for(let i = bullets.length - 1; i >= 0; i--) {
         const b = bullets[i];
         if(!b.active) continue;
+        
+        // Enemy Bullet hitting players
+        if(b.ownerId === -1) {
+            players.forEach(p => {
+                if(p.hp > 0 && Math.hypot(b.x - p.x, b.y - p.y) < p.size + b.size) {
+                    if(p.shieldTime <= 0 && p.invincibleTime <= 0) {
+                        if(p.mechHp > 0) {
+                            p.mechHp -= 1;
+                            p.invincibleTime = 30;
+                            audio.playerHit();
+                        } else if(p.vehicleHp > 0) {
+                            p.vehicleHp -= 1;
+                            p.invincibleTime = 30;
+                            audio.playerHit();
+                        } else {
+                            p.hp -= b.damage;
+                            scoreMultiplier = 1;
+                            screenShake = 10;
+                            p.invincibleTime = 30;
+                            audio.playerHit();
+                        }
+                    }
+                    b.active = false;
+                    createParticles(b.x, b.y, '#ff00ff', 10);
+                }
+            });
+            if(!b.active) continue;
+        }
         
         // Check Barrels
         barrels.forEach(barrel => {
