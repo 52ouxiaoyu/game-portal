@@ -2036,6 +2036,28 @@ let gameBossAmount = 'normal';
 document.addEventListener('DOMContentLoaded', () => {
     let p1Select = document.getElementById('p1-ship-select');
     let p2Select = document.getElementById('p2-ship-select');
+    let p1Canvas = document.getElementById('p1-preview');
+    let p2Canvas = document.getElementById('p2-preview');
+    
+    function drawPreview(canvas, color, index) {
+        if (!canvas || !shipDesigns[index]) return;
+        let ctx = canvas.getContext('2d');
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        ctx.save();
+        ctx.translate(canvas.width / 2, canvas.height / 2);
+        // Slightly rotate for a dynamic look
+        ctx.rotate(-Math.PI / 4);
+        
+        ctx.fillStyle = color;
+        ctx.strokeStyle = '#ffffff';
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        shipDesigns[index].draw(ctx, 12); // size = 12 to fit nicely
+        ctx.fill();
+        ctx.stroke();
+        ctx.restore();
+    }
+
     if (p1Select && p2Select && typeof shipDesigns !== 'undefined') {
         shipDesigns.forEach((ship, index) => {
             let op1 = document.createElement('option');
@@ -2050,6 +2072,13 @@ document.addEventListener('DOMContentLoaded', () => {
         });
         // Default P2 to a different ship
         p2Select.value = "1";
+        
+        p1Select.onchange = () => drawPreview(p1Canvas, '#00bfff', parseInt(p1Select.value) || 0);
+        p2Select.onchange = () => drawPreview(p2Canvas, '#00ff00', parseInt(p2Select.value) || 0);
+        
+        // Initial render
+        p1Select.onchange();
+        p2Select.onchange();
     }
 });
 
