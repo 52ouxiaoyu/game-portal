@@ -340,7 +340,18 @@ document.getElementById('restart-btn').onclick = startGame;
 document.getElementById('pause-btn').onclick = togglePause;
 document.getElementById('resume-btn').onclick = togglePause;
 
-// --- CLASSES ---
+const shipDesigns = [
+    { name: "经典战机 (Arrow)", draw: (ctx, size) => { ctx.moveTo(size, 0); ctx.lineTo(-size*0.7, size*0.8); ctx.lineTo(-size*0.3, 0); ctx.lineTo(-size*0.7, -size*0.8); ctx.closePath(); } },
+    { name: "隐身刺客 (Stealth)", draw: (ctx, size) => { ctx.moveTo(size, 0); ctx.lineTo(-size, size); ctx.lineTo(-size*0.5, 0); ctx.lineTo(-size, -size); ctx.closePath(); } },
+    { name: "重装巡洋 (Heavy)", draw: (ctx, size) => { ctx.moveTo(size, 0); ctx.lineTo(size*0.5, size*0.8); ctx.lineTo(-size*0.8, size*0.8); ctx.lineTo(-size*0.4, 0); ctx.lineTo(-size*0.8, -size*0.8); ctx.lineTo(size*0.5, -size*0.8); ctx.closePath(); } },
+    { name: "双轨拦截 (Twin)", draw: (ctx, size) => { ctx.moveTo(size, size*0.5); ctx.lineTo(-size, size*0.5); ctx.lineTo(-size*0.5, 0); ctx.lineTo(-size, -size*0.5); ctx.lineTo(size, -size*0.5); ctx.lineTo(size*0.3, 0); ctx.closePath(); } },
+    { name: "棱镜核心 (Prism)", draw: (ctx, size) => { ctx.moveTo(size*1.2, 0); ctx.lineTo(0, size*0.8); ctx.lineTo(-size*1.2, 0); ctx.lineTo(0, -size*0.8); ctx.closePath(); } },
+    { name: "三叉戟 (Trident)", draw: (ctx, size) => { ctx.moveTo(size*1.2, 0); ctx.lineTo(size*0.2, size*0.2); ctx.lineTo(size*0.5, size*0.7); ctx.lineTo(-size*0.8, size*0.7); ctx.lineTo(-size*0.4, 0); ctx.lineTo(-size*0.8, -size*0.7); ctx.lineTo(size*0.5, -size*0.7); ctx.lineTo(size*0.2, -size*0.2); ctx.closePath(); } },
+    { name: "光梭穿梭机 (Needle)", draw: (ctx, size) => { ctx.moveTo(size*1.5, 0); ctx.lineTo(-size*0.8, size*0.3); ctx.lineTo(-size*0.5, 0); ctx.lineTo(-size*0.8, -size*0.3); ctx.closePath(); } },
+    { name: "星环游侠 (Shuriken)", draw: (ctx, size) => { for(let i=0; i<8; i++) { let a=i*Math.PI/4; let r=i%2===0?size*1.2:size*0.4; ctx.lineTo(Math.cos(a)*r, Math.sin(a)*r); } ctx.closePath(); } },
+    { name: "堡垒要塞 (Bulwark)", draw: (ctx, size) => { ctx.moveTo(size*0.8, size*0.6); ctx.lineTo(-size*0.8, size*0.6); ctx.lineTo(-size*0.8, -size*0.6); ctx.lineTo(size*0.8, -size*0.6); ctx.lineTo(size*1.2, 0); ctx.closePath(); } },
+    { name: "夜行蝙蝠 (Bat)", draw: (ctx, size) => { ctx.moveTo(size, 0); ctx.lineTo(-size*0.5, size); ctx.lineTo(-size*0.2, size*0.4); ctx.lineTo(-size*1.2, size*0.8); ctx.lineTo(-size*0.8, 0); ctx.lineTo(-size*1.2, -size*0.8); ctx.lineTo(-size*0.2, -size*0.4); ctx.lineTo(-size*0.5, -size); ctx.closePath(); } }
+];
 
 class Player {
     constructor(id) {
@@ -350,6 +361,7 @@ class Player {
         this.size = 20;
         this.speed = 4.0;
         this.color = id === 1 ? '#00bfff' : '#00ff00';
+        this.shipIndex = 0;
         this.facing = {x: 1, y: 0}; // default facing right
         this.hp = 3;
         this.score = 0;
@@ -1003,19 +1015,23 @@ class Player {
             ctx.stroke();
         }
         
-        // Draw the player as a sleek glowing geometric arrow/ship
+        // Draw the player as a sleek glowing geometric ship
         ctx.fillStyle = this.color; // Fill with solid bright color to distinguish players
         ctx.strokeStyle = '#ffffff'; // White outline for contrast
         ctx.lineWidth = 3;
 
         ctx.beginPath();
-        // Pointy tip at the front (facing direction)
-        ctx.moveTo(this.size, 0); 
-        // Back corners
-        ctx.lineTo(-this.size * 0.7, this.size * 0.8);
-        ctx.lineTo(-this.size * 0.3, 0); // Indent at the back
-        ctx.lineTo(-this.size * 0.7, -this.size * 0.8);
-        ctx.closePath();
+        // Use the dynamically selected ship design
+        if (shipDesigns[this.shipIndex]) {
+            shipDesigns[this.shipIndex].draw(ctx, this.size);
+        } else {
+            // Fallback (Arrow)
+            ctx.moveTo(this.size, 0); 
+            ctx.lineTo(-this.size * 0.7, this.size * 0.8);
+            ctx.lineTo(-this.size * 0.3, 0);
+            ctx.lineTo(-this.size * 0.7, -this.size * 0.8);
+            ctx.closePath();
+        }
         ctx.fill();
         ctx.stroke();
 
@@ -2016,6 +2032,27 @@ function addFloatingText(x, y, text, color) {
 let gameDifficulty = 'normal';
 let gameBossAmount = 'normal';
 
+// Populate Ship Selectors
+document.addEventListener('DOMContentLoaded', () => {
+    let p1Select = document.getElementById('p1-ship-select');
+    let p2Select = document.getElementById('p2-ship-select');
+    if (p1Select && p2Select && typeof shipDesigns !== 'undefined') {
+        shipDesigns.forEach((ship, index) => {
+            let op1 = document.createElement('option');
+            op1.value = index;
+            op1.textContent = ship.name;
+            p1Select.appendChild(op1);
+            
+            let op2 = document.createElement('option');
+            op2.value = index;
+            op2.textContent = ship.name;
+            p2Select.appendChild(op2);
+        });
+        // Default P2 to a different ship
+        p2Select.value = "1";
+    }
+});
+
 // --- GAME LOOP ---
 
 function startGame() {
@@ -2031,6 +2068,12 @@ function startGame() {
     survivalTime = 0;
     startTime = Date.now();
     players = [new Player(1), new Player(2)];
+    let p1ShipSelect = document.getElementById('p1-ship-select');
+    if (p1ShipSelect) players[0].shipIndex = parseInt(p1ShipSelect.value) || 0;
+    
+    let p2ShipSelect = document.getElementById('p2-ship-select');
+    if (p2ShipSelect) players[1].shipIndex = parseInt(p2ShipSelect.value) || 0;
+
     players[0].x = CANVAS_W/2 - 20;
     players[1].x = CANVAS_W/2 + 20;
     players[0].y = CANVAS_H/2;

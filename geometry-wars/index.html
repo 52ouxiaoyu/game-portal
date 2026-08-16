@@ -60,7 +60,7 @@
             <!-- 开始屏幕 -->
             <div id="start-screen" class="screen">
                 <div class="title-art" style="line-height:1.2;">几何大战<br><span style="font-size:36px;">Geometry Wars</span></div>
-                <p class="subtitle">抵御无尽的几何狂潮！ Survive the geometry swarm! <span style="color: #00ffcc; margin-left: 10px; font-weight: bold; border: 1px solid #00ffcc; padding: 2px 6px; border-radius: 4px; font-size: 14px;">v1.1.10</span></p>
+                <p class="subtitle">抵御无尽的几何狂潮！ Survive the geometry swarm! <span style="color: #00ffcc; margin-left: 10px; font-weight: bold; border: 1px solid #00ffcc; padding: 2px 6px; border-radius: 4px; font-size: 14px;">v1.1.11</span></p>
                 <div class="controls-info">
                     <p>P1: W A S D 移动 Move, 空格 Space 射击 Shoot</p>
                     <p>P2: ↑ ↓ ← → 移动 Move, NumpadEnter 射击 Shoot</p>
@@ -83,6 +83,17 @@
                             <option value="many">密集 / Many</option>
                             <option value="none">无 Boss / None</option>
                         </select>
+                    </div>
+                    
+                    <div style="display: flex; gap: 15px; margin-top: 15px; padding-top: 15px; border-top: 1px dashed #444;">
+                        <div style="flex: 1;">
+                            <label for="p1-ship-select" style="color: #00bfff; display: block; margin-bottom: 5px;">P1 战机款式 / P1 Ship:</label>
+                            <select id="p1-ship-select" style="background: #111; color: #00bfff; border: 1px solid #00bfff; padding: 5px; width: 100%; font-family: 'Share Tech Mono', monospace;"></select>
+                        </div>
+                        <div style="flex: 1;">
+                            <label for="p2-ship-select" style="color: #00ff00; display: block; margin-bottom: 5px;">P2 战机款式 / P2 Ship:</label>
+                            <select id="p2-ship-select" style="background: #111; color: #00ff00; border: 1px solid #00ff00; padding: 5px; width: 100%; font-family: 'Share Tech Mono', monospace;"></select>
+                        </div>
                     </div>
                 </div>
                 <button id="start-btn" class="big-btn">开始突围 / START</button>
