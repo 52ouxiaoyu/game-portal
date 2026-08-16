@@ -536,7 +536,7 @@ class GameMap {
 class InputHandler {
     constructor() {
         this.keys = {};
-        this.gameKeys = ['KeyW', 'KeyS', 'KeyA', 'KeyD', 'Space', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'NumpadEnter', 'KeyP'];
+        this.gameKeys = ['KeyW', 'KeyS', 'KeyA', 'KeyD', 'Space', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'NumpadEnter', 'KeyP', 'KeyU', 'Numpad9'];
         this.touchState = { up: false, down: false, left: false, right: false, shoot: false };
         this.isMobile = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
         window.addEventListener('keydown', (e) => { this.keys[e.code] = true; if (this.gameKeys.includes(e.code)) e.preventDefault(); });
@@ -1074,6 +1074,7 @@ class Player extends Tank {
         this.aiMoveTimer = 0;
         this.killStreak = 0;
         this.lastKillTime = 0;
+        this.lives = 2;
     }
     
     draw(ctx) {
@@ -1945,8 +1946,8 @@ class Game {
         else { this.baseHealth = this.maxBaseHealth; }
         if (this.players.length === 0) {
             this.players = [
-                new Player(this, TILE_SIZE * 8, TILE_SIZE * 22, COLORS.PLAYER1, { up:'KeyW', down:'KeyS', left:'KeyA', right:'KeyD', shoot:'Space' }, 1),
-                new Player(this, TILE_SIZE * 16, TILE_SIZE * 22, COLORS.PLAYER2, { up:'ArrowUp', down:'ArrowDown', left:'ArrowLeft', right:'ArrowRight', shoot:'NumpadEnter' }, 2)
+                new Player(this, TILE_SIZE * 8, TILE_SIZE * 22, COLORS.PLAYER1, { up:'KeyW', down:'KeyS', left:'KeyA', right:'KeyD', shoot:'Space', rescue:'KeyU' }, 1),
+                new Player(this, TILE_SIZE * 16, TILE_SIZE * 22, COLORS.PLAYER2, { up:'ArrowUp', down:'ArrowDown', left:'ArrowLeft', right:'ArrowRight', shoot:'NumpadEnter', rescue:'Numpad9' }, 2)
             ];
         } else {
             this.players.forEach(p => { p.alive = true; });
@@ -1976,7 +1977,11 @@ class Game {
         if(p1LvlEl) p1LvlEl.innerHTML = this.players[0].alive ? `火力: Lv.${this.players[0].level} [${getWeaponHTML(this.players[0])}]` : `DEAD`;
         if(p2LvlEl) p2LvlEl.innerHTML = this.players[1].alive ? `火力: Lv.${this.players[1].level} [${getWeaponHTML(this.players[1])}]` : `DEAD`;
 
-        document.getElementById('lives-info').innerText = `生命 Lives: ❤️x${this.lives}`;
+        document.getElementById('p1-lives').innerText = '❤️x' + this.players[0].lives;
+        document.getElementById('p2-lives').innerText = '❤️x' + this.players[1].lives;
+        
+        const livesInfo = document.getElementById('lives-info');
+        if (livesInfo) livesInfo.innerText = '';
         document.getElementById('enemies-info').innerText = `敌人 Enemies: ${this.enemiesRemaining + this.enemies.length}`;
     }
     handlePlayerDeath(player) {
@@ -1990,16 +1995,34 @@ class Game {
             player.health = 1;
         }
 
-        if (this.lives > 0) {
-            this.lives--; this.updateHUD();
+        if (player.lives > 0) {
+            player.lives--; this.updateHUD();
             setTimeout(() => {
-                player.alive = true;
-                player.x = (player.id === 1) ? TILE_SIZE * 8 : TILE_SIZE * 16;
-                player.y = TILE_SIZE * 22;
-                player.setShield(180);
-                this.updateHUD();
+                this.respawnPlayer(player);
             }, 2000);
+        } else {
+            this.updateHUD();
         }
+    }
+
+    respawnPlayer(player) {
+        player.alive = true;
+        player.x = (player.id === 1) ? TILE_SIZE * 8 : TILE_SIZE * 16;
+        player.y = TILE_SIZE * 22;
+        player.setShield(180);
+        this.updateHUD();
+    }
+
+    revivePlayer(player) {
+        player.level = 0;
+        player.speed = 4;
+        player.maxHealth = 1;
+        player.health = 1;
+        player.weaponClass = 'NORMAL';
+        player.alive = true;
+        player.setShield(180);
+        this.updateHUD();
+        this.showFloatingText('被救活了! REVIVED!', player.x + player.width/2, player.y - 10, '#0f0');
     }
     nextLevel() { this.currentStage++; this.startLevel(); }
     fortifyBase() { this.fortifyTimer = 600; this.map.setBaseWalls(TILE_TYPES.STEEL); }
@@ -2159,7 +2182,27 @@ class Game {
             if (this.replayHistory.length > 200) this.replayHistory.shift(); // keep last ~3.3 seconds
         }
         
-        if (this.players.every(p => !p.alive) && this.lives === 0) this.gameOver();
+        const deadPlayers = this.players.filter(p => !p.alive);
+        const alivePlayers = this.players.filter(p => p.alive);
+        
+        for (const deadP of deadPlayers) {
+            for (const aliveP of alivePlayers) {
+                if (Math.hypot(aliveP.x - deadP.x, aliveP.y - deadP.y) < TILE_SIZE) {
+                    this.revivePlayer(deadP);
+                }
+                
+                if (this.input.isDown(deadP.controls.rescue) && this.input.isDown(aliveP.controls.rescue)) {
+                    if (aliveP.lives > 0) {
+                        aliveP.lives--;
+                        this.updateHUD();
+                        this.respawnPlayer(deadP);
+                        this.showFloatingText('借命成功!', aliveP.x + aliveP.width/2, aliveP.y - 10, '#0f0');
+                    }
+                }
+            }
+        }
+        
+        if (this.players.every(p => !p.alive && p.lives === 0)) this.gameOver();
     }
     draw() {
         this.ctx.fillStyle = '#000'; this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
@@ -2186,7 +2229,7 @@ class Game {
                 else if (this.weather === 'LIGHTNING') { if (this.lightningFlash > 0) { this.ctx.fillStyle = `rgba(255, 255, 255, ${this.lightningFlash/10})`; this.ctx.fillRect(0, 0, CANVAS_SIZE, CANVAS_SIZE); } }
                 this.ctx.restore();
             }
-            this.players.forEach(p => { try { if(p.alive) { p.draw(this.ctx); if (p.aiActive) { this.ctx.save(); this.ctx.fillStyle = 'rgba(0,0,0,0.7)'; this.ctx.beginPath(); this.ctx.arc(p.x + 30, p.y - 12, 14, 0, Math.PI * 2); this.ctx.fill(); this.ctx.fillStyle = '#0f0'; this.ctx.font = 'bold 12px Arial'; this.ctx.textAlign = 'center'; this.ctx.fillText('AI', p.x + 30, p.y - 8); this.ctx.restore(); } } } catch(e) {} }); 
+            this.players.forEach(p => { try { if(p.alive) { p.draw(this.ctx); if (p.aiActive) { this.ctx.save(); this.ctx.fillStyle = 'rgba(0,0,0,0.7)'; this.ctx.beginPath(); this.ctx.arc(p.x + 30, p.y - 12, 14, 0, Math.PI * 2); this.ctx.fill(); this.ctx.fillStyle = '#0f0'; this.ctx.font = 'bold 12px Arial'; this.ctx.textAlign = 'center'; this.ctx.fillText('AI', p.x + 30, p.y - 8); this.ctx.restore(); } } else { const otherP = this.players.find(o => o.id !== p.id); if (p.lives === 0 && otherP && otherP.alive && otherP.lives > 0) { this.ctx.save(); this.ctx.fillStyle = '#0f0'; this.ctx.font = 'bold 12px Arial'; this.ctx.textAlign = 'center'; this.ctx.shadowBlur = 4; this.ctx.shadowColor = '#000'; const key = p.id === 1 ? 'U键' : '9键'; this.ctx.fillText(`双人同按 ${key} 借命`, p.x + 30, p.y + 30); this.ctx.restore(); } } } catch(e) {} }); 
             this.enemies.forEach(e => { try { e.draw(this.ctx); } catch(e) {} }); 
             this.bullets.forEach(b => { try { b.draw(this.ctx); } catch(e) {} }); 
             this.effects.forEach(e => { try { e.draw(this.ctx); } catch(e) {} }); 
