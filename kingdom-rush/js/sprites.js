@@ -148,27 +148,44 @@ const SPRITES = {
     ]
 };
 
+const spriteCache = {};
+
 function drawSprite(ctx, spriteObj, x, y, sizeMultiplier, dynamicColor) {
     if (!spriteObj) return;
     const rows = spriteObj.length;
     const cols = spriteObj[0].length;
     const pSize = sizeMultiplier;
     
-    const startX = x - (cols * pSize) / 2;
-    const startY = y - (rows * pSize) / 2;
-    
-    for (let r = 0; r < rows; r++) {
-        for (let c = 0; c < cols; c++) {
-            const char = spriteObj[r][c];
-            if (char === '0') continue;
-            
-            let color = SPRITE_PALETTE[char];
-            if (char === 'C') color = dynamicColor;
-            
-            if (color) {
-                ctx.fillStyle = color;
-                ctx.fillRect(startX + c * pSize, startY + r * pSize, pSize, pSize);
+    // Create a cache key based on the sprite string shape, size, and dynamic color.
+    // Using the first row as a quick signature since each sprite starts differently.
+    const cacheKey = spriteObj[0] + "_" + rows + "_" + pSize + "_" + (dynamicColor || "");
+
+    let cachedCanvas = spriteCache[cacheKey];
+
+    if (!cachedCanvas) {
+        cachedCanvas = document.createElement('canvas');
+        cachedCanvas.width = cols * pSize;
+        cachedCanvas.height = rows * pSize;
+        const cctx = cachedCanvas.getContext('2d');
+        
+        for (let r = 0; r < rows; r++) {
+            for (let c = 0; c < cols; c++) {
+                const char = spriteObj[r][c];
+                if (char === '0') continue;
+                
+                let color = SPRITE_PALETTE[char];
+                if (char === 'C') color = dynamicColor;
+                
+                if (color) {
+                    cctx.fillStyle = color;
+                    cctx.fillRect(c * pSize, r * pSize, pSize, pSize);
+                }
             }
         }
+        spriteCache[cacheKey] = cachedCanvas;
     }
+    
+    const startX = x - (cols * pSize) / 2;
+    const startY = y - (rows * pSize) / 2;
+    ctx.drawImage(cachedCanvas, startX, startY);
 }
