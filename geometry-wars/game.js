@@ -435,7 +435,7 @@ class Player {
                                 this.isDowned = false;
                                 this.hp = this.maxHp / 2;
                                 this.reviveProgress = 0;
-                                addFloatingText(this.x, this.y - 40, "💉 重新加入战斗!", "#00ff00");
+                                addFloatingText(this.x, this.y - 40, "💉 重生协议启动!", "#00ff00");
                                 audio.levelUp();
                             }
                         }
@@ -1521,11 +1521,11 @@ class LootBox {
                     audio.levelUp();
                 } else if(this.type === 'mech') {
                     p.mechHp = 8;
-                    addFloatingText(p.x, p.y - 30, "🔴 超载护盾启动!", "#ff3300");
+                    addFloatingText(p.x, p.y - 30, "🔴 重力护盾启动!", "#ff3300");
                     audio.levelUp();
                 } else if(this.type === 'vehicle') {
                     p.vehicleHp = 3;
-                    addFloatingText(p.x, p.y - 30, "🔵 疾步光环加持!", "#00ffff");
+                    addFloatingText(p.x, p.y - 30, "🔵 加速力场启动!", "#00ffff");
                     audio.levelUp();
                 } else if(this.type === 'nuke') {
                     zombies.forEach(z => { 
