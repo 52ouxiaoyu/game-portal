@@ -679,7 +679,7 @@ class Game {
                 }
             }
             
-            this.drawPixelText(ctx, '王国保卫战', cx, cy - 160, 60, '#FFD700');
+            this.drawPixelText(ctx, '王国保卫战 v1.0.0', cx, cy - 160, 60, '#FFD700');
             this.drawPixelText(ctx, '像素射击版', cx, cy - 110, 30, '#FFF');
             
             this.drawPixelText(ctx, '操作指南：P1 (A/D) | P2 (左右) | P3 (J/L)', cx, cy - 50, 18, '#CCC');
