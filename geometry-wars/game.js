@@ -1701,7 +1701,7 @@ class LootBox {
         else if(this.type === 'ult') this.color = '#00ffff';
         
         this.active = true;
-        this.life = 600;
+        this.life = 300; // 5 seconds at 60fps
     }
     
     update() {
@@ -1714,7 +1714,7 @@ class LootBox {
 
         // Magnetic siphon effect for items (except traps)
         if(this.type !== 'trap') {
-            let closestDist = 150;
+            let closestDist = 400; // Increased magnet radius
             let targetPlayer = null;
             players.forEach(p => {
                 if(p.hp > 0) {
@@ -1731,8 +1731,8 @@ class LootBox {
                 let dy = targetPlayer.y - this.y;
                 let norm = Math.hypot(dx, dy);
                 if(norm > 0) {
-                    this.x += (dx/norm) * 4;
-                    this.y += (dy/norm) * 4;
+                    this.x += (dx/norm) * 12; // Increased pull speed
+                    this.y += (dy/norm) * 12;
                 }
             }
         }
@@ -1952,7 +1952,7 @@ class Geom {
     constructor(x, y) {
         this.x = x; this.y = y;
         this.size = 6;
-        this.life = 600; // 10 seconds at 60fps
+        this.life = 300; // 5 seconds at 60fps
         this.active = true;
         // Random drift
         this.dx = (Math.random() - 0.5) * 2;
@@ -1970,9 +1970,9 @@ class Geom {
         players.forEach(p => {
             if(p.hp > 0) {
                 let dist = Math.hypot(p.x - this.x, p.y - this.y);
-                if(dist < 100) {
-                    this.x += (p.x - this.x) / dist * 5;
-                    this.y += (p.y - this.y) / dist * 5;
+                if(dist < 400) { // Increased magnet range
+                    this.x += (p.x - this.x) / dist * 15; // Increased pull speed
+                    this.y += (p.y - this.y) / dist * 15;
                 }
                 if(dist < p.size + this.size) {
                     this.active = false;
