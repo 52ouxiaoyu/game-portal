@@ -1,5 +1,51 @@
 const canvas = document.getElementById('game-canvas');
 const ctx = canvas.getContext('2d');
+
+// Death Replay Globals
+let mediaRecorder = null;
+let recordedChunks = [];
+let replayVideoUrl = null;
+
+function startRecording() {
+    try {
+        let stream = canvas.captureStream(30);
+        mediaRecorder = new MediaRecorder(stream, { mimeType: 'video/webm' });
+        recordedChunks = [];
+        mediaRecorder.ondataavailable = e => {
+            if (e.data.size > 0) {
+                recordedChunks.push(e.data);
+                if (recordedChunks.length > 60) recordedChunks.shift(); // Keep last 6 seconds
+            }
+        };
+        mediaRecorder.start(100);
+    } catch(e) { console.warn("MediaRecorder not supported", e); }
+}
+
+function stopRecording() {
+    if (mediaRecorder && mediaRecorder.state !== 'inactive') {
+        mediaRecorder.stop();
+        setTimeout(() => {
+            let blob = new Blob(recordedChunks, { type: 'video/webm' });
+            replayVideoUrl = URL.createObjectURL(blob);
+            let videoContainer = document.getElementById('replay-container');
+            if (!videoContainer) {
+                videoContainer = document.createElement('div');
+                videoContainer.id = 'replay-container';
+                videoContainer.style.marginTop = '20px';
+                videoContainer.innerHTML = `
+                    <h3 style="color:#ff5555; text-shadow: 0 0 5px red;">💀 死亡回放 (Death Replay - Last 5s)</h3>
+                    <video id="replay-video" width="600" controls autoplay loop style="border: 2px solid red; border-radius: 10px;"></video>
+                `;
+                let goScreen = document.getElementById('game-over-screen');
+                goScreen.insertBefore(videoContainer, goScreen.firstChild);
+            }
+            if (replayVideoUrl) {
+                document.getElementById('replay-video').src = replayVideoUrl;
+            }
+        }, 200);
+    }
+}
+
 let CANVAS_W = window.innerWidth;
 let CANVAS_H = window.innerHeight;
 canvas.width = CANVAS_W;
@@ -16,7 +62,13 @@ window.addEventListener('resize', () => {
 });
 
 // --- AUDIO SYSTEM (Web Audio API) ---
-const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+let audioCtx;
+try {
+    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+} catch (e) {
+    console.warn("AudioContext initialization failed", e);
+    audioCtx = { state: 'suspended', resume: async () => {}, createOscillator: () => ({ connect: ()=>{}, frequency: { setValueAtTime: ()=>{} }, type: '', start: ()=>{}, stop: ()=>{} }), createGain: () => ({ connect: ()=>{}, gain: { setValueAtTime: ()=>{} } }), destination: {} };
+}
 const audio = {
     playTone: (freq, type, duration, vol=0.1) => {
         if(audioCtx.state === 'suspended') audioCtx.resume();
@@ -49,7 +101,12 @@ const audio = {
 // --- GAME STATE ---
 let gameState = 'START'; // START, PLAYING, GAME_OVER, PAUSED
 let score = 0;
-let highScore = parseInt(localStorage.getItem('zs_highscore') || '0');
+let highScore = 0;
+try {
+    highScore = parseInt(localStorage.getItem('geometryWarsHighScore')) || 0;
+} catch (e) {
+    console.warn("localStorage not available", e);
+}
 let survivalTime = 0;
 let killCount = 0;
 let startTime = 0;
@@ -426,6 +483,12 @@ class Player {
                 if(!z.active) return;
                 let d = Math.hypot(z.x - this.x, z.y - this.y);
                 if(d < this.size + z.size + 10) {
+                    if (z.isBoss || z.isUltimateBoss) {
+                        z.hp -= 100; // Deal damage to bosses instead of instant kill
+                        this.vehicleHp -= 0.5; // Vehicle takes damage from ramming bosses
+                        createParticles(z.x, z.y, '#ffff00', 10);
+                        return;
+                    }
                     z.active = false;
                     score += z.scoreVal;
                     this.score += z.scoreVal;
@@ -459,6 +522,9 @@ class Player {
             if(!this.isDowned) {
                 this.isDowned = true;
                 this.reviveProgress = 0;
+                this.mechHp = 0;
+                this.vehicleHp = 0;
+                this.buffTime = 0;
             }
             if(this.isDowned) {
                 // Check if other alive player is near
@@ -955,8 +1021,8 @@ class Player {
         // Draw the player as a sleek glowing geometric arrow/ship
         ctx.shadowBlur = 10;
         ctx.shadowColor = this.color;
-        ctx.fillStyle = '#050505';
-        ctx.strokeStyle = this.color;
+        ctx.fillStyle = this.color; // Fill with solid bright color to distinguish players
+        ctx.strokeStyle = '#ffffff'; // White outline for contrast
         ctx.lineWidth = 3;
 
         ctx.beginPath();
@@ -1241,14 +1307,25 @@ class Zombie {
         // Types
         if(this.isUltimateBoss) {
             this.type = 'ultimate_boss';
-        } else if(isBoss) {
+        } else if(this.isBoss) {
             this.type = 'boss';
         } else {
             const rand = Math.random();
-            if(rand < 0.5) this.type = 'normal';
-            else if(rand < 0.75) this.type = 'fast';
-            else if(rand < 0.9) this.type = 'tank';
+            if(rand < 0.85) this.type = 'normal';
             else this.type = 'exploder';
+        }
+        
+        if (!this.isUltimateBoss && !this.isBoss) {
+            let maxSides = Math.min(11, 3 + Math.floor(survivalTime / 60)); // Unlocks higher polygons over time
+            let r = Math.random();
+            if (r < 0.4) this.shapeSides = 3;
+            else if (r < 0.7) this.shapeSides = Math.min(4, maxSides);
+            else if (r < 0.85) this.shapeSides = Math.min(5, maxSides);
+            else if (r < 0.95) this.shapeSides = Math.min(6 + Math.floor(Math.random()*3), maxSides);
+            else this.shapeSides = Math.min(9 + Math.floor(Math.random()*3), maxSides);
+        } else {
+            // Bosses have bizarre/complex shapes
+            this.shapeSides = Math.floor(Math.random() * 8) + 12; // 12 to 19 sides for bosses!
         }
 
         if(this.isUltimateBoss) {
@@ -1276,14 +1353,21 @@ class Zombie {
             this._baseScore = 50000;
         } else if(this.type === 'boss') {
             this.size = 40; this.speed = 0.6; this.hp = 1000 + survivalTime*10; this.color = '#ff0044'; this.damage = 2; this._baseScore = 500;
-        } else if(this.type === 'fast') {
-            this.size = 12 + Math.random()*3; this.speed = 1.0 + Math.random()*0.4 + (survivalTime/240); this.hp = 10 + survivalTime/2; this.color = '#ff8800'; this.damage = 1; this._baseScore = 15;
-        } else if(this.type === 'tank') {
-            this.size = 25 + Math.random()*5; this.speed = 0.2 + Math.random()*0.2 + (survivalTime/400); this.hp = 100 + survivalTime*3; this.color = '#aa3300'; this.damage = 2; this._baseScore = 30;
-        } else if(this.type === 'exploder') {
-            this.size = 18 + Math.random()*4; this.speed = 0.5 + Math.random()*0.4 + (survivalTime/240); this.hp = 15 + survivalTime; this.color = '#ff4400'; this.damage = 1; this._baseScore = 20;
-        } else { // normal
-            this.size = 15 + Math.random()*5; this.speed = 0.4 + Math.random()*0.4 + (survivalTime/240); this.hp = 20 + survivalTime; this.color = '#ff3300'; this.damage = 1; this._baseScore = 10;
+        } else {
+            let mult = (this.shapeSides - 2); // 3 sides -> 1x, 4 sides -> 2x, etc.
+            if (this.shapeSides >= 11) mult = 15; // Circle is very strong!
+            
+            this.size = 12 + mult * 1.5 + Math.random()*2;
+            this.speed = Math.max(0.3, 1.0 - (mult * 0.05)) + Math.random()*0.2 + (survivalTime/400);
+            this.hp = (15 + survivalTime) * (mult * 0.8);
+            this.damage = 1 + Math.floor(mult / 4);
+            this._baseScore = 10 * mult;
+            this.color = `hsl(${this.shapeSides * 30}, 100%, 50%)`; // Different color for different shapes
+            
+            if (this.type === 'exploder') {
+                this.color = '#ff3300'; // Keep exploders reddish
+                this.speed *= 1.2;
+            }
         }
         
         if(activeEvent === 'bloodmoon') this.speed *= 2;
@@ -1462,10 +1546,10 @@ class Zombie {
         let s = this.size;
 
         if (this.isUltimateBoss || this.isBoss) {
-            // Huge pulsing Star/Polygon for Boss
-            let points = this.isUltimateBoss ? 12 : 8;
+            // Complex/Bizarre Boss Shapes
+            let points = this.shapeSides || 12; // 12 to 19
             let outerRadius = s * (1.5 + Math.sin(frameCount * 0.1) * 0.2);
-            let innerRadius = s * 0.8;
+            let innerRadius = s * (0.5 + Math.cos(frameCount * 0.15) * 0.3);
             
             ctx.shadowBlur = 20;
             ctx.shadowColor = this.color;
@@ -1473,6 +1557,7 @@ class Zombie {
             ctx.strokeStyle = this.color;
             ctx.lineWidth = 4;
 
+            // Base pulsing Star/Polygon
             ctx.beginPath();
             for (let i = 0; i < points * 2; i++) {
                 let radius = i % 2 === 0 ? outerRadius : innerRadius;
@@ -1482,6 +1567,21 @@ class Zombie {
             }
             ctx.closePath();
             ctx.fill();
+            ctx.stroke();
+            
+            // Nested bizarre geometry
+            ctx.strokeStyle = '#ffffff';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            let innerPoints = Math.max(3, points - 8);
+            for(let i=0; i<innerPoints; i++) {
+                let angle = (i * Math.PI * 2) / innerPoints - (frameCount * 0.05);
+                let px = Math.cos(angle) * s;
+                let py = Math.sin(angle) * s;
+                if(i===0) ctx.moveTo(px, py);
+                else ctx.lineTo(px, py);
+            }
+            ctx.closePath();
             ctx.stroke();
 
             // Core
@@ -1496,34 +1596,29 @@ class Zombie {
             ctx.lineWidth = 2;
 
             ctx.beginPath();
-            if (this.type === 'fast') {
-                // Sleek Triangle pointing forward
-                ctx.moveTo(s, 0);
-                ctx.lineTo(-s, s * 0.8);
-                ctx.lineTo(-s, -s * 0.8);
-                ctx.closePath();
-            } else if (this.type === 'tank') {
-                // Hexagon
-                for (let i = 0; i < 6; i++) {
-                    let angle = (i * Math.PI) / 3;
-                    if (i === 0) ctx.moveTo(Math.cos(angle) * s * 1.2, Math.sin(angle) * s * 1.2);
-                    else ctx.lineTo(Math.cos(angle) * s * 1.2, Math.sin(angle) * s * 1.2);
-                }
-                ctx.closePath();
-            } else if (this.type === 'exploder') {
-                // Diamond
-                ctx.moveTo(s * 1.2, 0);
-                ctx.lineTo(0, s * 1.2);
-                ctx.lineTo(-s * 1.2, 0);
-                ctx.lineTo(0, -s * 1.2);
-                ctx.closePath();
-                // Flashing effect
-                if (Math.floor(frameCount / 10) % 2 === 0) {
-                    ctx.fillStyle = this.color;
-                }
+            let sides = this.shapeSides || 3;
+            
+            if (sides >= 11) {
+                // Circle (strongest normal enemy)
+                ctx.arc(0, 0, s * 1.2, 0, Math.PI * 2);
             } else {
-                // Normal: Square
-                ctx.rect(-s, -s, s * 2, s * 2);
+                for (let i = 0; i < sides; i++) {
+                    let angle = (i * Math.PI * 2) / sides;
+                    // Rotate squares to look like diamonds, keep others pointing right
+                    if (sides === 4) angle += Math.PI / 4; 
+                    
+                    let px = Math.cos(angle) * s * 1.2;
+                    let py = Math.sin(angle) * s * 1.2;
+                    
+                    if (i === 0) ctx.moveTo(px, py);
+                    else ctx.lineTo(px, py);
+                }
+                ctx.closePath();
+            }
+            
+            // Special flashing effect for exploder
+            if (this.type === 'exploder' && Math.floor(frameCount / 10) % 2 === 0) {
+                ctx.fillStyle = this.color;
             }
             ctx.fill();
             ctx.stroke();
@@ -1532,6 +1627,7 @@ class Zombie {
             ctx.fillStyle = this.color;
             ctx.beginPath();
             ctx.arc(0, 0, s * 0.3, 0, Math.PI * 2);
+            ctx.fill(); // Wait, the old code didn't actually fill the eye, but let's fix it so the eye shows up
             ctx.shadowBlur = 0;
         }
         ctx.restore();
@@ -1881,7 +1977,7 @@ class Geom {
                 if(dist < p.size + this.size) {
                     this.active = false;
                     scoreMultiplier = Math.min(999, scoreMultiplier + 1);
-                    if (p.hp < p.maxHp) p.hp = Math.min(p.maxHp, p.hp + 0.2); // Heal 0.2 HP per Geom!
+                    if (p.hp < p.maxHp) p.hp = Math.min(p.maxHp, p.hp + 0.5); // Heal 0.5 HP per Geom!
                     audio.shootPistol(); // Use a subtle sound for pickup
                 }
             }
@@ -2061,7 +2157,9 @@ function gameWon() {
     
     if(score > highScore) {
         highScore = score;
-        localStorage.setItem('zs_highscore', highScore);
+        try {
+            localStorage.setItem('zs_highscore', highScore);
+        } catch(e) {}
         document.getElementById('high-score').textContent = highScore;
         document.getElementById('new-high').classList.remove('hidden');
     }
@@ -2085,7 +2183,9 @@ function gameOver() {
     
     if(score > highScore) {
         highScore = score;
-        localStorage.setItem('zs_highscore', highScore);
+        try {
+            localStorage.setItem('zs_highscore', highScore);
+        } catch(e) {}
         document.getElementById('high-score').textContent = highScore;
         document.getElementById('new-high').classList.remove('hidden');
     }
@@ -2422,7 +2522,7 @@ function update() {
             
             for(let j=i+1; j<zombies.length; j++) {
                 let z2 = zombies[j];
-                if(!z2.active || z1.type !== z2.type) continue;
+                if(!z2.active || z1.shapeSides !== z2.shapeSides) continue;
                 
                 let dx = z1.x - z2.x;
                 let dy = z1.y - z2.y;
