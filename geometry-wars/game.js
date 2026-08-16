@@ -565,15 +565,52 @@ class Player {
                 dx /= len; dy /= len;
             }
 
-            // Manual Aiming (Geometry Wars style)
+            // Hybrid Aiming (Geometry Wars / Vampire Survivors style)
             if(this.id === 1) {
-                let mx = mouse.screenX + camera.x - canvas.width/2;
-                let my = mouse.screenY + camera.y - canvas.height/2;
-                let ax = mx - this.x;
-                let ay = my - this.y;
-                let aLen = Math.hypot(ax, ay);
-                if(aLen > 0) this.facing = {x: ax/aLen, y: ay/aLen};
-                if(mouse.isDown) wantsToShoot = true;
+                if(mouse.isDown) {
+                    // Manual Override: aim and shoot at mouse
+                    let mx = mouse.screenX + camera.x - canvas.width/2;
+                    let my = mouse.screenY + camera.y - canvas.height/2;
+                    let ax = mx - this.x;
+                    let ay = my - this.y;
+                    let aLen = Math.hypot(ax, ay);
+                    if(aLen > 0) this.facing = {x: ax/aLen, y: ay/aLen};
+                    wantsToShoot = true;
+                } else {
+                    // Auto-Aim \u0026 Auto-Shoot at nearest enemy
+                    let closestZDist = Infinity;
+                    let targetZ = null;
+                    zombies.forEach(z => {
+                        if(!z.active) return;
+                        let d = Math.hypot(z.x - this.x, z.y - this.y);
+                        if(d < closestZDist && hasLineOfSight(this.x, this.y, z.x, z.y)) { 
+                            closestZDist = d; 
+                            targetZ = z; 
+                        }
+                    });
+                    
+                    if(targetZ && closestZDist < 800) {
+                        let ax = targetZ.x - this.x;
+                        let ay = targetZ.y - this.y;
+                        let aLen = Math.hypot(ax, ay);
+                        if(aLen > 0) this.facing = {x: ax/aLen, y: ay/aLen};
+                        
+                        // Avoid shooting barrels by accident
+                        let safeToShoot = true;
+                        barrels.forEach(b => {
+                            if(!b.active) return;
+                            let bd = Math.hypot(b.x - this.x, b.y - this.y);
+                            if(bd < 250) {
+                                let bdx = (b.x - this.x) / bd;
+                                let bdy = (b.y - this.y) / bd;
+                                let dotProd = (bdx * this.facing.x) + (bdy * this.facing.y);
+                                if(dotProd > 0.85) safeToShoot = false;
+                            }
+                        });
+                        
+                        if(safeToShoot) wantsToShoot = true;
+                    }
+                }
             } else {
                 let ax = 0; let ay = 0;
                 if(keys.KeyI) ay -= 1;
