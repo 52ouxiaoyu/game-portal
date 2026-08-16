@@ -856,14 +856,35 @@ class Player {
         ctx.restore();
 
 
-        // Player ID and Lives
+        // Player ID
         ctx.fillStyle = '#fff';
         ctx.font = '12px "Share Tech Mono", monospace';
         ctx.textAlign = 'center';
         let idText = this.isAI ? 'P' + this.id + ' (AI托管)' : 'P' + this.id;
         ctx.fillText(idText, this.x, this.y - 35);
         
+        // Draw Floating HP Bar (Neon Style)
+        let barW = 40;
+        let barH = 6;
+        let offsetY = 25;
         
+        // Background track
+        ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
+        ctx.fillRect(this.x - barW/2, this.y + offsetY, barW, barH);
+        
+        // Neon Fill
+        let hpRatio = Math.max(0, this.hp / this.maxHp);
+        ctx.shadowBlur = 10;
+        ctx.shadowColor = this.color;
+        ctx.fillStyle = this.color;
+        ctx.fillRect(this.x - barW/2, this.y + offsetY, barW * hpRatio, barH);
+        ctx.shadowBlur = 0;
+        
+        // Border
+        ctx.strokeStyle = '#fff';
+        ctx.lineWidth = 1;
+        ctx.strokeRect(this.x - barW/2, this.y + offsetY, barW, barH);
+
         // Draw Shield
         if(this.shieldTime > 0) {
             ctx.strokeStyle = `rgba(255, 255, 0, ${0.5 + Math.sin(frameCount * 0.2)*0.3})`;
