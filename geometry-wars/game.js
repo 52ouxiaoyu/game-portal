@@ -1634,17 +1634,26 @@ class LootBox {
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
         let text = '?';
-        if(this.type === 'heal') text = '+';
-        else if(this.type === 'shield') text = 'O';
-        else if(this.type === 'buff') text = '^';
-        else if(this.type === 'weapon_box') text = 'W';
-        else if(this.type === 'mech') text = 'M';
-        else if(this.type === 'vehicle') text = 'V';
-        else if(this.type === 'nuke') text = '*';
-        else if(this.type === 'trap') text = 'X';
-        else if(this.type === 'revive') text = 'R';
-        else if(this.type === 'ult') text = 'U';
+        let label = '未知道具';
+        if(this.type === 'heal') { text = '+'; label = '修复补给'; }
+        else if(this.type === 'shield') { text = 'O'; label = '无敌护盾'; }
+        else if(this.type === 'buff') { text = '^'; label = '火力狂热'; }
+        else if(this.type === 'weapon_box') { text = 'W'; label = '武器升级'; }
+        else if(this.type === 'mech') { text = 'M'; label = '重力护盾'; }
+        else if(this.type === 'vehicle') { text = 'V'; label = '加速力场'; }
+        else if(this.type === 'nuke') { text = '*'; label = '清屏核弹'; }
+        else if(this.type === 'trap') { text = 'X'; label = '地雷陷阱'; }
+        else if(this.type === 'revive') { text = 'R'; label = '复活信标'; }
+        else if(this.type === 'ult') { text = 'U'; label = '大招充能'; }
+        
         ctx.fillText(text, 0, 1);
+        
+        // Explain the item to the player
+        ctx.shadowBlur = 0;
+        ctx.font = '10px "Share Tech Mono", monospace';
+        ctx.fillStyle = this.color;
+        ctx.fillText(label + ` (${text})`, 0, -this.size - 10);
+        
         ctx.restore();
     }
 }

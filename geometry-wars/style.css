@@ -49,7 +49,7 @@ canvas {
     display: flex;
     flex-direction: column;
     gap: 8px;
-    width: 250px;
+    width: 380px; /* Increased to prevent text wrapping */
 }
 
 .right-align {
@@ -124,8 +124,9 @@ canvas {
 
 .stats-row {
     display: flex;
-    gap: 15px;
-    font-size: 14px;
+    flex-wrap: wrap;
+    gap: 8px;
+    font-size: 12px;
     margin-top: 15px;
     letter-spacing: 1px;
 }
