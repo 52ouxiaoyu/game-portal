@@ -617,12 +617,49 @@ class Player {
                 if(keys.KeyK) ay += 1;
                 if(keys.KeyJ) ax -= 1;
                 if(keys.KeyL) ax += 1;
+                
                 if(ax !== 0 || ay !== 0) {
+                    // Manual Override: aim and shoot using IJKL
                     let aLen = Math.hypot(ax, ay);
                     this.facing = {x: ax/aLen, y: ay/aLen};
                     wantsToShoot = true;
-                } else if(dx !== 0 || dy !== 0) {
-                    this.facing = {x: dx, y: dy};
+                } else {
+                    // Auto-Aim & Auto-Shoot at nearest enemy
+                    let closestZDist = Infinity;
+                    let targetZ = null;
+                    zombies.forEach(z => {
+                        if(!z.active) return;
+                        let d = Math.hypot(z.x - this.x, z.y - this.y);
+                        if(d < closestZDist && hasLineOfSight(this.x, this.y, z.x, z.y)) { 
+                            closestZDist = d; 
+                            targetZ = z; 
+                        }
+                    });
+                    
+                    if(targetZ && closestZDist < 800) {
+                        let tx = targetZ.x - this.x;
+                        let ty = targetZ.y - this.y;
+                        let tLen = Math.hypot(tx, ty);
+                        if(tLen > 0) this.facing = {x: tx/tLen, y: ty/tLen};
+                        
+                        // Avoid shooting barrels by accident
+                        let safeToShoot = true;
+                        barrels.forEach(b => {
+                            if(!b.active) return;
+                            let bd = Math.hypot(b.x - this.x, b.y - this.y);
+                            if(bd < 250) {
+                                let bdx = (b.x - this.x) / bd;
+                                let bdy = (b.y - this.y) / bd;
+                                let dotProd = (bdx * this.facing.x) + (bdy * this.facing.y);
+                                if(dotProd > 0.85) safeToShoot = false;
+                            }
+                        });
+                        
+                        if(safeToShoot) wantsToShoot = true;
+                    } else if(dx !== 0 || dy !== 0) {
+                        // Just look in moving direction if no enemies
+                        this.facing = {x: dx, y: dy};
+                    }
                 }
             }
             
@@ -1909,6 +1946,20 @@ function togglePause() {
     }
 }
 
+function updateMVPDisplay() {
+    let mvpDisplay = document.getElementById('mvp-display');
+    if(!mvpDisplay) return;
+    let p1 = players[0];
+    let p2 = players[1];
+    if(p1.score > p2.score) {
+        mvpDisplay.innerHTML = `🏆 MVP: P1 核心战机<br><span style="font-size: 16px; color: #aaa">得分领先 ${p1.score - p2.score} 分</span>`;
+    } else if(p2.score > p1.score) {
+        mvpDisplay.innerHTML = `🏆 MVP: P2 护卫僚机<br><span style="font-size: 16px; color: #aaa">得分领先 ${p2.score - p1.score} 分</span>`;
+    } else {
+        mvpDisplay.innerHTML = `🤝 势均力敌 (平局)<br><span style="font-size: 16px; color: #aaa">并肩作战的最佳拍档</span>`;
+    }
+}
+
 function gameWon() {
     gameState = 'GAME_WON';
     document.getElementById('hud').classList.add('hidden');
@@ -1922,6 +1973,7 @@ function gameWon() {
     document.getElementById('final-score').textContent = score;
     document.getElementById('survival-time').textContent = survivalTime;
     document.getElementById('kill-count').textContent = killCount;
+    updateMVPDisplay();
     
     if(score > highScore) {
         highScore = score;
@@ -1944,6 +1996,7 @@ function gameOver() {
     document.getElementById('final-score').textContent = score;
     document.getElementById('survival-time').textContent = survivalTime;
     document.getElementById('kill-count').textContent = killCount;
+    updateMVPDisplay();
     
     if(score > highScore) {
         highScore = score;
