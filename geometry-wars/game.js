@@ -397,7 +397,7 @@ class Player {
                     screenShake = Math.max(screenShake, 5);
                     for(let b=0; b<5; b++) bloodStains.push(new Blood(z.x + (Math.random()-0.5)*40, z.y + (Math.random()-0.5)*40, Math.random()*8+4, Math.random()*8+4, '#800000'));
                     comboCount++; comboTimer = 180;
-                    if(comboCount % 10 === 0) { screenShake = 10; addFloatingText(CANVAS_W/2, 100, `${comboCount} COMBO!`, '#ffaa00'); audio.levelUp(); }
+                    if(comboCount % 10 === 0) { screenShake = 10; addFloatingText(CANVAS_W/2, 100, `${comboCount} 连杀 (COMBO)!`, '#ffaa00'); audio.levelUp(); }
                     audio.zombieDie();
                     addFloatingText(z.x, z.y, "🔵 疾速冲击!", "#00ffff");
                 }
@@ -777,7 +777,8 @@ class Player {
             ctx.fillStyle = '#666';
             ctx.fillRect(this.x - 15, this.y - 15, 30, 35);
             ctx.beginPath(); ctx.arc(this.x, this.y - 15, 15, Math.PI, 0); ctx.fill();
-            ctx.fillStyle = '#000'; ctx.font = '20px Arial'; ctx.fillText('RIP', this.x, this.y + 5);
+            ctx.fillStyle = '#000'; ctx.font = '16px "Share Tech Mono", monospace'; ctx.fillText('阵亡', this.x, this.y - 2);
+            ctx.font = '12px "Share Tech Mono", monospace'; ctx.fillText('(RIP)', this.x, this.y + 10);
             
             ctx.fillStyle = '#fff';
             ctx.font = '12px "Share Tech Mono", monospace';
@@ -2321,7 +2322,7 @@ function update() {
                     }
                     for(let b=0; b<5; b++) bloodStains.push(new Blood(z.x + (Math.random()-0.5)*40, z.y + (Math.random()-0.5)*40, Math.random()*8+4, Math.random()*8+4, '#800000'));
                     comboCount++; comboTimer = 180;
-                    if(comboCount % 10 === 0) { screenShake = 10; addFloatingText(CANVAS_W/2, 100, `🔥 ${comboCount} COMBO!`, '#ffaa00'); audio.levelUp(); }
+                    if(comboCount % 10 === 0) { screenShake = 10; addFloatingText(CANVAS_W/2, 100, `🔥 ${comboCount} 连杀 (COMBO)!`, '#ffaa00'); audio.levelUp(); }
                     audio.zombieDie();
                     if(z.isBoss) {
                         addFloatingText(z.x, z.y, `+${z.scoreVal} BOSS击杀!`, '#ff00ff');
