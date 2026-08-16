@@ -1334,13 +1334,15 @@ class Zombie {
 
         if(this.type === 'ultimate_boss') {
             this.size = 60 + (this.bossId % 4) * 10; 
-            this.speed = 0.8 + (this.bossId % 3) * 0.3; 
-            this.hp = 10000 + this.bossId * 1500; 
+            this.speed = 1.0 + (this.bossId % 3) * 0.3; // Slightly faster base speed
+            this.hp = 50000 + survivalTime * 200 + this.bossId * 5000; // Massive HP buff
             this.color = `hsl(${this.bossId * 36}, 100%, 50%)`; 
-            this.damage = 3 + (this.bossId % 2); 
+            this.damage = 4 + (this.bossId % 2); 
             this._baseScore = 50000;
         } else if(this.type === 'boss') {
-            this.size = 40; this.speed = 0.6; this.hp = 1000 + survivalTime*10; this.color = '#ff0044'; this.damage = 2; this._baseScore = 500;
+            this.size = 40; this.speed = 0.8; 
+            this.hp = 12000 + survivalTime * 80; // Massive HP buff
+            this.color = '#ff0044'; this.damage = 2; this._baseScore = 1500;
         } else {
             let mult = (this.shapeSides - 2); // 3 sides -> 1x, 4 sides -> 2x, etc.
             if (this.shapeSides >= 11) mult = 15; // Circle is very strong!
@@ -1388,7 +1390,7 @@ class Zombie {
             this.bossTemper = trait.temper;
             this.bossSkill = trait.skill;
             this.color = trait.color;
-            this.skillCooldown = 120;
+            this.skillCooldown = 60; // Initial cooldown halved to 1 second
             this.isDashing = false;
         }
     }
@@ -1410,36 +1412,36 @@ class Zombie {
                         createParticles(this.x, this.y, '#aa00ff', 30);
                         addFloatingText(this.x, this.y - this.size - 40, "!! 空间折跃 !!", "#ff00ff");
                     }
-                    this.skillCooldown = 300;
+                    this.skillCooldown = 180; // Teleport every 3 seconds (was 300)
                 } else if (this.bossSkill === 'invis') {
                     this.isInvisible = true;
                     addFloatingText(this.x, this.y - this.size - 40, "!! 隐身 !!", "#444444");
                     setTimeout(() => { if(this) this.isInvisible = false; }, 3500);
-                    this.skillCooldown = 400;
+                    this.skillCooldown = 240; // Invis every 4 seconds (was 400)
                 } else if (this.bossSkill === 'speed') {
                     this.isDashing = true;
                     this.speed *= 5;
                     addFloatingText(this.x, this.y - this.size - 40, "!! 狂暴加速 !!", "#ff0000");
                     setTimeout(() => { if(this) { this.speed /= 5; this.isDashing = false; } }, 1500);
-                    this.skillCooldown = 360;
+                    this.skillCooldown = 240; // Dash every 4 seconds (was 360)
                 } else if (this.bossSkill === 'bomber') {
-                    for(let i=0; i<5; i++) {
-                        let bx = camera.x + (Math.random()-0.5)*CANVAS_W*0.8;
-                        let by = camera.y + (Math.random()-0.5)*CANVAS_H*0.8;
+                    for(let i=0; i<8; i++) { // More bombs!
+                        let bx = camera.x + (Math.random()-0.5)*CANVAS_W*0.9;
+                        let by = camera.y + (Math.random()-0.5)*CANVAS_H*0.9;
                         barrels.push(new Barrel(bx, by));
                         addFloatingText(bx, by, "🛬 空投炸弹!", "#ff5500");
                     }
-                    this.skillCooldown = 420;
+                    this.skillCooldown = 300; // Bomber every 5 seconds (was 420)
                 } else if (this.bossSkill === 'bullethell') {
-                    for(let i=0; i<36; i++) {
-                        let angle = (i / 36) * Math.PI * 2;
-                        let b = new Bullet(this.x, this.y, Math.cos(angle), Math.sin(angle), 2.5, 1, '#ff0055', false, -1, false);
-                        b.size = 12;
+                    for(let i=0; i<45; i++) { // Denser bullet hell
+                        let angle = (i / 45) * Math.PI * 2;
+                        let b = new Bullet(this.x, this.y, Math.cos(angle), Math.sin(angle), 3.5, 1, '#ff0055', false, -1, false);
+                        b.size = 15;
                         bullets.push(b);
                     }
                     audio.shootLaser();
                     addFloatingText(this.x, this.y - this.size - 40, "!! 天女散花 !!", "#ff0055");
-                    this.skillCooldown = 240;
+                    this.skillCooldown = 210; // Bullet hell every 3.5 seconds (was 240)
                 }
             }
             if (this.isDashing) {
