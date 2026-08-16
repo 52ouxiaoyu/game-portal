@@ -1465,7 +1465,10 @@ class Boss extends Enemy {
         
         const scale = (1.5 + Math.random() * 0.5 + difficulty * 0.5) * scaleMult;
         this.width = TILE_SIZE * scale; this.height = TILE_SIZE * scale;
-        this.health = Math.floor((30 + stage * 5) * scale * hpMult); 
+        
+        // Ensure starting players can defeat the boss with skillful movement (~15-30 hits for normal boss)
+        const avgPlayerLvl = Math.max(1, ...this.game.players.map(p => p.level || 1));
+        this.health = Math.floor((15 + stage * 3 + avgPlayerLvl * 2) * hpMult); 
         this.maxHealth = this.health;
         this.speed = (1.0 + difficulty * 0.8) * speedMult; 
         this.baseSpeed = this.speed;
