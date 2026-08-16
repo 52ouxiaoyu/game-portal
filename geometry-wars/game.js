@@ -445,6 +445,28 @@ class Player {
         if(this.shieldTime > 0) this.shieldTime--;
         if(this.invincibleTime > 0) this.invincibleTime--;
 
+        if (this.mechHp > 0 && this.mechTime > 0) {
+            this.mechTime--;
+            if (this.mechTime % 60 === 0 && this.mechTime <= 300 && this.mechTime > 0) {
+                addFloatingText(this.x, this.y - 40, `倒计时: ${this.mechTime / 60}`, "#ffaa00");
+            }
+            if (this.mechTime <= 0) {
+                this.mechHp = 0;
+                addFloatingText(this.x, this.y - 40, "🔴 护盾能量耗尽!", "#ff0000");
+            }
+        }
+        
+        if (this.vehicleHp > 0 && this.vehicleTime > 0) {
+            this.vehicleTime--;
+            if (this.vehicleTime % 60 === 0 && this.vehicleTime <= 300 && this.vehicleTime > 0) {
+                addFloatingText(this.x, this.y - 40, `倒计时: ${this.vehicleTime / 60}`, "#00ffff");
+            }
+            if (this.vehicleTime <= 0) {
+                this.vehicleHp = 0;
+                addFloatingText(this.x, this.y - 40, "🔵 力场能量耗尽!", "#ff0000");
+            }
+        }
+
         
         if(this.vehicleHp > 0) {
             // Vehicle ramming
@@ -1725,10 +1747,12 @@ class LootBox {
                     audio.levelUp();
                 } else if(this.type === 'mech') {
                     p.mechHp = 8;
+                    p.mechTime = 1800; // 30 seconds
                     addFloatingText(p.x, p.y - 30, "🔴 重力护盾启动!", "#00ffaa");
                     audio.levelUp();
                 } else if(this.type === 'vehicle') {
                     p.vehicleHp = 3;
+                    p.vehicleTime = 1800; // 30 seconds
                     addFloatingText(p.x, p.y - 30, "🔵 加速力场启动!", "#00ffff");
                     audio.levelUp();
                 } else if(this.type === 'nuke') {
