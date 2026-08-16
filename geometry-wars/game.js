@@ -1019,8 +1019,6 @@ class Player {
         }
         
         // Draw the player as a sleek glowing geometric arrow/ship
-        ctx.shadowBlur = 10;
-        ctx.shadowColor = this.color;
         ctx.fillStyle = this.color; // Fill with solid bright color to distinguish players
         ctx.strokeStyle = '#ffffff'; // White outline for contrast
         ctx.lineWidth = 3;
@@ -1040,12 +1038,10 @@ class Player {
         ctx.beginPath();
         ctx.arc(0, 0, this.size * 1.5, 0, Math.PI * 2);
         ctx.strokeStyle = this.color;
-        ctx.globalAlpha = 0.3; // Faint
-        ctx.lineWidth = 1.5;
+        ctx.globalAlpha = 0.3; // Faint glow without expensive shadowBlur
+        ctx.lineWidth = 2;
         ctx.stroke();
         ctx.globalAlpha = 1.0;
-
-        ctx.shadowBlur = 0;
 
         ctx.restore();
 
@@ -1551,11 +1547,18 @@ class Zombie {
             let outerRadius = s * (1.5 + Math.sin(frameCount * 0.1) * 0.2);
             let innerRadius = s * (0.5 + Math.cos(frameCount * 0.15) * 0.3);
             
-            ctx.shadowBlur = 20;
-            ctx.shadowColor = this.color;
             ctx.fillStyle = '#111';
             ctx.strokeStyle = this.color;
             ctx.lineWidth = 4;
+
+            // Faint glow using globalAlpha instead of shadowBlur
+            ctx.globalAlpha = 0.3;
+            ctx.beginPath();
+            ctx.arc(0, 0, outerRadius + 10, 0, Math.PI*2);
+            ctx.fillStyle = this.color;
+            ctx.fill();
+            ctx.globalAlpha = 1.0;
+            ctx.fillStyle = '#111';
 
             // Base pulsing Star/Polygon
             ctx.beginPath();
@@ -1627,8 +1630,7 @@ class Zombie {
             ctx.fillStyle = this.color;
             ctx.beginPath();
             ctx.arc(0, 0, s * 0.3, 0, Math.PI * 2);
-            ctx.fill(); // Wait, the old code didn't actually fill the eye, but let's fix it so the eye shows up
-            ctx.shadowBlur = 0;
+            ctx.fill(); 
         }
         ctx.restore();
         
@@ -1640,14 +1642,11 @@ class Zombie {
             
             // Floating Boss Name & Temper
             ctx.fillStyle = this.color;
-            ctx.shadowColor = this.color;
-            ctx.shadowBlur = 5;
             ctx.font = this.isUltimateBoss ? 'bold 18px "Share Tech Mono", monospace' : 'bold 14px "Share Tech Mono", monospace';
             ctx.textAlign = 'center';
             ctx.fillText(this.bossName, this.x, this.y + offsetY - 18);
             
             ctx.fillStyle = '#aaaaaa';
-            ctx.shadowBlur = 0;
             ctx.font = '12px "Share Tech Mono", monospace';
             ctx.fillText(this.bossTemper, this.x, this.y + offsetY - 4);
             
@@ -2038,14 +2037,14 @@ function startGame() {
     players[1].y = CANVAS_H/2;
     zombies = [];
     
-    let initialBossCount = 0;
-    if (gameBossAmount === 'many') initialBossCount = 10;
-    else if (gameBossAmount === 'normal') initialBossCount = 3;
-    else if (gameBossAmount === 'few') initialBossCount = 1;
-    else if (gameBossAmount === 'none') initialBossCount = 0;
+    let initialEnemyCount = 0;
+    if (gameBossAmount === 'many') initialEnemyCount = 30;
+    else if (gameBossAmount === 'normal') initialEnemyCount = 15;
+    else if (gameBossAmount === 'few') initialEnemyCount = 5;
+    else if (gameBossAmount === 'none') initialEnemyCount = 0;
 
-    for(let i=0; i<initialBossCount; i++) {
-        zombies.push(new Zombie(true, true, i)); // Spawn ultimate bosses!
+    for(let i=0; i<initialEnemyCount; i++) {
+        zombies.push(new Zombie(false, false, 0)); // Spawn normal starting enemies!
     }
     bullets = [];
     particles = [];
