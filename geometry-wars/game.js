@@ -796,19 +796,16 @@ class Player {
         if(this.hp <= 0 || this.isDowned || this.cooldown > 0) return;
         
         if(this.vehicleHp > 0) {
-            this.cooldown = 15;
             audio.shootLaser();
             // Motorcycle fires multiple homing missiles
             let angle = Math.atan2(this.facing.y, this.facing.x);
             bullets.push(new Bullet(this.x, this.y, Math.cos(angle), Math.sin(angle), 12, 150, '#00bfff', false, this.id, true));
             bullets.push(new Bullet(this.x, this.y, Math.cos(angle-0.3), Math.sin(angle-0.3), 12, 150, '#00bfff', false, this.id, true));
             bullets.push(new Bullet(this.x, this.y, Math.cos(angle+0.3), Math.sin(angle+0.3), 12, 150, '#00bfff', false, this.id, true));
-            return;
         }
 
         if(this.mechHp > 0) {
             if(this.mechType === 1) { 
-                this.cooldown = 20;
                 audio.shootLaser();
                 let b = new Bullet(this.x, this.y, this.facing.x, this.facing.y, 10, 400, '#00ff88', true, this.id);
                 b.size = 15;
@@ -817,7 +814,6 @@ class Player {
                 bullets.push(new Bullet(this.x, this.y, Math.cos(angle-0.2), Math.sin(angle-0.2), 12, 200, '#00ffff', false, this.id, true));
                 bullets.push(new Bullet(this.x, this.y, Math.cos(angle+0.2), Math.sin(angle+0.2), 12, 200, '#00ffff', false, this.id, true));
             } else if(this.mechType === 2) { 
-                this.cooldown = 10;
                 audio.shootLaser();
                 for(let i=0; i<8; i++) {
                     let angle = Math.PI/4 * i + (frameCount*0.1);
@@ -825,13 +821,11 @@ class Player {
                 }
                 bullets.push(new Bullet(this.x, this.y, this.facing.x, this.facing.y, 12, 100, '#00ffcc', false, this.id, true));
             } else if(this.mechType === 3) { 
-                this.cooldown = 3;
                 audio.shootMachine();
                 let angle = Math.atan2(this.facing.y, this.facing.x) + (Math.random()-0.5)*0.15;
                 bullets.push(new Bullet(this.x, this.y, Math.cos(angle), Math.sin(angle), 25, 30, '#00ffff', true, this.id));
                 bullets.push(new Bullet(this.x, this.y, Math.cos(angle), Math.sin(angle), 15, 80, '#00ffcc', false, this.id, true));
             }
-            return;
         }
 
         let w = this.weapon;
