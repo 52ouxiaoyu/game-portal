@@ -1090,12 +1090,9 @@ class Player {
 
 function resolveBuildingCollision(obj) {
     buildings.forEach(b => {
-        if (b.type === 'shelter') {
-            if (obj.constructor.name === 'Player' || obj.constructor.name === 'Barrel') return;
-            if (obj.constructor.name === 'Zombie' && !obj.isBoss && !obj.isUltimateBoss && obj.size <= 30) return;
-        }
         let testX = obj.x;
         let testY = obj.y;
+        
         if (obj.x < b.x) testX = b.x; else if (obj.x > b.x + b.w) testX = b.x + b.w;
         if (obj.y < b.y) testY = b.y; else if (obj.y > b.y + b.h) testY = b.y + b.h;
         let distX = obj.x - testX;
@@ -2257,8 +2254,26 @@ function update() {
                     // Massive central monolith (Dense blocker)
                     buildings.push(new Building(cx + 150, cy + 150, CHUNK_SIZE - 300, CHUNK_SIZE - 300));
                 } else {
-                    // Shelter chunk (Safe zone for players, blocked for bosses)
-                    buildings.push(new Building(cx + 200, cy + 200, CHUNK_SIZE - 400, CHUNK_SIZE - 400, 'shelter'));
+                    // Physical Bunker chunk (narrow slits that only players/small zombies can pass)
+                    // Box size 400x400. Center is cx + 500. Wall thickness 40. Slit 32px.
+                    // A 32px gap allows players (size 12, diam 24) but blocks bosses (diam 70+)
+                    let bx = cx + 300, by = cy + 300;
+                    
+                    // Top Wall (Two segments with 32px gap in middle)
+                    buildings.push(new Building(bx, by, 184, 40));
+                    buildings.push(new Building(bx + 216, by, 184, 40));
+                    
+                    // Bottom Wall
+                    buildings.push(new Building(bx, by + 360, 184, 40));
+                    buildings.push(new Building(bx + 216, by + 360, 184, 40));
+                    
+                    // Left Wall
+                    buildings.push(new Building(bx, by, 40, 184));
+                    buildings.push(new Building(bx, by + 216, 40, 184));
+                    
+                    // Right Wall
+                    buildings.push(new Building(bx + 360, by, 40, 184));
+                    buildings.push(new Building(bx + 360, by + 216, 40, 184));
                 }
             }
         }
