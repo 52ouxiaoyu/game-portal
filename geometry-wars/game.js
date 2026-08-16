@@ -1687,17 +1687,21 @@ class LootBox {
         // Push out of walls
         resolveBuildingCollision(this);
 
-        // Magnetic siphon effect for items (except traps)
+        // Magnetic siphon effect (Robin Hood: steal from rich, give to poor)
         if(this.type !== 'trap') {
-            let closestDist = 400; // Increased magnet radius
             let targetPlayer = null;
             players.forEach(p => {
                 if(p.hp > 0) {
                     let d = Math.hypot(p.x - this.x, p.y - this.y);
-                    // Must have line of sight to magnetize, otherwise it pulls against walls
-                    if(d < closestDist && hasLineOfSight(this.x, this.y, p.x, p.y)) {
-                        closestDist = d;
-                        targetPlayer = p;
+                    if(d < 400 && hasLineOfSight(this.x, this.y, p.x, p.y)) {
+                        if(!targetPlayer) {
+                            targetPlayer = p;
+                        } else {
+                            // Prioritize lower weapon level. Then lower HP. Then closer distance.
+                            if(p.weaponLevel < targetPlayer.weaponLevel) targetPlayer = p;
+                            else if(p.weaponLevel === targetPlayer.weaponLevel && p.hp < targetPlayer.hp) targetPlayer = p;
+                            else if(p.weaponLevel === targetPlayer.weaponLevel && p.hp === targetPlayer.hp && d < Math.hypot(targetPlayer.x - this.x, targetPlayer.y - this.y)) targetPlayer = p;
+                        }
                     }
                 }
             });
@@ -1939,14 +1943,38 @@ class Geom {
         this.life--;
         if (this.life <= 0) this.active = false;
         
-        // Attract to players if close
+        // Attract to players (Robin Hood: prioritize lower HP / lower level players)
+        let targetPlayer = null;
         players.forEach(p => {
             if(p.hp > 0) {
-                let dist = Math.hypot(p.x - this.x, p.y - this.y);
-                if(dist < 400) { // Increased magnet range
-                    this.x += (p.x - this.x) / dist * 15; // Increased pull speed
-                    this.y += (p.y - this.y) / dist * 15;
+                let d = Math.hypot(p.x - this.x, p.y - this.y);
+                if(d < 400) {
+                    if(!targetPlayer) {
+                        targetPlayer = p;
+                    } else {
+                        // Prioritize lower HP. Then lower weapon level. Then closer.
+                        if(p.hp < targetPlayer.hp) targetPlayer = p;
+                        else if(p.hp === targetPlayer.hp && p.weaponLevel < targetPlayer.weaponLevel) targetPlayer = p;
+                        else if(p.hp === targetPlayer.hp && p.weaponLevel === targetPlayer.weaponLevel && d < Math.hypot(targetPlayer.x - this.x, targetPlayer.y - this.y)) targetPlayer = p;
+                    }
                 }
+            }
+        });
+        
+        if(targetPlayer) {
+            let dx = targetPlayer.x - this.x;
+            let dy = targetPlayer.y - this.y;
+            let dist = Math.hypot(dx, dy);
+            if(dist > 0) {
+                this.x += (dx/dist) * 15;
+                this.y += (dy/dist) * 15;
+            }
+        }
+
+        // Check actual pickup collision for all players
+        players.forEach(p => {
+            if(p.hp > 0 && this.active) {
+                let dist = Math.hypot(p.x - this.x, p.y - this.y);
                 if(dist < p.size + this.size) {
                     this.active = false;
                     scoreMultiplier = Math.min(999, scoreMultiplier + 1);
