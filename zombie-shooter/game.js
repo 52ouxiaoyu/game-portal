@@ -278,6 +278,9 @@ class Player {
         this.shieldTime = 0;
         this.mechTime = 0; this.vehicleHp = 0;
         this.mechType = 0;
+        this.ultType = null;
+        this.ultLevel = 0;
+        this.ultCooldown = 0;
         this.mechHp = 0;
         this.vehicleTime = 0;
         this.reviveProgress = 0; // 0 to 180 (3 seconds at 60fps)
@@ -503,19 +506,20 @@ class Player {
             
         } else {
             // Player Logic
+            let wantsToUlt = false;
             let wantsToShoot = false;
             if(this.id === 1) {
                 if(keys.KeyW) dy -= 1;
                 if(keys.KeyS) dy += 1;
                 if(keys.KeyA) dx -= 1;
                 if(keys.KeyD) dx += 1;
-                if(keys.Space) wantsToShoot = true;
+                if(keys.Space) wantsToUlt = true;
             } else {
                 if(keys.ArrowUp) dy -= 1;
                 if(keys.ArrowDown) dy += 1;
                 if(keys.ArrowLeft) dx -= 1;
                 if(keys.ArrowRight) dx += 1;
-                if(keys.Enter || keys.NumpadEnter) wantsToShoot = true;
+                if(keys.Enter || keys.NumpadEnter) wantsToUlt = true;
             }
 
             if(dx !== 0 || dy !== 0) {
@@ -526,10 +530,14 @@ class Player {
             // Auto-aim at the nearest zombie with line of sight
             let autoTarget = null;
             let minDist = Infinity;
+            let weaponRange = 600; // Attack range
             zombies.forEach(z => {
                 if(z.active) {
                     let dist = Math.hypot(z.x - this.x, z.y - this.y);
-                    if(dist < minDist && hasLineOfSight(this.x, this.y, z.x, z.y)) { minDist = dist; autoTarget = z; }
+                    if(dist < minDist && dist < weaponRange && hasLineOfSight(this.x, this.y, z.x, z.y)) { 
+                        minDist = dist; 
+                        autoTarget = z; 
+                    }
                 }
             });
 
@@ -538,11 +546,16 @@ class Player {
                 let ay = autoTarget.y - this.y;
                 let aLen = Math.hypot(ax, ay);
                 if(aLen > 0) this.facing = {x: ax/aLen, y: ay/aLen};
+                wantsToShoot = true; // Auto-shoot when target is found
             } else if(dx !== 0 || dy !== 0) {
                 // Default to movement direction if no zombies are around
                 this.facing = {x: dx, y: dy};
             }
+            
             if(wantsToShoot) this.shoot();
+            if(wantsToUlt) this.useUltimate();
+            
+            if(this.ultCooldown > 0) this.ultCooldown--;
         }
 
         // Apply jitter to avoid perfect perpendicular lock, and split X/Y axes to allow sliding
@@ -655,6 +668,82 @@ class Player {
             bullets.push(b);
         }
         audio.shootPistol();
+    }
+
+    useUltimate() {
+        if(this.hp <= 0 || this.isDowned) return;
+        if(this.ultLevel === 0 || this.ultCooldown > 0) return;
+        
+        let baseCooldown = 900; // 15 seconds base
+        this.ultCooldown = Math.max(120, baseCooldown - (this.ultLevel * 100)); // Reduces with level
+        
+        audio.levelUp(); // ultimate sound
+        screenShake = 20;
+        let levelScale = 1 + (this.ultLevel * 0.3);
+        let ultNames = ["", "Neon Nova", "Time Flux", "Homing Swarm", "Laser Grid", "Orbital Strike", "Plasma Mines", "Blade Vortex", "Heal Burst", "God Mode", "Chain Lightning"];
+        addFloatingText(this.x, this.y - 50, `ULT: ${ultNames[this.ultType]}!`, "#ff00ff");
+
+        switch(this.ultType) {
+            case 1: // Neon Nova
+                shockwaves.push(new Shockwave(this.x, this.y, '#ff00ff', 2000 * levelScale, 400 * levelScale, this.id));
+                break;
+            case 2: // Time Flux
+                hitStopFrames = Math.floor(180 * levelScale); // Freeze all zombies
+                break;
+            case 3: // Homing Swarm
+                for(let i=0; i<20 * levelScale; i++) {
+                    let a = Math.random() * Math.PI * 2;
+                    let b = new Bullet(this.x, this.y, Math.cos(a), Math.sin(a), 15, 300, '#ff00ff', false, this.id, true);
+                    b.size = 8;
+                    bullets.push(b);
+                }
+                break;
+            case 4: // Laser Grid
+                for(let i=0; i<16; i++) {
+                    let a = (Math.PI * 2 / 16) * i;
+                    let b = new Bullet(this.x, this.y, Math.cos(a), Math.sin(a), 25, 800 * levelScale, '#00ffff', true, this.id);
+                    b.size = 10;
+                    bullets.push(b);
+                }
+                break;
+            case 5: // Orbital Strike
+                let ang = Math.atan2(this.facing.y, this.facing.x);
+                let beam = new Bullet(this.x, this.y, Math.cos(ang), Math.sin(ang), 40, 3000 * levelScale, '#ffff00', true, this.id);
+                beam.size = 80 * levelScale;
+                bullets.push(beam);
+                break;
+            case 6: // Plasma Mines
+                for(let i=0; i<10 + this.ultLevel*3; i++) {
+                    barrels.push(new Barrel(this.x + (Math.random()-0.5)*500, this.y + (Math.random()-0.5)*500));
+                }
+                break;
+            case 7: // Blade Vortex
+                for(let i=0; i<30 * levelScale; i++) {
+                    let a = Math.random() * Math.PI * 2;
+                    let b = new Bullet(this.x, this.y, Math.cos(a), Math.sin(a), 3 + Math.random()*2, 400, '#00ff00', true, this.id);
+                    b.size = 6;
+                    bullets.push(b);
+                }
+                break;
+            case 8: // Heal Burst
+                this.hp = Math.min(this.maxHp, this.hp + 3 * levelScale);
+                players.forEach(p => { if(p!==this && p.hp>0) p.hp = Math.min(p.maxHp, p.hp + 3 * levelScale); });
+                break;
+            case 9: // God Mode
+                this.shieldTime = 400 * levelScale;
+                this.buffTime = 400 * levelScale;
+                break;
+            case 10: // Chain Lightning
+                let radius = 500 * levelScale;
+                zombies.forEach(z => {
+                    if(z.active && Math.hypot(z.x-this.x, z.y-this.y) < radius) {
+                        z.hp -= 2000 * levelScale;
+                        createParticles(z.x, z.y, '#00ffff', 5);
+                        if(z.hp <= 0) { z.active = false; this.score += z.scoreVal; }
+                    }
+                });
+                break;
+        }
     }
 
     draw(ctx) {
@@ -1386,8 +1475,17 @@ class LootBox {
                         audio.levelUp();
                     }
                 } else if(this.type === 'ult') {
-                    p.hasUlt = true;
-                    addFloatingText(p.x, p.y - 30, "⚡ 战术充能完毕 (按Q/Shift释放)", "#00ffff");
+                    if (p.ultType === null) {
+                        p.ultType = Math.floor(Math.random() * 10) + 1;
+                        p.ultLevel = 1;
+                    } else if (p.ultLevel < 5) {
+                        p.ultLevel++;
+                    } else {
+                        p.score += 1000;
+                    }
+                    p.ultCooldown = 0; // Instantly refresh cooldown
+                    let ultNames = ["", "Neon Nova", "Time Flux", "Homing Swarm", "Laser Grid", "Orbital Strike", "Plasma Mines", "Blade Vortex", "Heal Burst", "God Mode", "Chain Lightning"];
+                    addFloatingText(p.x, p.y - 30, `⚡ 大招: ${ultNames[p.ultType]} (Lv.${p.ultLevel})`, "#ff00ff");
                     audio.levelUp();
                 }
             }
@@ -2038,13 +2136,27 @@ function update() {
         document.getElementById('p1-score').textContent = p1.score;
         document.getElementById('p1-weapon').textContent = p1.weapon.name;
         
+        let ultNames = ["无大招", "Nova", "Time", "Swarm", "Laser", "Strike", "Mines", "Blades", "Heal", "God", "Chain"];
+        
         let p1b = [];
         if(p1.shieldTime > 0) p1b.push('🛡️');
         if(p1.buffTime > 0) p1b.push('🌀');
         if(p1.mechHp > 0) p1b.push('🔴超载护盾');
         if(p1.vehicleHp > 0) p1b.push('🔵疾步光环');
-        if(p1.hasUlt) p1b.push('⚡');
         document.getElementById('p1-buffs').textContent = p1b.length > 0 ? p1b.join(' ') : '常规';
+
+        let p1ultElem = document.getElementById('p1-ult');
+        if(p1ultElem) {
+            if(p1.ultLevel === 0) {
+                p1ultElem.textContent = '无大招';
+                p1ultElem.style.color = '#555'; p1ultElem.style.borderColor = '#555';
+            } else {
+                let readyText = p1.ultCooldown > 0 ? `CD:${Math.ceil(p1.ultCooldown/60)}s` : 'READY';
+                p1ultElem.textContent = `${ultNames[p1.ultType]} Lv.${p1.ultLevel} [${readyText}]`;
+                p1ultElem.style.color = p1.ultCooldown > 0 ? '#ff0000' : '#ff00ff';
+                p1ultElem.style.borderColor = p1ultElem.style.color;
+            }
+        }
 
         let p2 = players[1];
         let p2hpElem = document.getElementById('p2-hp-bar');
@@ -2059,8 +2171,20 @@ function update() {
         if(p2.buffTime > 0) p2b.push('🌀');
         if(p2.mechHp > 0) p2b.push('🔴超载护盾');
         if(p2.vehicleHp > 0) p2b.push('🔵疾步光环');
-        if(p2.hasUlt) p2b.push('⚡');
         document.getElementById('p2-buffs').textContent = p2b.length > 0 ? p2b.join(' ') : '常规';
+
+        let p2ultElem = document.getElementById('p2-ult');
+        if(p2ultElem) {
+            if(p2.ultLevel === 0) {
+                p2ultElem.textContent = '无大招';
+                p2ultElem.style.color = '#555'; p2ultElem.style.borderColor = '#555';
+            } else {
+                let readyText = p2.ultCooldown > 0 ? `CD:${Math.ceil(p2.ultCooldown/60)}s` : 'READY';
+                p2ultElem.textContent = `${ultNames[p2.ultType]} Lv.${p2.ultLevel} [${readyText}]`;
+                p2ultElem.style.color = p2.ultCooldown > 0 ? '#ff0000' : '#00ffff';
+                p2ultElem.style.borderColor = p2ultElem.style.color;
+            }
+        }
     }
     
     // Update Central HUD
