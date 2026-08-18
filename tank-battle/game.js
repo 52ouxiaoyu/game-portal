@@ -783,11 +783,7 @@ class Tank {
         this.level++;
         this.speed = Math.min(8, 4 + this.level * 0.15); 
         if (this instanceof Player) {
-            this.maxHealth = 1 + this.level * 2;
-            this.health = this.maxHealth;
             this.game.showFloatingText(`LEVEL ${this.level}!`, this.x, this.y, '#0f0');
-            
-
             this.game.updateHUD();
         }
     }
@@ -2003,11 +1999,12 @@ class Game {
         if (player.level > 0) {
             player.level = Math.floor(player.level / 2);
             player.speed = Math.min(8, 4 + player.level * 0.15);
-            player.maxHealth = 1 + player.level * 2;
-            player.health = player.maxHealth;
+            player.health = 1;
+            player.maxHealth = 1;
             this.showFloatingText('火力减半!', player.x + player.width/2, player.y - 10, '#f00');
         } else {
             player.health = 1;
+            player.maxHealth = 1;
         }
 
         if (player.lives > 0) {
