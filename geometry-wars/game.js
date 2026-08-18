@@ -1695,6 +1695,12 @@ class LootBox {
         
         this.active = true;
         this.life = 300; // 5 seconds at 60fps
+        
+        // 游戏后期不再掉落基础道具
+        const basicTypes = ['heal', 'shield', 'buff', 'trap', 'revive'];
+        if(typeof killCount !== 'undefined' && killCount > 150 && basicTypes.includes(this.type)) {
+            this.active = false;
+        }
     }
     
     update() {
@@ -2662,7 +2668,7 @@ function update() {
     lootTimer++;
     if(lootTimer > 1200) {
         lootTimer = 0;
-        if(Math.random() < 0.4) lootBoxes.push(new LootBox());
+        if(Math.random() < 0.15) lootBoxes.push(new LootBox());
     }
     floatingTexts.forEach(ft => { ft.y -= 1; ft.life -= 0.02; });
     if(typeof boars !== 'undefined') boars.forEach(b => b.update());
@@ -2748,7 +2754,7 @@ function update() {
                         flashFrames = 15;
                         screenShake = 10;
                         addFloatingText(camera.x, camera.y, "🌟 斩杀目标! 🌟", "#00ff00");
-                    } else if(Math.random() < 0.15) {
+                    } else if(Math.random() < 0.06) {
                         lootBoxes.push(new LootBox(z.x, z.y));
                     }
                     
@@ -2960,11 +2966,13 @@ function draw() {
         ctx.fillRect(CANVAS_W - 120, 50, 100 * (comboTimer/180), 5);
     }
     
-    // Draw Ultimate Boss Arrow Pointers
-    let ultBosses = zombies.filter(z => z.isUltimateBoss && z.active);
-    ultBosses.forEach(ultBoss => {
-        let dx = ultBoss.x - camera.x;
-        let dy = ultBoss.y - camera.y;
+    // Draw Boss Arrow Pointers
+    let activeBosses = zombies.filter(z => (z.isBoss || z.isUltimateBoss) && z.active);
+    let bossesToPoint = activeBosses.filter(z => z.isUltimateBoss || activeBosses.length === 1);
+    
+    bossesToPoint.forEach(boss => {
+        let dx = boss.x - camera.x;
+        let dy = boss.y - camera.y;
         let dist = Math.hypot(dx, dy);
         
         ctx.save();
@@ -2974,7 +2982,7 @@ function draw() {
         ctx.translate(Math.cos(angle) * arrowDist, Math.sin(angle) * arrowDist);
         ctx.rotate(angle);
         
-        ctx.fillStyle = ultBoss.color || '#ff00ff';
+        ctx.fillStyle = boss.color || '#ff00ff';
         ctx.beginPath();
         ctx.moveTo(15, 0);
         ctx.lineTo(-10, 10);
@@ -2986,7 +2994,8 @@ function draw() {
         ctx.textAlign = 'center';
         // Rotate text to stay upright
         ctx.rotate(-angle);
-        ctx.fillText(`BOSS ${ultBoss.bossId + 1}`, 0, -20);
+        let label = boss.isUltimateBoss ? `终极 BOSS` : `BOSS`;
+        ctx.fillText(label, 0, -20);
         ctx.fillText(Math.floor(dist/10) + "m", 0, 20);
         ctx.restore();
     });
