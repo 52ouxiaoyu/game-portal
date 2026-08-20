@@ -78,7 +78,7 @@ class InputManager {
         if (type === 'peashooter') {
             this.dragGhost.style.backgroundImage = "url('assets/images/Plants/Peashooter/Peashooter.gif')";
         } else if (type === 'sunflower') {
-            this.dragGhost.style.backgroundImage = "url('assets/images/Plants/SunFlower/SunFlower.gif')";
+            this.dragGhost.style.backgroundImage = "url('assets/images/Plants/SunFlower/SunFlower1.gif')";
         } else if (type === 'shovel') {
             this.dragGhost.style.backgroundImage = "url('assets/images/interface/Shovel/0.gif')";
         }

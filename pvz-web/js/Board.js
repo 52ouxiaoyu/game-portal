@@ -6,7 +6,7 @@ class Board {
         
         // Coordinates for the top-left of the first cell
         // Adjusted for the new background image
-        this.offsetX = 250; 
+        this.offsetX = 140; 
         this.offsetY = 85;
         
         this.cellWidth = 80;

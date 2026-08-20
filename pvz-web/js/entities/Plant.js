@@ -14,7 +14,7 @@ class Plant extends Entity {
             this.hp = 300;
             this.sunRate = 10;
             this.sunTimer = 0;
-            this.element.src = 'assets/images/Plants/SunFlower/SunFlower.gif';
+            this.element.src = 'assets/images/Plants/SunFlower/SunFlower1.gif';
             this.yOffset = -20;
         }
     }
