@@ -60,51 +60,16 @@ class Game {
     }
     
     showMenu() {
-        const menu = document.createElement('div');
-        menu.id = 'start-menu';
-        menu.style.position = 'absolute';
-        menu.style.top = '0';
-        menu.style.left = '0';
-        menu.style.width = '100%';
-        menu.style.height = '100%';
-        menu.style.backgroundColor = 'rgba(0,0,0,0.8)';
-        menu.style.zIndex = '2000';
-        menu.style.display = 'flex';
-        menu.style.flexDirection = 'column';
-        menu.style.justifyContent = 'center';
-        menu.style.alignItems = 'center';
-        
-        const logo = document.createElement('img');
-        logo.src = 'assets/images/interface/Logo.png';
-        logo.style.marginBottom = '20px';
-        menu.appendChild(logo);
-        
-        const startBtn = document.createElement('div');
-        startBtn.style.backgroundImage = "url('assets/images/interface/SelectorScreen_WoodSign2_32.png')";
-        startBtn.style.width = '200px';
-        startBtn.style.height = '100px';
-        startBtn.style.backgroundSize = 'contain';
-        startBtn.style.backgroundRepeat = 'no-repeat';
-        startBtn.style.backgroundPosition = 'center';
-        startBtn.style.cursor = 'pointer';
-        startBtn.style.display = 'flex';
-        startBtn.style.alignItems = 'center';
-        startBtn.style.justifyContent = 'center';
-        startBtn.style.color = 'white';
-        startBtn.style.fontSize = '24px';
-        startBtn.style.fontWeight = 'bold';
-        startBtn.innerText = 'Start Adventure';
+        const menu = document.getElementById('start-menu');
+        const startBtn = document.getElementById('start-btn');
         
         startBtn.onclick = () => {
-            document.getElementById('game-container').removeChild(menu);
+            menu.style.display = 'none';
             this.state = 'PLAYING';
             this.audioManager.play('bgm');
             this.lastTime = performance.now();
             requestAnimationFrame((t) => this.loop(t));
         };
-        
-        menu.appendChild(startBtn);
-        document.getElementById('game-container').appendChild(menu);
     }
 
     
