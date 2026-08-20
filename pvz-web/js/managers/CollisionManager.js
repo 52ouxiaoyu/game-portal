@@ -13,7 +13,8 @@ class CollisionManager {
         for (let p of projectiles) {
             for (let z of zombies) {
                 if (p.row === z.row) {
-                    if (p.x + p.radius > z.x - 15 && p.x - p.radius < z.x + 15) {
+                    // Zombie visually faces left. The front is roughly z.x - 30
+                    if (p.x + p.radius > z.x - 30 && p.x - p.radius < z.x + 30) {
                         p.isDead = true; 
                         z.takeDamage(p.damage);
                         this.game.audioManager.play('splat');

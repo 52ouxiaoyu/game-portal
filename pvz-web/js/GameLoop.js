@@ -164,7 +164,7 @@ class Game {
         
         // Add ZombiesWon.png overlay
         const wonImg = document.createElement('img');
-        wonImg.src = 'assets/images/ZombiesWon.png';
+        wonImg.src = 'assets/images/interface/ZombiesWon.png';
         wonImg.style.position = 'absolute';
         wonImg.style.top = '50%';
         wonImg.style.left = '50%';

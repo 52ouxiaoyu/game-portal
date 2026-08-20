@@ -12,7 +12,7 @@ class Plant extends Entity {
             this.yOffset = -20; // Offset for GIF centering
         } else if (type === 'sunflower') {
             this.hp = 300;
-            this.sunRate = 10;
+            this.sunRate = 24.0; // Native PVZ is 24 seconds
             this.sunTimer = 0;
             this.element.src = 'assets/images/Plants/SunFlower/SunFlower1.gif';
             this.yOffset = -20;
