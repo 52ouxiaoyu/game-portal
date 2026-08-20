@@ -4,30 +4,31 @@ class Plant extends Entity {
         this.type = type;
         this.col = -1; // Set by Board
         
-        // Define properties based on type (MVP: simple properties)
         if (type === 'peashooter') {
             this.hp = 300;
-            this.color = '#00FF00'; // Green
-            this.fireRate = 1.5; // seconds
+            this.fireRate = 1.5;
             this.fireTimer = 0;
-            this.cost = 100;
+            this.element.src = 'assets/images/Plants/Peashooter/Peashooter.gif';
+            this.yOffset = -20; // Offset for GIF centering
         } else if (type === 'sunflower') {
             this.hp = 300;
-            this.color = '#FFFF00'; // Yellow
-            this.sunRate = 10; // seconds
+            this.sunRate = 10;
             this.sunTimer = 0;
-            this.cost = 50;
+            this.element.src = 'assets/images/Plants/SunFlower/SunFlower.gif';
+            this.yOffset = -20;
         }
     }
     
     update(deltaTime) {
+        super.update(deltaTime);
+        this.element.style.top = `${this.y + this.yOffset}px`;
+        
         if (this.hp <= 0) {
             this.isDead = true;
             this.game.board.grid[this.row][this.col] = null; // Clear from grid
             return;
         }
         
-        // MVP Logic
         if (this.type === 'peashooter') {
             this.fireTimer += deltaTime;
             if (this.fireTimer >= this.fireRate) {
@@ -41,9 +42,8 @@ class Plant extends Entity {
                 
                 if (hasZombieAhead) {
                     this.fireTimer = 0;
-                    this.game.entities.push(new Projectile(this.game, this.x + 20, this.y, this.row));
+                    this.game.entities.push(new Projectile(this.game, this.x + 20, this.y - 15, this.row));
                 } else {
-                    // Cap timer so it fires immediately when zombie appears
                     this.fireTimer = this.fireRate; 
                 }
             }
@@ -51,42 +51,9 @@ class Plant extends Entity {
             this.sunTimer += deltaTime;
             if (this.sunTimer >= this.sunRate) {
                 this.sunTimer = 0;
-                // Generate a sun entity
-                const targetY = this.y + 20; // Fall slightly below
+                const targetY = this.y + 20;
                 this.game.entities.push(new Sun(this.game, this.x, this.y - 20, targetY));
             }
-        }
-    }
-    
-    draw(ctx) {
-        // Simple shape drawing for MVP
-        ctx.fillStyle = this.color;
-        ctx.beginPath();
-        ctx.arc(this.x, this.y, 25, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.strokeStyle = '#333';
-        ctx.lineWidth = 2;
-        ctx.stroke();
-        
-        // Draw eyes
-        ctx.fillStyle = '#000';
-        ctx.beginPath();
-        ctx.arc(this.x - 8, this.y - 5, 4, 0, Math.PI * 2);
-        ctx.arc(this.x + 8, this.y - 5, 4, 0, Math.PI * 2);
-        ctx.fill();
-        
-        if (this.type === 'peashooter') {
-            // Draw snout
-            ctx.fillStyle = '#008000';
-            ctx.beginPath();
-            ctx.arc(this.x + 20, this.y + 5, 8, 0, Math.PI * 2);
-            ctx.fill();
-        } else if (this.type === 'sunflower') {
-            // Draw petals (simplified)
-            ctx.fillStyle = '#FFA500'; // Orange border
-            ctx.beginPath();
-            ctx.arc(this.x, this.y, 30, 0, Math.PI * 2);
-            ctx.stroke(); // Just outline for petals concept
         }
     }
 }

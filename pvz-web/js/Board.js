@@ -5,45 +5,26 @@ class Board {
         this.cols = 9;
         
         // Coordinates for the top-left of the first cell
-        this.offsetX = 220; 
-        this.offsetY = 100;
+        // Adjusted for the new background image
+        this.offsetX = 250; 
+        this.offsetY = 85;
         
-        this.cellWidth = 72;
-        this.cellHeight = 96;
+        this.cellWidth = 80;
+        this.cellHeight = 100;
         
-        // 2D Array to track plants in each cell
         this.grid = [];
         for (let r = 0; r < this.rows; r++) {
             this.grid[r] = [];
             for (let c = 0; c < this.cols; c++) {
-                this.grid[r][c] = null; // null means empty
+                this.grid[r][c] = null; 
             }
         }
     }
     
-    draw(ctx) {
-        // Draw the lawn (checkerboard pattern for visibility during prototyping)
-        for (let r = 0; r < this.rows; r++) {
-            for (let c = 0; c < this.cols; c++) {
-                const x = this.offsetX + c * this.cellWidth;
-                const y = this.offsetY + r * this.cellHeight;
-                
-                // Checkerboard colors
-                if ((r + c) % 2 === 0) {
-                    ctx.fillStyle = '#4CAF50'; // Light green
-                } else {
-                    ctx.fillStyle = '#45a049'; // Darker green
-                }
-                ctx.fillRect(x, y, this.cellWidth, this.cellHeight);
-            }
-        }
-    }
-    
-    // Converts pixel coordinates to grid coordinates (row, col)
     getGridPos(x, y) {
         if (x < this.offsetX || x >= this.offsetX + this.cols * this.cellWidth ||
             y < this.offsetY || y >= this.offsetY + this.rows * this.cellHeight) {
-            return null; // Outside the board
+            return null;
         }
         
         const col = Math.floor((x - this.offsetX) / this.cellWidth);
@@ -51,20 +32,17 @@ class Board {
         return { row, col };
     }
     
-    // Checks if a cell is empty
     canPlant(row, col) {
         if (row < 0 || row >= this.rows || col < 0 || col >= this.cols) return false;
         return this.grid[row][col] === null;
     }
     
-    // Adds a plant to the grid
     addPlant(plant, row, col) {
         if (this.canPlant(row, col)) {
             this.grid[row][col] = plant;
             plant.row = row;
             plant.col = col;
             
-            // Set plant's exact pixel position based on grid
             plant.x = this.offsetX + col * this.cellWidth + this.cellWidth / 2;
             plant.y = this.offsetY + row * this.cellHeight + this.cellHeight / 2;
             
@@ -74,13 +52,13 @@ class Board {
         return false;
     }
     
-    // Removes a plant from the grid
     removePlant(row, col) {
         if (row >= 0 && row < this.rows && col >= 0 && col < this.cols) {
             const plant = this.grid[row][col];
             if (plant) {
-                plant.hp = 0; // Trigger death
+                plant.hp = 0;
                 this.grid[row][col] = null;
+                if (this.game.audioManager) this.game.audioManager.play('plant');
             }
         }
     }

@@ -12,14 +12,12 @@ class CollisionManager {
         
         for (let p of projectiles) {
             for (let z of zombies) {
-                // Must be in the same row
                 if (p.row === z.row) {
-                    // Simple AABB (or radius to rect) collision
-                    // Zombie rect is roughly x-15 to x+15
                     if (p.x + p.radius > z.x - 15 && p.x - p.radius < z.x + 15) {
-                        p.isDead = true; // Destroy projectile
+                        p.isDead = true; 
                         z.takeDamage(p.damage);
-                        break; // Projectile can only hit one zombie
+                        this.game.audioManager.play('splat');
+                        break; 
                     }
                 }
             }

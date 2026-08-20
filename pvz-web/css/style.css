@@ -2,11 +2,11 @@
     box-sizing: border-box;
     margin: 0;
     padding: 0;
-    user-select: none; /* Prevent text selection while playing */
+    user-select: none;
 }
 
 body {
-    background-color: #222;
+    background-color: #000;
     display: flex;
     justify-content: center;
     align-items: center;
@@ -18,9 +18,34 @@ body {
     position: relative;
     width: 900px;
     height: 600px;
-    background-color: #87CEEB; /* Sky blue background fallback */
     overflow: hidden;
     box-shadow: 0 0 20px rgba(0,0,0,0.8);
+}
+
+#background-layer {
+    position: absolute;
+    top: 0;
+    left: -200px; /* Offset to hide left part of background1.jpg */
+    width: 1400px;
+    height: 600px;
+    background-image: url('../assets/images/interface/background1.jpg');
+    background-size: cover;
+    z-index: 0;
+}
+
+#entity-layer {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 1;
+}
+
+.entity {
+    position: absolute;
+    transform: translate(-50%, -50%);
+    /* Will be styled dynamically by JS */
 }
 
 #ui-layer {
@@ -30,112 +55,94 @@ body {
     width: 100%;
     height: 100%;
     z-index: 10;
-    pointer-events: none; /* Let canvas handle most clicks, except UI elements */
+    pointer-events: none;
 }
 
 #top-bar {
     display: flex;
-    padding: 10px;
+    padding: 5px;
     pointer-events: auto;
 }
 
 #sun-bank {
-    background-color: #fce205;
-    border: 3px solid #b8860b;
-    border-radius: 20px;
-    padding: 10px 20px;
-    font-size: 24px;
-    font-weight: bold;
-    color: #333;
+    background-image: url('../assets/images/interface/SunBack.png');
+    background-size: 100% 100%;
+    width: 123px;
+    height: 34px;
     display: flex;
     align-items: center;
     justify-content: center;
-    width: 120px;
-    height: 50px;
-    margin-right: 15px;
-    box-shadow: 2px 2px 5px rgba(0,0,0,0.5);
+    margin-right: 10px;
+}
+
+#sun-count {
+    font-size: 20px;
+    font-weight: bold;
+    color: black;
+    margin-left: 20px;
 }
 
 #seed-bank {
     display: flex;
-    gap: 5px;
-    background-color: rgba(139, 69, 19, 0.8); /* SaddleBrown */
-    padding: 5px;
+    gap: 2px;
+    background-image: url('../assets/images/interface/SeedChooser_Background.png');
+    background-size: cover;
+    padding: 5px 10px;
     border-radius: 5px;
-    border: 2px solid #5c3a21;
 }
 
 .seed-card {
     width: 50px;
     height: 70px;
-    background-color: #fff;
-    border: 2px solid #333;
-    border-radius: 5px;
     cursor: pointer;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: space-between;
-    padding: 2px;
-    font-size: 12px;
     position: relative;
     overflow: hidden;
-}
-
-.seed-card:hover {
-    border-color: #00ff00;
+    background-size: 100% 100%;
+    box-shadow: 1px 1px 3px rgba(0,0,0,0.5);
+    border-radius: 4px;
 }
 
 .seed-card.disabled {
-    filter: grayscale(100%);
+    filter: brightness(50%);
     cursor: not-allowed;
 }
 
-.seed-card .cost {
-    font-weight: bold;
-    color: #b8860b;
-}
-
-.seed-card .cooldown-overlay {
+.cooldown-overlay {
     position: absolute;
     bottom: 0;
     left: 0;
     width: 100%;
-    background-color: rgba(0, 0, 0, 0.6);
-    height: 0%; /* Adjusted via JS */
+    background-color: rgba(0, 0, 0, 0.5);
+    height: 0%;
+    transition: height 0.1s linear;
 }
 
 #shovel-bank {
-    margin-left: auto;
-}
-
-.tool-card {
-    width: 60px;
-    height: 60px;
-    background-color: #ccc;
-    border: 2px solid #333;
-    border-radius: 10px;
-    cursor: pointer;
+    margin-left: 10px;
+    background-image: url('../assets/images/interface/ShovelBack.png');
+    background-size: 100% 100%;
+    width: 70px;
+    height: 72px;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-weight: bold;
+}
+
+.tool-card {
+    width: 50px;
+    height: 50px;
+    background-image: url('../assets/images/interface/Shovel/0.gif');
+    background-size: cover;
+    cursor: pointer;
 }
 
 #drag-ghost {
     position: absolute;
-    width: 50px;
-    height: 50px;
-    background-color: rgba(255, 255, 255, 0.5);
-    border: 2px dashed #333;
+    width: 60px;
+    height: 60px;
+    background-size: contain;
+    background-repeat: no-repeat;
     pointer-events: none;
-    transform: translate(-50%, -50%); /* Center on cursor */
+    transform: translate(-50%, -50%);
     z-index: 100;
-}
-
-#game-canvas {
-    position: absolute;
-    top: 0;
-    left: 0;
-    z-index: 1;
 }

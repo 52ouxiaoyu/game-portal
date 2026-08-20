@@ -6,26 +6,16 @@ class Projectile extends Entity {
         this.damage = 20;
         this.radius = 10;
         
-        // Z-sorting: keep projectiles above plants
-        this.yOffset = -15; // Visually shoot from the snout
+        this.element.src = 'assets/images/Plants/PB00.gif'; // Assuming this exists or Pea.gif
     }
     
     update(deltaTime) {
+        super.update(deltaTime);
         this.x += this.speed * deltaTime;
         
         // Off screen check
-        if (this.x > this.game.canvas.width) {
+        if (this.x > this.game.canvas ? this.game.canvas.width : 900) {
             this.isDead = true;
         }
-    }
-    
-    draw(ctx) {
-        ctx.fillStyle = '#90EE90'; // Light green pea
-        ctx.beginPath();
-        ctx.arc(this.x, this.y + this.yOffset, this.radius, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.strokeStyle = '#006400';
-        ctx.lineWidth = 1;
-        ctx.stroke();
     }
 }

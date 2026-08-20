@@ -4,23 +4,38 @@ class Sun extends Entity {
     constructor(game, x, y, targetY = null) {
         super(game, x, y);
         this.value = 25;
-        this.radius = 25;
+        this.radius = 25; // Hitbox radius
         this.speed = 50; // Fall speed
         
         if (targetY === null) {
-            // Falls from sky
             this.targetY = game.board.offsetY + Math.random() * (game.board.rows * game.board.cellHeight - 50);
         } else {
             this.targetY = targetY;
-            // Arc movement for sunflower suns (simplified as direct move for MVP)
         }
         
         this.state = 'FALLING'; // FALLING, GROUND, COLLECTED
         this.lifeTime = 0;
-        this.maxLife = 10; // Disappears after 10 seconds on ground
+        this.maxLife = 10;
+        
+        this.element.src = 'assets/images/interface/Sun.gif';
+        this.element.style.width = '78px';
+        this.element.style.height = '78px';
+        this.element.style.cursor = 'pointer';
+        this.element.style.pointerEvents = 'auto'; // allow direct clicking!
+        
+        // Add direct click event listener
+        this.element.addEventListener('mousedown', (e) => {
+            // Prevent UI manager from getting confused
+            if (!this.game.inputManager.selectedSeed && !this.game.inputManager.isShovelSelected) {
+                e.stopPropagation();
+                this.collect();
+            }
+        });
     }
     
     update(deltaTime) {
+        super.update(deltaTime);
+        
         if (this.state === 'FALLING') {
             this.y += this.speed * deltaTime;
             if (this.y >= this.targetY) {
@@ -54,36 +69,7 @@ class Sun extends Entity {
     collect() {
         if (this.state !== 'COLLECTED') {
             this.state = 'COLLECTED';
+            this.game.audioManager.play('sun');
         }
-    }
-    
-    draw(ctx) {
-        ctx.save();
-        ctx.translate(this.x, this.y);
-        
-        // Spin animation
-        ctx.rotate(Date.now() / 1000);
-        
-        // Sun rays
-        ctx.fillStyle = '#FFA500';
-        ctx.beginPath();
-        for (let i = 0; i < 8; i++) {
-            ctx.moveTo(0, 0);
-            ctx.lineTo(25, -5);
-            ctx.lineTo(25, 5);
-            ctx.rotate(Math.PI / 4);
-        }
-        ctx.fill();
-        
-        // Sun center
-        ctx.fillStyle = '#FFFF00';
-        ctx.beginPath();
-        ctx.arc(0, 0, 18, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.strokeStyle = '#DAA520';
-        ctx.lineWidth = 2;
-        ctx.stroke();
-        
-        ctx.restore();
     }
 }

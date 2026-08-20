@@ -8,25 +8,22 @@
 </head>
 <body>
     <div id="game-container">
+        <div id="background-layer"></div>
+        <div id="entity-layer"></div>
+        
         <!-- UI Layer -->
         <div id="ui-layer">
             <div id="top-bar">
                 <div id="sun-bank">
                     <span id="sun-count">50</span>
                 </div>
-                <div id="seed-bank">
-                    <!-- Seed cards will be dynamically injected here -->
-                </div>
+                <div id="seed-bank"></div>
                 <div id="shovel-bank">
-                    <div id="shovel" class="tool-card">铲子</div>
+                    <div id="shovel" class="tool-card"></div>
                 </div>
             </div>
-            <!-- Custom cursor / dragging ghost -->
             <div id="drag-ghost" style="display: none;"></div>
         </div>
-
-        <!-- Render Layer -->
-        <canvas id="game-canvas" width="900" height="600"></canvas>
     </div>
 
     <!-- Scripts -->
