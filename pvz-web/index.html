@@ -27,6 +27,20 @@
     </div>
 
     <!-- Scripts -->
+    <script>
+        function resizeGame() {
+            const container = document.getElementById('game-container');
+            const scaleX = window.innerWidth / 900;
+            const scaleY = window.innerHeight / 600;
+            const scale = Math.min(scaleX, scaleY);
+            container.style.transform = `scale(${scale})`;
+            container.style.transformOrigin = 'center center';
+            // Store scale for InputManager
+            window.gameScale = scale;
+        }
+        window.addEventListener('resize', resizeGame);
+        resizeGame();
+    </script>
     <script src="js/InputManager.js"></script>
     <script src="js/Board.js"></script>
     <script src="js/entities/Entity.js"></script>

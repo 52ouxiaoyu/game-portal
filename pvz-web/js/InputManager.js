@@ -35,16 +35,21 @@ class InputManager {
         
         document.addEventListener('mousemove', (e) => {
             if (this.selectedSeed || this.isShovelSelected) {
-                this.dragGhost.style.left = e.clientX + 'px';
-                this.dragGhost.style.top = e.clientY + 'px';
+                const rect = this.container.getBoundingClientRect();
+                const scale = window.gameScale || 1;
+                const mouseX = (e.clientX - rect.left) / scale;
+                const mouseY = (e.clientY - rect.top) / scale;
+                this.dragGhost.style.left = mouseX + 'px';
+                this.dragGhost.style.top = mouseY + 'px';
             }
         });
         
         this.container.addEventListener('mouseup', (e) => {
             if (this.selectedSeed || this.isShovelSelected) {
                 const rect = this.container.getBoundingClientRect();
-                const mouseX = e.clientX - rect.left;
-                const mouseY = e.clientY - rect.top;
+                const scale = window.gameScale || 1;
+                const mouseX = (e.clientX - rect.left) / scale;
+                const mouseY = (e.clientY - rect.top) / scale;
                 
                 const gridPos = this.game.board.getGridPos(mouseX, mouseY);
                 
@@ -65,8 +70,10 @@ class InputManager {
     
     updateDragGhost(x, y, type) {
         this.dragGhost.style.display = 'block';
-        this.dragGhost.style.left = x + 'px';
-        this.dragGhost.style.top = y + 'px';
+        const rect = this.container.getBoundingClientRect();
+        const scale = window.gameScale || 1;
+        this.dragGhost.style.left = ((x - rect.left) / scale) + 'px';
+        this.dragGhost.style.top = ((y - rect.top) / scale) + 'px';
         
         if (type === 'peashooter') {
             this.dragGhost.style.backgroundImage = "url('assets/images/Plants/Peashooter/Peashooter.gif')";
