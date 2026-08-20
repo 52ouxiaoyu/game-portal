@@ -2,9 +2,9 @@ class WaveManager {
     constructor(game) {
         this.game = game;
         this.timeElapsed = 0;
-        this.nextSpawnTime = 5; 
-        
-        this.spawnInterval = 10;
+        this.nextSpawnTime = 20; // First zombie in 20 seconds
+        this.spawnInterval = 15;
+        this.waveCount = 0;
     }
     
     update(deltaTime) {

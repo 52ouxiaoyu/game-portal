@@ -16,6 +16,15 @@ class Plant extends Entity {
             this.sunTimer = 0;
             this.element.src = 'assets/images/Plants/SunFlower/SunFlower1.gif';
             this.yOffset = -20;
+        } else if (type === 'wallnut') {
+            this.hp = 4000;
+            this.element.src = 'assets/images/Plants/WallNut/WallNut.gif';
+            this.yOffset = -15;
+        } else if (type === 'cherrybomb') {
+            this.hp = 300;
+            this.element.src = 'assets/images/Plants/CherryBomb/CherryBomb.gif';
+            this.yOffset = -15;
+            this.explodeTimer = 1.0; // 1 second to explode
         }
     }
     
@@ -53,6 +62,33 @@ class Plant extends Entity {
                 this.sunTimer = 0;
                 const targetY = this.y + 20;
                 this.game.entities.push(new Sun(this.game, this.x, this.y - 20, targetY));
+            }
+        } else if (this.type === 'wallnut') {
+            if (this.hp < 1333 && this.element.src.indexOf('Wallnut_cracked2') === -1) {
+                // Not perfectly smooth without proper preloading, but works
+                // this.element.src = 'assets/images/Plants/WallNut/Wallnut_cracked2.gif';
+            } else if (this.hp < 2666 && this.element.src.indexOf('Wallnut_cracked1') === -1 && this.hp >= 1333) {
+                // this.element.src = 'assets/images/Plants/WallNut/Wallnut_cracked1.gif';
+            }
+        } else if (this.type === 'cherrybomb') {
+            if (this.explodeTimer > 0) {
+                this.explodeTimer -= deltaTime;
+                if (this.explodeTimer <= 0) {
+                    this.game.audioManager.play('splat'); // Use splat/explosion
+                    this.element.src = 'assets/images/Plants/CherryBomb/Boom.gif';
+                    
+                    // Kill zombies in 3x3 area (roughly within 120px X and 1 row Y)
+                    const zombies = this.game.entities.filter(e => e instanceof Zombie && !e.isDead);
+                    for (let z of zombies) {
+                        if (Math.abs(z.row - this.row) <= 1 && Math.abs(z.x - this.x) < 150) {
+                            z.hp = 0;
+                        }
+                    }
+                    
+                    setTimeout(() => {
+                        this.hp = 0; // Trigger death
+                    }, 500); // Wait for boom animation
+                }
             }
         }
     }

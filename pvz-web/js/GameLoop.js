@@ -78,12 +78,16 @@ class Game {
         // Added cooldown in seconds
         this.seeds = [
             { type: 'sunflower', cost: 50, cooldown: 7.5, img: 'assets/images/Card/Plants/SunFlower.png' },
-            { type: 'peashooter', cost: 100, cooldown: 7.5, img: 'assets/images/Card/Plants/Peashooter.png' }
+            { type: 'peashooter', cost: 100, cooldown: 7.5, img: 'assets/images/Card/Plants/Peashooter.png' },
+            { type: 'wallnut', cost: 50, cooldown: 30, img: 'assets/images/Card/Plants/WallNut.png' },
+            { type: 'cherrybomb', cost: 150, cooldown: 50, img: 'assets/images/Card/Plants/CherryBomb.png' }
         ];
         
         this.cooldowns = {
             'sunflower': 0,
-            'peashooter': 0
+            'peashooter': 0,
+            'wallnut': 0,
+            'cherrybomb': 0
         };
         
         this.seeds.forEach(s => {
@@ -118,6 +122,8 @@ class Game {
             let plant;
             if (type === 'peashooter') plant = new Plant(this, 'peashooter');
             if (type === 'sunflower') plant = new Plant(this, 'sunflower');
+            if (type === 'wallnut') plant = new Plant(this, 'wallnut');
+            if (type === 'cherrybomb') plant = new Plant(this, 'cherrybomb');
             
             if (plant && this.board.addPlant(plant, row, col)) {
                 this.sunCount -= seed.cost;

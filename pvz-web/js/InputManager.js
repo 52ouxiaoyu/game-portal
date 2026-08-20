@@ -79,6 +79,10 @@ class InputManager {
             this.dragGhost.style.backgroundImage = "url('assets/images/Plants/Peashooter/Peashooter.gif')";
         } else if (type === 'sunflower') {
             this.dragGhost.style.backgroundImage = "url('assets/images/Plants/SunFlower/SunFlower1.gif')";
+        } else if (type === 'wallnut') {
+            this.dragGhost.style.backgroundImage = "url('assets/images/Plants/WallNut/WallNut.gif')";
+        } else if (type === 'cherrybomb') {
+            this.dragGhost.style.backgroundImage = "url('assets/images/Plants/CherryBomb/CherryBomb.gif')";
         } else if (type === 'shovel') {
             this.dragGhost.style.backgroundImage = "url('assets/images/interface/Shovel/0.gif')";
         }
