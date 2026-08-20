@@ -52,7 +52,7 @@ class Zombie extends Entity {
         if (this.state === 'WALKING') {
             this.x -= this.speed * deltaTime;
             
-            if (this.x < 150) { 
+            if (this.x < 40) { 
                 this.game.gameOver();
             }
             
