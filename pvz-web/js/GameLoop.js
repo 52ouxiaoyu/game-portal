@@ -44,6 +44,8 @@ class Game {
         
         this.state = 'MENU'; // MENU, PLAYING, GAMEOVER
         
+        this.lastTime = 0;
+        
         this.board = new Board(this);
         this.inputManager = new InputManager(this);
         this.waveManager = new WaveManager(this);
@@ -97,6 +99,7 @@ class Game {
             document.getElementById('game-container').removeChild(menu);
             this.state = 'PLAYING';
             this.audioManager.play('bgm');
+            this.lastTime = performance.now();
             requestAnimationFrame((t) => this.loop(t));
         };
         

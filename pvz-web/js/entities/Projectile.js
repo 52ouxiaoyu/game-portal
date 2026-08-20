@@ -13,8 +13,8 @@ class Projectile extends Entity {
         super.update(deltaTime);
         this.x += this.speed * deltaTime;
         
-        // Off screen check
-        if (this.x > this.game.canvas ? this.game.canvas.width : 900) {
+        // Off screen check (canvas width is 900)
+        if (this.x > 900) {
             this.isDead = true;
         }
     }
