@@ -25,9 +25,9 @@
             <div id="drag-ghost" style="display: none;"></div>
         </div>
         <!-- Start Menu -->
-        <div id="start-menu" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.8); z-index: 2000; display: flex; flex-direction: column; justify-content: center; align-items: center;">
-            <img src="assets/images/interface/Logo.png" style="margin-bottom: 20px;">
-            <div id="start-btn" style="background-image: url('assets/images/interface/SelectorScreen_WoodSign2_32.png'); width: 200px; height: 100px; background-size: contain; background-repeat: no-repeat; background-position: center; cursor: pointer; display: flex; align-items: center; justify-content: center; color: white; font-size: 24px; font-weight: bold; transition: transform 0.2s;">
+        <div id="start-menu" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.8); z-index: 2000;">
+            <img src="assets/images/interface/Logo.png" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: contain; pointer-events: none;">
+            <div id="start-btn" style="position: absolute; bottom: 80px; left: 50%; transform: translateX(-50%); background-image: url('assets/images/interface/SelectorScreen_WoodSign2_32.png'); width: 250px; height: 120px; background-size: contain; background-repeat: no-repeat; background-position: center; cursor: pointer; display: flex; align-items: center; justify-content: center; color: white; font-size: 26px; font-weight: bold; transition: transform 0.2s; z-index: 2001;">
                 开始游戏
             </div>
         </div>
@@ -35,8 +35,8 @@
 
     <!-- Scripts -->
     <script>
-        document.getElementById('start-btn').onmouseover = function() { this.style.transform = 'scale(1.05)'; };
-        document.getElementById('start-btn').onmouseout = function() { this.style.transform = 'scale(1)'; };
+        document.getElementById('start-btn').onmouseover = function() { this.style.transform = 'translateX(-50%) scale(1.05)'; };
+        document.getElementById('start-btn').onmouseout = function() { this.style.transform = 'translateX(-50%) scale(1)'; };
         
         function resizeGame() {
             const container = document.getElementById('game-container');
