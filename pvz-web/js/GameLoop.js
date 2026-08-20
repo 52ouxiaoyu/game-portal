@@ -61,9 +61,8 @@ class Game {
     
     showMenu() {
         const menu = document.getElementById('start-menu');
-        const startBtn = document.getElementById('start-btn');
         
-        startBtn.onclick = () => {
+        menu.onclick = () => {
             menu.style.display = 'none';
             this.state = 'PLAYING';
             this.audioManager.play('bgm');
@@ -231,6 +230,7 @@ class Game {
             if (e.element) {
                 let z = Math.floor(e.y);
                 if (e instanceof Projectile) z += 1000; // Projectiles always on top of row
+                if (e instanceof Sun) z += 2000; // Suns always on top of EVERYTHING
                 e.element.style.zIndex = z;
             }
         });

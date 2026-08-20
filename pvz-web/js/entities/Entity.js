@@ -11,6 +11,7 @@ class Entity {
         
         this.element = document.createElement('img');
         this.element.className = 'entity';
+        this.element.style.pointerEvents = 'none'; // Prevent entities from blocking clicks
         this.game.entityLayer.appendChild(this.element);
     }
     

@@ -5,8 +5,8 @@ class Board {
         this.cols = 9;
         
         // Coordinates for the top-left of the first cell
-        // Adjusted for the new background image
-        this.offsetX = 140; 
+        // Adjusted for the new background image (left: -200px)
+        this.offsetX = 50; 
         this.offsetY = 85;
         
         this.cellWidth = 80;
